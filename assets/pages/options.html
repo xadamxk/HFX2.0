@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--Check for other extensions: https://stackoverflow.com/a/36194645-->
+    <title>HFX Settings</title>
+    <!-- jQuery -->
+    <script src="../dependencies/jquery-3.3.1.min.js"></script>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <script src="../dependencies/bootstrap.min.js"></script>
+    <!-- Options -->
+    <link rel="stylesheet" href="../css/options.css">
+    <script src="../js/options.js"></script>
+    <!-- TitaToggle CSS -->
+    <link rel="stylesheet" href="../css/titatoggle-dist-min.css">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="../css/font-awesome.min.css">
+    <!-- JSColor JS
+    <script src="../js/dependencies/jscolor.min.js"></script> -->
+    <script src="../dependencies/jscolor.js"></script>
+</head>
+<!-- TODO:
+    -
+
+     -->
+<body id="bodyTag">
+    <ul class="nav nav-pills nav-stacked tabs-left" id="navigation">
+        <li class="active"><a data-toggle="tab" href="#aboutHFX">About HFX</a></li>
+        <li><a data-toggle="tab" href="#general">General</a></li>
+        <li><a data-toggle="tab" href="#menuGlobal" id="generalShowGlobal">Global</a></li>
+        <li><a data-toggle="tab" href="#menuThread" id="generalShowThread">Thread</a></li>
+        <li><a data-toggle="tab" href="#menuForum" id="generalShowForum">Forum</a></li>
+        <li><a data-toggle="tab" href="#menuPM" id="generalShowPM">PM</a></li>
+    </ul>
+
+    <div class="tab-content" id="optionBodyTag">
+        <!-- About -->
+        <div id="aboutHFX" class="tab-pane fade in active">
+            <h3>About HFX</h3>
+            <!-- Container -->
+            <div class="panel panel-default" id="aboutPanel" align="center">
+                <img src="../images/banner-small.png" id="headerImage" alt="HFX Header">
+                <h3>Enhance your HF Experience!</h3>
+                <h4>Written By: <a href="https://hackforums.net/member.php?action=profile&uid=1306528">xadamxk</a></h4>
+                <h4>Version: <span id="HFXVersion"></span></h4>
+                <!--<img src="../images/avatar_hf_gradcap.png_transparent.png" class="logoImage" id="hfAvatarImage" alt="HF Avatar Logo">-->
+                <!--
+                    <a href="https://chrome.google.com/webstore/detail/hf-xtension/hcfofmfmidhgbblcnnipcphhegcmdeeb">
+                    <img src="../images/ChromeWebStore01.png" id="chromeStoreImage" class="logoImage" alt="Chrome Web Store Logo">
+                    </a>
+                -->
+                <a href="https://github.com/xadamxk/HFX" target="_blank">
+                    <img src="../images/GitHub_Logo.png" class="logoImage" id="githubLogoImage" alt="Github Logo">
+                </a>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    HFX Alerts
+                </div>
+                <div class="panel-body">
+                    <!-- HFX Alerts -->
+                    <div class="col-sm-12" align="left">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="HFXAlertsEnable" class="GlobalChanges">
+                                <span class="toggleLabel">HFX Alerts</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Alert system for new features and changes.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><a id="resetHFXAlerts">(Click to reset alert dismiss settings)</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- General -->
+        <div id="general" class="tab-pane fade in">
+            <h3>General Changes</h3>
+            <p></p>
+            <!-- Annoyance Fixers -->
+            <div class="panel panel-default">
+                <div class="panel-heading">Annoyance Fixers</div>
+                <div class="panel-body">
+                    <!-- Collapse Related Threads -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="CollapseRelatedThreadsEnable" class="PostOptions">
+                                <span class="toggleLabel">Collapse Possibly Related Threads</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Automatically collapse 'Possibly Related Threads' results.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Click the toggle image to view results.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Revert Green Stars -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="RevertGreenStarsEnable" class="GlobalChanges">
+                                <span class="toggleLabel">Revert Green Stars</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Reverts green stars to normal stars.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Works on every HF page.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Revert Purple Stars -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="RevertPurpleStarsEnable" class="GlobalChanges">
+                                <span class="toggleLabel">Revert Purple Stars</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Reverts purple stars to normal stars.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Works on every HF page.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Revert Green Usernames -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="RevertGreenUsernameEnable" class="PostOptions">
+                                <span class="toggleLabel">Revert Green Names</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Reverts green usernames to normal.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Works on threads.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Annoyance Fixers End -->
+            <!-- Postbit Hide -->
+            <!--
+            <div class="panel panel-default">
+                <div class="panel-heading">Hide Postbit Attributes</div>
+                <div class="panel-body">
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <span class="toggleLabel">Hide Postbit Attributes</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Allows you to hide various elements of posts.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Does <u>NOT</u> Support Classic Post Style YET!</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideAvatar" class="PostbitHide">
+                                <span class="toggleLabel">Hide Avatar</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideUsertitle" class="PostbitHide">
+                                <span class="toggleLabel">Hide UserTitle</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideUserStar" class="PostbitHide">
+                                <span class="toggleLabel">Hide UserStar</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideUserBar" class="PostbitHide">
+                                <span class="toggleLabel">Hide UserBar</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHidePrestige" class="PostbitHide">
+                                <span class="toggleLabel">Hide Prestige</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHidePostCount" class="PostbitHide">
+                                <span class="toggleLabel">Hide Post Count</span>
+                            </label>
+                        </div>
+                    </div>
+                    >
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideJoinDate" class="PostbitHide">
+                                <span class="toggleLabel">Hide Join Date</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideReputation" class="PostbitHide">
+                                <span class="toggleLabel">Hide Reputation</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideWarningLevel" class="PostbitHide">
+                                <span class="toggleLabel">Hide Warning Level</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideAwards" class="PostbitHide">
+                                <span class="toggleLabel">Hide Awards</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostbitHideSignature" class="PostbitHide">
+                                <span class="toggleLabel">Hide Signature</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            -->
+            <!-- Postbit Hide End -->
+            <!-- UserTag -->
+            <div class="panel panel-default">
+                <div class="panel-heading">UserTag</div>
+                <div class="panel-body">
+                    <!-- Enable User Tag -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="UserTagEnable" class="UserTag">
+                                <span class="toggleLabel">User Tagging</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">UserTagging allows you to notify a user when you quote(mention) them in a post.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Only the first 5 users quoted can be notified per post.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Notified users are sent a PM with a link and short summary of the post you tagged them in.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">If you wish to never receive alerts from UserTagging, request to join the UserTag Blacklist HERE.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- User Tag End -->
+        </div>
+        <!-- End General -->
+        <!-- Global -->
+        <div id="menuGlobal" class="tab-pane fade">
+            <h3>Global Changes</h3>
+            <!-- Global Changes -->
+            <div class="panel panel-default">
+                <div class="panel-heading">Global Changes</div>
+                <div class="panel-body">
+                    <!-- Enable Hide Location -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="HideLocation" class="GlobalChanges">
+                                <span class="toggleLabel">Hide Location</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Hides your location from the "Who's Online List".</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Your location will point to: hackforums.net/misc.php</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Original Author: <a href="https://hackforums.net/member.php?action=profile&uid=956054">Emylbus</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Leave Warning
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesLeaveWarning" class="LivePreview">
+                                <span class="toggleLabel">Leave Warning</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Warns you if you are about to leave the page when replying.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Alerts you on quick reply and full reply.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                        -->
+                    <!-- Enable EasyCite -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesEasyCite" class="GlobalChanges">
+                                <span class="toggleLabel">EasyCite</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Adds cite button to every page for quick & easy reference.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">When the button is clicked, a popup will come up, allowing you to copy the citation to your clipboard (CTR+C).</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Cite threads, sections, and other pages by using the cite button next to the navigation bar.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Cite posts by using the cite button in the postbit options.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Cite Thread with Author using the cite button on the first post of a thread.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable User Notes -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesUserNotes" class="GlobalChanges">
+                                <span class="toggleLabel">User Notes</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Allows custom profile notes for other users.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Notes are shown on threads and profiles.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Click the note label to edit.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Character Counter -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesCharacterCounter" class="LivePreview">
+                                <span class="toggleLabel">Character Counter</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Adds intelligent character counter to replies.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Counter changes color based on:</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">
+                                <strong>
+                                    <span class="minLimitStyle">Too Low</span>,
+                                    <span class="limitStyle">Good</span>,
+                                    <span class="minLuckyStyle">Clover</span>,
+                                    <span class="tooHighStyle">Too High</span> (
+                                    <span class="maxLimitStyleL33t">L33t</span>,
+                                    <span class="maxLimitStyleUb3r"> Ub3r</span>,
+                                    <span class="maxLimitStyleEp1c"> Ep1c</span> )
+                                </strong>
+                            </span>
+                        </div>
+                    </div>
+                    <hr class="lineBreak" align="center" />
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesSFWMode" class="GlobalChanges">
+                                <span class="toggleLabel">SFW Mode</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">When enabled, hides all images.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Author: <a href="https://hackforums.net/member.php?action=profile&uid=93414">Anxuein</a></span>
+                        </div>
+                    </div>
+                    <br />
+                </div>
+            </div>   <!-- Global Changes End -->
+            <!-- HFTB Changes -->
+            <div class="panel panel-default">
+                <div class="panel-heading">HF ToolBar</div>
+                <div class="panel-body">
+                    <!-- Enable HFTB -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesHFTBEnabled" class="GlobalChanges">
+                                <span class="toggleLabel">HF ToolBar</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Adds a toolbar with various options to the top of HF.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Left:</u> Left of the toolbar has quick links to go to UserCP, Top/Bottom of Page, and quick access to the PM system.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Center:</u> Customizable quick links to your favorite pages on HF.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Right:</u> Quick access to New Posts, Your Threads, and Your Posts.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable StickHFTB -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesHFTBStickyEnabled" class="GlobalChanges">
+                                <span class="toggleLabel">Stick HF ToolBar</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">
+                                Sticks the toolbar to the top of the screen,
+                                so you'll always have access to your shortcuts.
+                            </span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Quick Links/ Favorites -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <span class="toggleLabel">Quick Links</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">
+                                Allows you to add shortcuts to the top
+                                of HFTB for quick access across the forum.
+                            </span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Name:</u> The name of the section that appears on HFTB.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Link:</u> The link to the matching section name.</span>
+                            <br />
+                            <br />
+                        </div>
+                        <!-- table -->
+                        <table class="col-sm-12">
+                            <tr class="col-sm-12"></tr>
+                            <tr>
+                                <td class="col-sm-6" align="center">Name</td>
+                                <td class="col-sm-6" align="center">Link</td>
+                            </tr>
+                            <tr>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav1Text" /></th>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav1Link" /></th>
+                            </tr>
+                            <tr>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav2Text" /></th>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav2Link" /></th>
+                            </tr>
+                            <tr>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav3Text" /></th>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav3Link" /></th>
+                            </tr>
+                            <tr>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav4Text" /></th>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav4Link" /></th>
+                            </tr>
+                            <tr>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav5Text" /></th>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav5Link" /></th>
+                            </tr>
+                            <tr>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav6Text" /></th>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav6Link" /></th>
+                            </tr>
+                            <tr>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav7Text" /></th>
+                                <th><input type="text" class="form-control input-sm GlobalChanges" id="GlobalChangesHFTBFav7Link" /></th>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>   <!-- HFTB End -->
+            <!-- Rep Changes -->
+            <div class="panel panel-default">
+                <div class="panel-heading">Rep Changes</div>
+                <div class="panel-body">
+                    <!-- Enable Rep Charts -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="RepChartsEnable" class="RepCharts">
+                                <span class="toggleLabel">Rep Charts</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Display graphical information on member's reputation page.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Adds button to Summary/Given pages for quick access between the two pages.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable QuickRep -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="QuickRep" class="QuickRepChanges">
+                                <span class="toggleLabel">QuickRep</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Allows you to give users reputation from a post or private message. </span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Uses the notification API to display alerts when you rep'd a user from QuickRep. </span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Clickable Links in Rep -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="RepChartsLinksEnable" class="RepCharts">
+                                <span class="toggleLabel">Clickable Rep Links</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Turns all links in reputation to clickable hyperlinks.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>   <!-- Rep Charts End -->
+            <!-- Live Preview -->
+            <div class="panel panel-default">
+                <div class="panel-heading">Live Preview</div>
+                <div class="panel-body">
+                    <!-- Enable Live Preview -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="LivePreviewChangesEnable" class="LivePreview">
+                                <span class="toggleLabel">Live Preview</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">A live WYSIWYG viewer for HF.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Supported Pages:</u> Quick Reply, Full Edit, New Reply, Thread Compose, and PM Reply.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Collapsable View:</u> Allows you to hide the Live Preview output.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Collapse Live Preview by Default -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="LivePreviewChangesCollapse" class="LivePreview">
+                                <span class="toggleLabel">Collapse by Default</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Automatically hide Live Preview Output.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Visibility can be toggled by clicking the collapse icon.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>   <!-- Live Preview End -->
+        </div>
+        <!-- End Global -->
+        <!-- Thread -->
+        <div id="menuThread" class="tab-pane fade">
+            <h3>Thread Changes</h3>
+            <!-- PostOptions -->
+            <div class="panel panel-default">
+                <div class="panel-heading">Post Options</div>
+                <div class="panel-body">
+                    <!-- Infiniscroll Threads -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostOptionsInfiniscrollThread" class="PostOptions">
+                                <span class="toggleLabel">Infiniscroll Threads</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                                <span class="toggleLabel">Adds infiniscroll to threads.</span>
+                                <br />
+                                <br />
+                                <span class="toggleLabel">Note: Post changes won't apply to new posts.</span>
+                                <br />
+                                <br />
+                                <span class="toggleLabel">Limitation: 2 pages per 5 seconds.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Thread Rating Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostOptionsThreadRating" class="PostOptions">
+                                <span class="toggleLabel">Adv Ratings (Thread)</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Show advanced thread rating information in threads.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Includes total number of votes along with average rating.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- PoT Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostOptionsPoT" class="PostOptions">
+                                <span class="toggleLabel">Posts on Thread Btn.</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Button that shows all posts made by the user on the current thread.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Threads Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostOptionsThreads" class="PostOptions">
+                                <span class="toggleLabel">User's Threads Btn.</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Button that shows all threads made by the user.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Posts Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PostOptionsPosts" class="PostOptions">
+                                <span class="toggleLabel">User's Posts Btn.</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Button that shows all posts made by the user.</span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- PostOptions End -->
+            <!-- SmartQuotes -->
+            <div class="panel panel-default">
+                <div class="panel-heading">SmartQuotes</div>
+                <div class="panel-body">
+                    <!-- Enable SmartQuote Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="SmartQuotesEnable" class="SmartQuotes">
+                                <span class="toggleLabel">SmartQuotes</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Enhances quotes by adding style & highlights mentioned quotes.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Mentioned Quotes:</u> Changes the quote's color if your username was mentioned. </span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel"><u>Always Quote:</u> Allows you to quote the text on closed threads. </span>
+                            <br />
+                            <br />
+                        </div>
+                        <div class="col-sm-4">
+                            <input class="jscolor" id="SmartQuoteColorBody">
+                            <label>
+                                <span class="toggleLabel">Body Color</span>
+                            </label>
+                        </div>
+                        <div class="col-sm-8">
+                            <span class="toggleLabel">Change the color of quote bodies.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Requires SmartQuotes (Default: ADB1A1).</span>
+                            <br />
+                            <br />
+                        </div>
+                        <div class="col-sm-4">
+                            <input class="jscolor" id="SmartQuoteColorQuote">
+                            <label>
+                                <span class="toggleLabel">Quote Color</span>
+                            </label>
+                        </div>
+                        <div class="col-sm-8">
+                            <span class="toggleLabel">Change the color of normal quote headers.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Requires SmartQuotes (Default: B1F8BF).</span>
+                            <br />
+                            <br />
+                        </div>
+                        <div class="col-sm-4">
+                            <input class="jscolor" id="SmartQuoteColorMention">
+                            <label>
+                                <span class="toggleLabel">Mention Color</span>
+                            </label>
+                        </div>
+                        <div class="col-sm-8">
+                            <span class="toggleLabel">Change the color of mentioned quote headers.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Requires SmartQuotes (Default: BC3232).</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable SmartQuote Mention Count Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="SmartQuotesMentionCount" class="SmartQuotes">
+                                <span class="toggleLabel">Mention Count Label</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">
+                                Notifies you (next to thread title)
+                                if your username was mentioned on that page.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- SmartQuotes End -->
+            <!-- Annoyance Fixers -->
+            <div class="panel panel-default">
+                <div class="panel-heading">Annoyance Fixers</div>
+                <div class="panel-body">
+                    <!-- MaxSize Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ImageChangesMaxSize" class="ImageChanges">
+                                <span class="toggleLabel">Limit Img Sizes (Posts)</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">
+                                Limits all image sizes in posts so the image
+                                always fits within your current screen dimensions.
+                            </span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- ReplaceBroken Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ImageChangesReplaceBroken" class="ImageChanges">
+                                <span class="toggleLabel">Replace Broken Imgs</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Replaces broken images with placeholder image.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- ForceHTTPS Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ImageChangesForceHTTPS" class="ImageChanges">
+                                <span class="toggleLabel">HTTPS on HTTP Imgs</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Attempts to force HTTPS on all HTTP Images.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- YoutubeFullScreen Toggle -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="AnnoyanceFixerFullscreenYoutube" class="PostOptions">
+                                <span class="toggleLabel">YouTube Fullscreen</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Enabled the FullScreen option in embedded YouTube videos.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Show Blocked User's Posts -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="AnnoyanceFixerShowBlockedPosts" class="PostOptions">
+                                <span class="toggleLabel">Show Blocked Posts</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Automatically shows posts made by users from your blocked list.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Hide Blocked User's Posts -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="AnnoyanceFixerHideBlockedPosts" class="PostOptions">
+                                <span class="toggleLabel">Hide Blocked Posts</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Automatically removes all posts made by users from your blocked list</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Overrides "Show Blocked User's Posts" Setting.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="AnnoyanceFixerUsersBrowsingToTop" class="PostOptions">
+                                <span class="toggleLabel">Browsing users to top</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Move browsing users to the top of the thread, rather than bottom</span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Annoyance Fixers End -->
+        </div>
+        <!-- Thread End -->
+        <!-- Forum -->
+        <div id="menuForum" class="tab-pane fade">
+            <h3>Forum Changes</h3>
+            <!-- Forum Changes -->
+            <div class="panel panel-default">
+                <div class="panel-heading">Forum Changes</div>
+                <div class="panel-body">
+                    <!-- Enable Infiniscroll -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ForumChangesInfiniscrollForums" class="ForumChanges">
+                                <span class="toggleLabel">Infiniscroll Forums</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Adds infiniscroll to forums.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Note: Forum changes won't apply to new threads.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Limitation: 2 pages per 5 seconds.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Online Sorting -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="OnlineSortingEnable" class="OnlineSorting">
+                                <span class="toggleLabel">Online Sorting</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Sorts online member list by current usergroup.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Original Author: <a href="https://hackforums.net/member.php?action=profile&uid=3099730">Aveling</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Forum Rating -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ForumChangesForumRating" class="ForumChanges">
+                                <span class="toggleLabel">Adv Ratings (Forum)</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Show advanced thread rating information in forums.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Includes total number of votes along with average rating.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Enhanced SYT -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ForumChangesEnhancedSYT" class="ForumChanges">
+                                <span class="toggleLabel">Enhanced SYT</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Adds a textbox to search a section for threads by specified user.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Original Author: <a href="https://hackforums.net/member.php?action=profile&uid=175033">Xerotic</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable New Post Links -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="GlobalChangesNewPostLinks" class="GlobalChanges">
+                                <span class="toggleLabel">New Post Links</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Adds link to 'latest unread post' to threads.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">When searching your posts, threads with new posts will have a link to latest unread post.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Threads on homepage will have a link to latest unread post.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Original Author: <a href="https://hackforums.net/member.php?action=profile&uid=175033">Xerotic</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Hide Closed Threads -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ForumChangesHideClosed" class="ForumChanges">
+                                <span class="toggleLabel">Hide Closed Threads</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Removes all closed threads in forums.</span>
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Enable Hide Forum Ratings -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="ForumChangesHideForumRatings" class="ForumChanges">
+                                <span class="toggleLabel">Hide Thread Ratings</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Hides thread rating information</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Overrides 'Advanced Thread Rating in Forums' Setting.</span>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Forum Changes End -->
+        </div>
+        <!-- End Forum -->
+        <!-- PM -->
+        <div id="menuPM" class="tab-pane fade">
+            <h3>PM Changes</h3>
+            <!-- PM Changes -->
+            <div class="panel panel-default">
+                <div class="panel-heading">PM Changes</div>
+                <div class="panel-body">
+                    <!-- Unread Badge Count -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="UnreadBadgeCountEnable" class="GlobalChanges">
+                                <span class="toggleLabel">Unread Badge Count</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Adds a badge with number of unread messages to the HFX extension icon.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Updates every 5 minutes if inactive.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <hr class="lineBreak" align="center" />
+                    <!-- PM From Post -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesPMFromPost" class="PostOptions">
+                                <span class="toggleLabel">PM From Post</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Allows you to PM someone directly from a post.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Automatically adds a quote of the post to the PM body.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Automatically adds the thread's title to the PM title.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Co-Author: <a href="https://hackforums.net/member.php?action=profile&uid=175033">Xerotic</a></span>
+                            <br />
+                            <br />
+                        </div>
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesPMFromPostQuote" class="PostOptions">
+                                <span class="toggleLabel">Include Quote</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Automatically adds the quote when PM'ing from post.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Requires 'PM from Post'.</span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Pretty PMs -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesPrettyPMs" class="PMChanges">
+                                <span class="toggleLabel">Pretty PMs</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Formats nested quotes into conversation format.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Newest message will be red.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Original Author: <a href="https://hackforums.net/member.php?action=profile&uid=956054">Emylbus</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Quote Stripping -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesQuoteStripping" class="PMChanges">
+                                <span class="toggleLabel">Quote Stripping</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Removes all but the last quote in a PM conversation.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Co-Author: <a href="https://hackforums.net/member.php?action=profile&uid=44755">Snorlax</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Salutation Enable -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesSalutation" class="PMChanges">
+                                <span class="toggleLabel">PM Salutation</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Allows you to add your very own salutation to private messages.</span>
+                            <br />
+                            <br />
+                        </div>
+                        <br />
+                        <br />
+                        <!-- Salutation Text -->
+                        <input class="form-control PMChanges" id="PMChangesSalutationText" type="text">
+                        <br />
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Signature Enable -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesSignature" class="PMChanges">
+                                <span class="toggleLabel">PM Signature</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Allows you to add your very own signature to private messages.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Use ||| as a line break to have multiple lines in signature.</span>
+                            <br />
+                            <br />
+                        </div>
+                        <br />
+                        <br />
+                        <!-- Signature Text -->
+                        <input class="form-control PMChanges" id="PMChangesSignatureText" type="text">
+                        <br />
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- Deny PM Receipt Enable -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesDenyPMReceipt" class="GlobalChanges">
+                                <span class="toggleLabel">Deny PM Receipt</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Allows you to deny the read receipt of a private message.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Button is appended at the end of PM Alerts.</span>
+                            <br />
+                            <br />
+                            <span class="toggleLabel">Original Author: <a href="https://hackforums.net/member.php?action=profile&uid=956054">Emylbus</a></span>
+                            <br />
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <hr class="lineBreak" align="center" />
+                    <!-- PM Tracking Links Enable -->
+                    <div class="col-sm-12">
+                        <div class="checkbox-slider--b col-sm-4">
+                            <label>
+                                <input type="checkbox" id="PMChangesTrackingLinks" class="PMChanges">
+                                <span class="toggleLabel">PM Tracking Links</span>
+                            </label>
+                        </div>
+                        <div class="checkbox-slider--b col-sm-8">
+                            <span class="toggleLabel">Turns all messages in 'Message Tracking' to clickable hyperlinks.</span>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div> <!-- PM Changes End -->
+        </div>
+        <!-- PM End -->
+    </div>
+</body>
+</html>
+<!--
+    Textbox with Label
+<div class="input-group">
+    <span class="input-group-addon" id="basic-addon1">@</span>
+    <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+</div>
+
+
+
+
+
+
+-->

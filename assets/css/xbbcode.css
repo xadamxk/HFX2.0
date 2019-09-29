@@ -1,0 +1,170 @@
+/*
+    Modification Notes:
+    - (02/26/2017) added class for align (left, center, right)
+    - (03/16/2017) added class for bit-buttons (Skype, XMPP)
+    - (03/17/2017) Removed center class.
+*/
+.xbbcode-align{
+    width:100%;
+    display:inline-block;
+}
+.xbbcode-align-left {
+    text-align: left;
+}
+.xbbcode-align-center {
+    text-align: center;
+}
+.xbbcode-align-right {
+    text-align: right;
+}
+
+.xbbcode-b {
+    font-weight:bold;
+}
+
+.xbbcode-blockquote {
+    border: 1px dashed #ccc;
+    color: #ccc;
+    margin: 0;
+    background: #777777;
+    padding: 4px;
+}
+
+.xbbcode-blockquote cite {
+    font-weight: bold;
+    border-bottom: 1px dashed #ccc;
+    font-style: normal;
+    display: block;
+    margin: 4px 0;
+}
+
+.xbbcode-blockquote cite span {
+    float: right;
+    font-weight: normal;
+}
+
+.xbbcode-code {
+    white-space: pre-wrap;
+    font-family: monospace;
+}
+
+.xbbcode-i {
+    font-style: italic; 
+}
+
+.xbbcode-justify {
+	display: block;
+	text-align: justify;
+}
+
+.xbbcode-left {
+	display: block;
+	text-align: left;
+}
+
+.xbbcode-removeAnchorAttrs {
+   text-decoration: none; 
+   background-color: none;
+   color: white;
+}
+
+.xbbcode-removeAnchorAttrs:hover {
+    color: #499FED;
+	text-decoration: none;
+}
+
+.xbbcode-right {
+	display: block;
+	text-align: right;
+}
+
+.xbbcode-s {
+    text-decoration: line-through;
+}
+
+.xbbcode-size-4 {font-size:4px;}
+.xbbcode-size-5 {font-size:5px;}
+.xbbcode-size-6 {font-size:6px;}
+.xbbcode-size-7 {font-size:7px;}
+.xbbcode-size-8 {font-size:8px;}
+.xbbcode-size-9 {font-size:9px;}
+.xbbcode-size-10 {font-size:10px;}
+.xbbcode-size-11 {font-size:11px;}
+.xbbcode-size-12 {font-size:12px;}
+.xbbcode-size-13 {font-size:13px;}
+.xbbcode-size-14 {font-size:14px;}
+.xbbcode-size-15 {font-size:15px;}
+.xbbcode-size-16 {font-size:16px;}
+.xbbcode-size-17 {font-size:17px;}
+.xbbcode-size-18{font-size:18px;}
+.xbbcode-size-19 {font-size:19px;}
+.xbbcode-size-20 {font-size:20px;}
+.xbbcode-size-21 {font-size:21px;}
+.xbbcode-size-22 {font-size:22px;}
+.xbbcode-size-23 {font-size:23px;}
+.xbbcode-size-24 {font-size:24px;}
+.xbbcode-size-25 {font-size:25px;}
+.xbbcode-size-26 {font-size:26px;}
+.xbbcode-size-27 {font-size:27px;}
+.xbbcode-size-28 {font-size:28px;}
+.xbbcode-size-29 {font-size:29px;}
+.xbbcode-size-30 {font-size:30px;}
+.xbbcode-size-31 {font-size:31px;}
+.xbbcode-size-32 {font-size:32px;}
+.xbbcode-size-33 {font-size:33px;}
+.xbbcode-size-34 {font-size:34px;}
+.xbbcode-size-35 {font-size:35px;}
+.xbbcode-size-36 {font-size:36px;}
+.xbbcode-size-37 {font-size:37px;}
+.xbbcode-size-38 {font-size:38px;}
+.xbbcode-size-39 {font-size:39px;}
+.xbbcode-size-40 {font-size:40px;}
+
+.xbbcode-postbitBtn {
+    color: white;
+    font-size: 14pt;
+    background-color: #072948;
+    font-weight: bold;
+    text-shadow: 1px 1px 0px #000;
+    text-align: left;
+    border: 1px solid #000 !important;
+    box-shadow: 0 1px 0 0 #0F5799 inset !important;
+    padding: 3px 6px;
+    border-radius: 3px;
+    text-shadow: 1px 1px 0px #000;
+    text-decoration: none;
+    font-family: arial;
+}
+
+.xbbcode-postbitBtn img{
+    position: relative;
+    bottom: 3px;
+    margin-right: 3px;
+}
+
+.xbbcode-quick_jump {
+    color: #0F5799;
+    text-decoration: none;
+    font-size: 18px;
+    width: 13px;
+    height: 13px;
+    padding-left: 3px;
+    vertical-align: middle;
+    border: none;
+}
+
+.xbbcode-u {
+    text-decoration: underline;
+}
+
+.xbbcode-table {
+    border-collapse:collapse;
+}
+
+.xbbcode-tr {
+
+}
+
+.xbbcode-table , .xbbcode-th, .xbbcode-td {
+    border: 1px solid #666;
+}

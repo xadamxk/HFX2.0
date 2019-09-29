@@ -1,0 +1,13 @@
+{
+  "extends": "standard",
+  "rules": {
+    "quotes": ["error", "double"],
+    "semi": ["error", "always"]
+  },
+  "globals": {
+    "$": true,
+    "chrome": true,
+    "FileReader": true,
+    "HFX": true
+  }
+}

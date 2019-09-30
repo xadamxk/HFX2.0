@@ -15,18 +15,20 @@
   "dependencies": {
     "bootstrap": "^4.0.0",
     "browserify-resolutions": "^1.1.0",
+    "font-awesome": "^4.7.0",
+    "jquery": "^3.3.1",
+    "titatoggle": "^2.0.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-browserify": "^0.5.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-watch": "^5.0.0",
     "eslint": "^4.17.0",
     "eslint-config-standard": "^11.0.0-beta.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1",
-    "font-awesome": "^4.7.0",
-    "gulp": "^3.9.1",
-    "gulp-browserify": "^0.5.1",
-    "gulp-concat": "^2.6.1",
-    "gulp-watch": "^5.0.0",
-    "jquery": "^3.3.1",
-    "titatoggle": "^2.0.1"
+    "eslint-plugin-standard": "^3.0.1"
   }
 }

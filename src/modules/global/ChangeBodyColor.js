@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class ChangeBodyColor extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: "global",
       name: "Change Body Color",
@@ -10,7 +10,7 @@ class ChangeBodyColor extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     $("table").css("color", "red");
   }
 };

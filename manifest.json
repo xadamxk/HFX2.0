@@ -2,14 +2,14 @@
   "manifest_version": 2,
   "name": "HF Xtension",
   "short_name": "HFX",
-  "version": "0.2.1.3",
+  "version": "2.0.0.0",
   "icons": {
     "16": "assets/images/icon16.png",
     "32": "assets/images/icon32.png",
     "48": "assets/images/icon48.png",
     "128": "assets/images/icon128.png"
   },
-  "version_name": "beta 0.2.1.3",
+  "version_name": "alpha 2.0.0.0",
   "description": "Enhance your HF Experience!",
   "options_ui": {
     "chrome_style": true,
@@ -29,11 +29,16 @@
     "default_popup": "assets/pages/new_options.html"
   },
   "background": {
+    "scripts": [
+      "assets/lib/hotreload/hot-reload.js"
+    ]
   },
   "content_scripts": [
     {
       "run_at": "document_end",
-      "matches": ["*://hackforums.net/*"],
+      "matches": [
+        "*://hackforums.net/*"
+      ],
       "js": [
         "assets/lib/jquery/jquery.min.js",
         "release/js/Global.js"

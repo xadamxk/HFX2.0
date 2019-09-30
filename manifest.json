@@ -30,7 +30,7 @@
   },
   "background": {
     "scripts": [
-      "assets/lib/hotreload/hot-reload.js"
+      "assets/dependencies/hot-reload.js"
     ]
   },
   "content_scripts": [

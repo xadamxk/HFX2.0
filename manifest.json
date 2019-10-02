@@ -46,6 +46,16 @@
       "css": [
         "assets/css/HFX.css"
       ]
+    },
+    {
+      "run_at": "document_end",
+      "matches": [
+        "*://hackforums.net/gamecp*"
+      ],
+      "js": [
+        "assets/lib/jquery/jquery.min.js",
+        "release/js/Game.js"
+      ]
     }
   ],
   "permissions": [

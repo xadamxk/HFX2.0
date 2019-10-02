@@ -11,6 +11,14 @@ gulp.task("build", [], function () {
     .pipe(concat("Global.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
+
+  gulp.src([
+    "src/modules/game/**.js",
+    "src/_core/modules/**.js"
+  ])
+    .pipe(concat("Game.js"))
+    .pipe(browserify())
+    .pipe(gulp.dest("./release/js/"));
 });
 
 gulp.task("libs", function () {
@@ -34,7 +42,7 @@ gulp.task("libs", function () {
 gulp.task("default", ["build"], function () {
 });
 
-gulp.task('watch', ['build'], function () {
+gulp.task("watch", ["build"], function () {
   watch("src/**/*.js", function () {
     gulp.start("build");
   });

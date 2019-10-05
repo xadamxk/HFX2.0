@@ -4,18 +4,13 @@ var concat = require("gulp-concat");
 var browserify = require("gulp-browserify");
 var watch = require("gulp-watch");
 gulp.task("build", [], function () {
-  gulp.src([
-    "src/modules/global/**.js",
-    "src/_core/modules/**.js"
-  ])
+  // "src/_core/modules/**.js"
+  gulp.src(["src/modules/global/**.js"])
     .pipe(concat("Global.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
 
-  gulp.src([
-    "src/modules/game/**.js",
-    "src/_core/modules/**.js"
-  ])
+  gulp.src(["src/modules/game/**.js"])
     .pipe(concat("Game.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
@@ -38,6 +33,8 @@ gulp.task("libs", function () {
   gulp.src("./node_modules/font-awesome/css/font-awesome.min.css")
     .pipe(gulp.dest("./assets/lib/fontawesome"));
 });
+
+// Hot Reload
 
 gulp.task("default", ["build"], function () {
 });

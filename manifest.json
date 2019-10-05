@@ -50,12 +50,22 @@
     {
       "run_at": "document_end",
       "matches": [
-        "*://hackforums.net/gamecp*"
+        "*://hackforums.net/gamecp.php*"
       ],
       "js": [
         "assets/lib/jquery/jquery.min.js",
         "assets/lib/moment/moment.min.js",
         "release/js/Game.js"
+      ]
+    },
+    {
+      "run_at": "document_end",
+      "matches": [
+        "*://hackforums.net/showthread.php?*"
+      ],
+      "js": [
+        "assets/lib/jquery/jquery.min.js",
+        "release/js/Threads.js"
       ]
     }
   ],

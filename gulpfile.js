@@ -5,13 +5,18 @@ var browserify = require("gulp-browserify");
 var watch = require("gulp-watch");
 gulp.task("build", [], function () {
   // "src/_core/modules/**.js"
-  gulp.src(["src/modules/global/**.js"])
+  gulp.src(["src/modules/global/**.js", "src/_core/modules/**.js"])
     .pipe(concat("Global.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
 
-  gulp.src(["src/modules/game/**.js"])
+  gulp.src(["src/modules/game/**.js", "src/_core/modules/**.js"])
     .pipe(concat("Game.js"))
+    .pipe(browserify())
+    .pipe(gulp.dest("./release/js/"));
+
+  gulp.src(["src/modules/threads/**.js", "src/_core/modules/**.js"])
+    .pipe(concat("Threads.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
 });

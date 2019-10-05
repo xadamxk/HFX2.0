@@ -1,16 +1,16 @@
 require("../../_core/HFX");
 class HideImages extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: "global",
       name: "Hides images",
-      default: 1,
+      default: 0,
       description: "Hides images",
       id: "hidesimages"
     });
   }
 
-  run () {
+  run() {
     $("img").hide();
   }
 };

@@ -54,6 +54,7 @@
       ],
       "js": [
         "assets/lib/jquery/jquery.min.js",
+        "assets/lib/moment/moment.min.js",
         "release/js/Game.js"
       ]
     }

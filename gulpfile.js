@@ -32,6 +32,10 @@ gulp.task("libs", function () {
   // Font awesome
   gulp.src("./node_modules/font-awesome/css/font-awesome.min.css")
     .pipe(gulp.dest("./assets/lib/fontawesome"));
+
+  // Moment js
+  gulp.src("./node_modules/moment/min/moment.min.js")
+    .pipe(gulp.dest("./assets/lib/moment"));
 });
 
 // Hot Reload

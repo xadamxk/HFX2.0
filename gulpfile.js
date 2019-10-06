@@ -1,8 +1,6 @@
 var gulp = require("gulp");
 var concat = require("gulp-concat");
-// var uglify = require("gulp-uglify");
 var browserify = require("gulp-browserify");
-var watch = require("gulp-watch");
 
 gulp.task("build", asyncComplete => {
   gulp.src(["src/modules/global/**.js", "src/_core/modules/**.js"])

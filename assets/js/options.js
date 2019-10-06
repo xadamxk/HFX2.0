@@ -48,6 +48,7 @@ $(document).ready(function () {
     setting.description = setting.description.replace(/(?:\r\n|\r|\n)/g, "<br />");
     var checked = Boolean(setting.enabled) === true ? "checked" : "";
     console.log(setting);
+    // TODO: Logic for more setting options (ie. textbox)
     $(`#${sectionName}`).find(".card").append(`
     <div class="d-flex justify-content-start">
       <div class="mr-auto p-2">${setting.name}</div>

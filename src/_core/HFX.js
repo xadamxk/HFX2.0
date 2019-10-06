@@ -1,4 +1,3 @@
-//global.$ = require("jquery");
 global.HFX = {
   Logger: require("./Logger"),
   Settings: require("./Settings"),

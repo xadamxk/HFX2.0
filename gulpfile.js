@@ -3,8 +3,8 @@ var concat = require("gulp-concat");
 // var uglify = require("gulp-uglify");
 var browserify = require("gulp-browserify");
 var watch = require("gulp-watch");
-gulp.task("build", () => {
-  // "src/_core/modules/**.js"
+
+gulp.task("build", asyncComplete => {
   gulp.src(["src/modules/global/**.js", "src/_core/modules/**.js"])
     .pipe(concat("Global.js"))
     .pipe(browserify())
@@ -19,6 +19,7 @@ gulp.task("build", () => {
     .pipe(concat("Threads.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
+  asyncComplete();
 });
 
 gulp.task("libs", asyncComplete => {
@@ -49,15 +50,12 @@ gulp.task("libs", asyncComplete => {
   asyncComplete();
 });
 
-gulp.task("watch", () => {
-  watch("src/**/*.js", function () {
-    gulp.start("build");
-  });
+gulp.task("watch", asyncComplete => {
+  gulp.watch("src/**/*.js", gulp.series("build"));
+  asyncComplete();
 });
 
-// gulp.task("default", ["build"], () => {});
-//
-// gulp.task("watch", ["build"], () => {
-// watch("src/**/*.js", function () {
-//   gulp.start("build");// });
-// });
+gulp.task("default", asyncComplete => {
+  gulp.series("build");
+  asyncComplete();
+});

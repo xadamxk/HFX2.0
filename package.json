@@ -5,7 +5,8 @@
   "main": "src/_core/HFX.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint ./src/**",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "config": "gulp libs"
   },
   "author": "",
   "license": "ISC",

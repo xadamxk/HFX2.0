@@ -3,7 +3,7 @@ var concat = require("gulp-concat");
 // var uglify = require("gulp-uglify");
 var browserify = require("gulp-browserify");
 var watch = require("gulp-watch");
-gulp.task("build", [], function () {
+gulp.task("build", () => {
   // "src/_core/modules/**.js"
   gulp.src(["src/modules/global/**.js", "src/_core/modules/**.js"])
     .pipe(concat("Global.js"))
@@ -21,7 +21,7 @@ gulp.task("build", [], function () {
     .pipe(gulp.dest("./release/js/"));
 });
 
-gulp.task("libs", function () {
+gulp.task("libs", () => {
   // jQuery
   gulp.src("./node_modules/jquery/dist/jquery.min.js")
     .pipe(gulp.dest("./assets/lib/jquery/"));
@@ -41,15 +41,19 @@ gulp.task("libs", function () {
   // Moment js
   gulp.src("./node_modules/moment/min/moment.min.js")
     .pipe(gulp.dest("./assets/lib/moment"));
+
+  // Hot Reload
 });
 
-// Hot Reload
-
-gulp.task("default", ["build"], function () {
-});
-
-gulp.task("watch", ["build"], function () {
+gulp.task("watch", () => {
   watch("src/**/*.js", function () {
     gulp.start("build");
   });
 });
+
+// gulp.task("default", ["build"], () => {});
+//
+// gulp.task("watch", ["build"], () => {
+// watch("src/**/*.js", function () {
+//   gulp.start("build");// });
+// });

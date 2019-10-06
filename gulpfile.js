@@ -21,7 +21,7 @@ gulp.task("build", () => {
     .pipe(gulp.dest("./release/js/"));
 });
 
-gulp.task("libs", () => {
+gulp.task("libs", asyncComplete => {
   // jQuery
   gulp.src("./node_modules/jquery/dist/jquery.min.js")
     .pipe(gulp.dest("./assets/lib/jquery/"));
@@ -43,6 +43,10 @@ gulp.task("libs", () => {
     .pipe(gulp.dest("./assets/lib/moment"));
 
   // Hot Reload
+  gulp.src("./node_modules/crx-hotreload/hot-reload.js")
+    .pipe(gulp.dest("./assets/lib/hotreload"));
+
+  asyncComplete();
 });
 
 gulp.task("watch", () => {

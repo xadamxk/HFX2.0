@@ -839,6 +839,11 @@ cross-spawn@^6.0.5:
     shebang-command "^1.2.0"
     which "^1.2.9"
 
+crx-hotreload@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/crx-hotreload/-/crx-hotreload-1.0.4.tgz#227b1a8aa2ddfc5c29075ad2ee3e3bc37f7a239b"
+  integrity sha512-3mJMMbjoLhHmhNubyIPKmgLvr9V6UZ/yKaZW1WKb2n7yHs1R10VVCAUgQ00amR6fTmM/aiEvZHx+jzhSSf0CGA==
+
 crypto-browserify@~1.0.9:
   version "1.0.9"
   resolved "https://registry.yarnpkg.com/crypto-browserify/-/crypto-browserify-1.0.9.tgz#cc5449685dfb85eb11c9828acc7cb87ab5bbfcc0"

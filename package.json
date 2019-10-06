@@ -12,6 +12,7 @@
   "dependencies": {
     "bootstrap": "^4.0.0",
     "browserify-resolutions": "^1.1.0",
+    "crx-hotreload": "^1.0.4",
     "font-awesome": "^4.7.0",
     "global": "^4.4.0",
     "jquery": "^3.3.1",

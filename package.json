@@ -6,8 +6,7 @@
   "scripts": {
     "lint": "./node_modules/.bin/eslint ./src/**",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "config": "yarn && yarn run gulplibs",
-    "gulplibs": "gulp libs"
+    "config": "yarn && ./node_modules/.bin/gulp libs"
   },
   "engines": {
     "node": ">=11.0",

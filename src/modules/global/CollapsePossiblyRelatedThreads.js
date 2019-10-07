@@ -1,17 +1,17 @@
 require("../../_core/HFX");
 class CollapsePossiblyRelatedThreads extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: "global",
       name: "Collapse Possibly Related Threads",
-      default: 1,
+      default: 0,
       description: "Automatically collapse 'Possibly Related Threads' results.\n\nClick the toggle image to view results",
       id: "collapsepossiblylrelatedthreads"
     });
   }
 
-  run () {
-    var collapseImages = {"collapse": chrome.extension.getURL("/assets/images/collapse_collapsed.gif"), "collapsed": chrome.extension.getURL("/assets/images/collapse_collapsed.gif")};
+  run() {
+    var collapseImages = { "collapse": chrome.extension.getURL("/assets/images/collapse_collapsed.gif"), "collapsed": chrome.extension.getURL("/assets/images/collapse_collapsed.gif") };
     var prtTitle = $("strong:contains(Possibly Related Threads...)");
     // If Table exists
     if (prtTitle.length > 0) {
@@ -28,7 +28,7 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
       });
     }
 
-    function togglePRTCollapseAttr (prtTableRows) {
+    function togglePRTCollapseAttr(prtTableRows) {
       // Not visible
       if (!prtTableRows.is(":visible")) {
         $("#relatedThreadsCollapse").attr("alt", "[-]").attr("title", "[-]").attr("src", collapseImages.collapse);

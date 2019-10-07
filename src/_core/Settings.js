@@ -1,10 +1,10 @@
 require("./HFX");
 var queue = [];
 class Settings {
-  constructor () {
+  constructor() {
     this.running = false;
   }
-  getFeatureSettings (section, key, defaultOpt, name, description, id, Feature, cb) {
+  getFeatureSettings(section, key, defaultOpt, name, description, id, Feature, cb) {
     chrome.storage.sync.get(section, function (items) {
       if (Object.keys(items).length === 0) {
         return cb(null, Feature);
@@ -18,12 +18,12 @@ class Settings {
     });
   }
 
-  create (section, key, defaultOpt, name, description, id) {
+  create(section, key, defaultOpt, name, description, id) {
     queue.push({ "section": section, "key": key, "defaultOpt": defaultOpt, "name": name, "description": description, "id": id });
     this.processQueue();
   }
 
-  processQueue () {
+  processQueue() {
     if (queue.length === 0 || this.running) {
       return false;
     }
@@ -37,7 +37,6 @@ class Settings {
     chrome.storage.sync.get(section, function (items) {
       var keys = Object.keys(items);
       var obj = {};
-      console.log(queue[0]);
       if (keys.length === 0) {
         obj[section] = {};
         obj[section][key] = {};
@@ -66,19 +65,19 @@ class Settings {
     });
   }
 
-  proceedQueue () {
+  proceedQueue() {
     this.running = false;
     queue.shift();
     this.processQueue();
   }
 
-  printSettings () {
+  printSettings() {
     chrome.storage.sync.get(null, function (items) {
       HFX.Logger.debug("Items: ", items);
     });
   }
 
-  exists (section, key, setting, cb) {
+  exists(section, key, setting, cb) {
     chrome.storage.sync.get(section, function (items) {
       if (setting === null) {
         return cb(Boolean(items[section][key]));
@@ -88,7 +87,7 @@ class Settings {
     });
   }
 
-  get (section, key, setting, cb) {
+  get(section, key, setting, cb) {
     chrome.storage.sync.get(section, function (items) {
       if (typeof items[section][key] === 'undefined' || typeof items[section][key][setting] === 'undefined') {
         return cb(null);
@@ -97,7 +96,7 @@ class Settings {
     });
   }
 
-  set (section, key, setting, value) {
+  set(section, key, setting, value) {
     chrome.storage.sync.get(section, function (items) {
       var obj = items;
       obj[section][key][setting] = value;
@@ -107,14 +106,14 @@ class Settings {
     });
   }
 
-  clear () {
+  clear() {
     chrome.storage.sync.clear(function () {
       HFX.Logger.log("Cleared storage");
     });
   }
 
   getTotal(cb) {
-    chrome.storage.sync.get(null, function(items) {
+    chrome.storage.sync.get(null, function (items) {
       return cb(Object.keys(items).length);
     });
   }

@@ -30,7 +30,7 @@
   },
   "background": {
     "scripts": [
-      "assets/dependencies/hot-reload.js"
+      "assets/lib/hotreload/hot-reload.js"
     ]
   },
   "content_scripts": [
@@ -45,6 +45,27 @@
       ],
       "css": [
         "assets/css/HFX.css"
+      ]
+    },
+    {
+      "run_at": "document_end",
+      "matches": [
+        "*://hackforums.net/gamecp.php*"
+      ],
+      "js": [
+        "assets/lib/jquery/jquery.min.js",
+        "assets/lib/moment/moment.min.js",
+        "release/js/Game.js"
+      ]
+    },
+    {
+      "run_at": "document_end",
+      "matches": [
+        "*://hackforums.net/showthread.php?*"
+      ],
+      "js": [
+        "assets/lib/jquery/jquery.min.js",
+        "release/js/Threads.js"
       ]
     }
   ],

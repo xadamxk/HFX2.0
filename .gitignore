@@ -1,3 +1,4 @@
 node_modules/
 release/
 assets/lib
+.DS_Store

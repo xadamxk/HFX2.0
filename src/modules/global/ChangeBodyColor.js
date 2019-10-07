@@ -4,7 +4,7 @@ class ChangeBodyColor extends HFX.Feature {
     super({
       section: "global",
       name: "Change Body Color",
-      default: 1,
+      default: 0,
       description: "Change color.",
       id: "changebodycolor"
     });

@@ -2,7 +2,7 @@ $(document).ready(function () {
   // Load version string
   $("#HFXVersion").text(chrome.runtime.getManifest().version);
 
-  function getSettings () {
+  function getSettings() {
     var deferred = $.Deferred(function () {
       $("#main").hide();
     });
@@ -28,13 +28,13 @@ $(document).ready(function () {
     createChangeHandlers();
   });
 
-  function addSectionToList (name) {
+  function addSectionToList(name) {
     var title = name.charAt(0).toUpperCase() + name.slice(1);
     var href = `#${name}`;
     $(".nav").append(`<li class="nav-item"><a class="nav-link" data-toggle="tab" href="${href}" role="tab">${title}</a></li>`);
   }
 
-  function buildSectionBase (name) {
+  function buildSectionBase(name) {
     $(".tab-content").append(`
       <div id="${name}" class="tab-pane fade">
         <h3>${capFirstLetter(name)}</h3>
@@ -44,10 +44,11 @@ $(document).ready(function () {
     `);
   }
 
-  function addSettingOptionToList (sectionName, setting) {
+  function addSettingOptionToList(sectionName, setting) {
     setting.description = setting.description.replace(/(?:\r\n|\r|\n)/g, "<br />");
     var checked = Boolean(setting.enabled) === true ? "checked" : "";
     console.log(setting);
+    // TODO: Logic for more setting options (ie. textbox)
     $(`#${sectionName}`).find(".card").append(`
     <div class="d-flex justify-content-start">
       <div class="mr-auto p-2">${setting.name}</div>
@@ -61,27 +62,28 @@ $(document).ready(function () {
     `);
   }
 
-  function capFirstLetter (something) {
-    return something.charAt(0).toUpperCase() + something.slice(1);
+  function capFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
   function createChangeHandlers() {
-    $("input[type=checkbox]").change(function() {
+    $("input[type=checkbox]").change(function () {
       var section = $(this).attr("id").split("-")[0];
       var id = $(this).attr("id").split("-")[1];
-      chrome.storage.sync.get(section, function(items) {
+      var checkbox = $(this);
+      chrome.storage.sync.get(section, function (items) {
         var obj = items;
-        Object.keys(obj.global).forEach(function(key, index) {
-          console.log(`key: `, key);
-          console.log(`index: `, index);
-          console.log(obj.global);
-          console.log(obj.global[key]);
-          if (obj.global[key]["id"] === id) {
-            obj.global[key]["enabled"] = $(this).prop("checked");
-            chrome.storage.sync.set(obj, function () {});
-          }
+        Object.keys(obj).forEach(function (settingsKey, settingsIndex) {
+          Object.keys(obj[settingsKey]).forEach(function (settingKey, settingIndex) {
+            console.log("key: ", settingKey);
+            console.log("index: ", settingIndex);
+            if (obj[settingsKey][settingKey]["id"] === id) {
+              obj[settingsKey][settingKey]["enabled"] = checkbox.prop("checked");
+              chrome.storage.sync.set(obj, function () { });
+            }
+          });
         });
-      })
+      });
     });
   }
 });

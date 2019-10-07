@@ -1,7 +1,7 @@
 {
-  "name": "hfx-rebase",
+  "name": "hfx",
   "version": "0.0.1",
-  "description": "",
+  "description": "Enhance your HF experience, a native browser extension.",
   "main": "src/_core/HFX.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint ./src/**",
@@ -10,9 +10,10 @@
   },
   "engines": {
     "node": ">=11.0",
-    "npm": ">=6.11"
+    "npm": ">=6.11.0",
+    "yarn": ">=1.13.0"
   },
-  "author": "",
+  "author": "xadamxk",
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^4.0.0",

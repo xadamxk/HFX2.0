@@ -32,7 +32,7 @@ class PMFromPost extends HFX.Feature {
       pmFromPostQuoteText = "[quote=\"" + usernameName + "\" pid=\"" + pmFromPostQuotePID + "\"]" + pmFromPostQuoteText.text().replace(/\t+/g, "").replace(/\n\s*\n/g, "\n") + "[/quote]";
       let newPMButton = $("<a>")
         .attr({
-          "title": "PM From Post",
+          "title": "HFX: PM From Post",
           "href": "javascript:void(0);",
           "onclick": "javascript:document.getElementById('HFXPMFromPost" + index + "').style.display = " +
             "(document.getElementById('HFXPMFromPost" + index + "').style.display == 'block') ? 'none' : 'block'",

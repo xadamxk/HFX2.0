@@ -31,8 +31,7 @@ class TrackingLinks extends HFX.Feature {
   }
 
   trackingTableLinks(table) {
-    table.find("tr").each(function (index) {
-      // var messageID;
+    table.find("tr").each(function () {
       if ($(this).find(".checkbox").attr("name") !== undefined) {
         $(this).find("td:eq(1)").html("<a href=\"https://hackforums.net/private.php?action=read&pmid=" +
           (parseInt($(this).find(".checkbox").attr("name").replace(/\D/g, "")) + 1) + "\">" +

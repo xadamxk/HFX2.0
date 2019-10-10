@@ -1,18 +1,19 @@
 {
-  "name": "hfx-rebase",
+  "name": "hfx",
   "version": "0.0.1",
-  "description": "",
+  "description": "Enhance your HF experience, a native browser extension.",
   "main": "src/_core/HFX.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint ./src/**",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "config": "gulp libs"
+    "config": "yarn && ./node_modules/.bin/gulp libs"
   },
   "engines": {
-    "node": ">=12.0",
-    "npm": ">=6.11"
+    "node": ">=11.0",
+    "npm": ">=6.11.0",
+    "yarn": ">=1.13.0"
   },
-  "author": "",
+  "author": "xadamxk",
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^4.0.0",

@@ -51,7 +51,7 @@ $(document).ready(function () {
     // TODO: Logic for more setting options (ie. textbox)
     $(`#${sectionName}`).find(".card").append(`
     <div class="d-flex justify-content-start">
-      <div class="mr-auto p-2">${setting.name}</div>
+      <div class="mr-auto p-2 section-name">${setting.name}</div>
       <div class="p-2">${setting.description}</div>
       <div class="mt-auto p-2">
         <div class="checkbox-slider--default">

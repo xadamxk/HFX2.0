@@ -2,8 +2,13 @@ class Logger {
   constructor () {
     this.debugMode = true;
   }
+
   error (message, ...opts) {
     console.error(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
+  }
+
+  warn (message, ...opts) {
+    console.warn(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
   }
 
   log (message, ...opts) {

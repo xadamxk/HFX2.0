@@ -47,7 +47,7 @@ $(document).ready(function () {
   function addSettingOptionToList(sectionName, setting) {
     setting.description = setting.description.replace(/(?:\r\n|\r|\n)/g, "<br />");
     var checked = Boolean(setting.enabled) === true ? "checked" : "";
-    console.log(setting);
+    // console.log(setting);
     // TODO: Logic for more setting options (ie. textbox)
     $(`#${sectionName}`).find(".card").append(`
     <div class="d-flex justify-content-start">

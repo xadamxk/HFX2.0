@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class HideBlockedPosts extends HFX.Feature {
   constructor() {
     super({
-      section: "threads",
+      section: HFX.Section.Threads,
       name: "Hide Blocked Posts",
       default: 0,
       description: "Automatically hides blocked user's posts.",

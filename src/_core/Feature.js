@@ -14,20 +14,22 @@ module.exports = class Feature {
       opts.subsection = "general";
     }
 
-    HFX.Settings.getFeatureSettings(opts.section, childClass, opts.default, opts.name, opts.description, opts.id, this, (settings, Feature) => {
+    HFX.Settings.getFeatureSettings(opts.section.name, childClass, opts.default, opts.name, opts.description, opts.id, this, (settings, Feature) => {
       if (!settings) {
-        HFX.Settings.create(opts.section, childClass, opts.default, opts.name, opts.description, opts.id, () => {
-          if (opts.default) {
+        HFX.Settings.create(opts.section.name, childClass, opts.default, opts.name, opts.description, opts.id, () => {
+          HFX.Logger.debug(`${childClass} loaded.`);
+          if (opts.default && opts.section.runnable) {
             Feature.run(opts.default);
+            HFX.Logger.debug(`${childClass} running.`);
           }
         });
       } else {
-        if (settings.enabled) {
+        HFX.Logger.debug(`${childClass} loaded.`);
+        if (settings.enabled && opts.section.runnable) {
           Feature.run(settings.default);
+          HFX.Logger.debug(`${childClass} running.`);
         }
       }
     });
-
-    HFX.Logger.debug(`${childClass} loaded.`);
   }
 };

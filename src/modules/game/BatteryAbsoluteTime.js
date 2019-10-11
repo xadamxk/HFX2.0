@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class BatteryAbsoluteTime extends HFX.Feature {
   constructor() {
     super({
-      section: "game",
+      section: HFX.Section.Game,
       name: "Battery Absolute Time",
       default: 1,
       description: "Show absolute timestamp for battery full charge.",

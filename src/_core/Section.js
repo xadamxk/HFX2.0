@@ -1,8 +1,8 @@
 class Section {
-  constructor(name, location) {
+  constructor(name, ...locations) {
     this.name = name;
-    this.location = location === undefined ? "/" : location;
-    this.runnable = document.location.pathname.startsWith(this.location);
+    this.locations = locations.length === 0 ? ["/"] : locations;
+    this.runnable = this.locations.some((location) => document.location.pathname.startsWith(location));
   }
 };
 

@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class ShortcutLogs extends HFX.Feature {
   constructor() {
     super({
-      section: "game",
+      section: HFX.Section.Game,
       name: "Shortcut: Logs",
       default: 1,
       description: "Show logs shortcut in game header",

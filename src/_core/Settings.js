@@ -1,4 +1,3 @@
-require("./HFX");
 const queue = {};
 class Settings {
   getFeatureSettings (section, key, defaultOpt, name, description, id, Feature, cb) {

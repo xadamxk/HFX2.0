@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class ShortcutLeaderboard extends HFX.Feature {
   constructor() {
     super({
-      section: "game",
+      section: HFX.Section.Game,
       name: "Shortcut: Leaderboard",
       default: 1,
       description: "Show leaderboard shortcut in game header",

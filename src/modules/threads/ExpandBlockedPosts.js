@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class ExpandBlockedPosts extends HFX.Feature {
   constructor() {
     super({
-      section: "threads",
+      section: HFX.Section.Threads,
       name: "Expand Blocked Posts",
       default: 1,
       description: "Automatically expands blocked user's posts.",

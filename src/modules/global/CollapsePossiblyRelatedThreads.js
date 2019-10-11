@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class CollapsePossiblyRelatedThreads extends HFX.Feature {
   constructor() {
     super({
-      section: "global",
+      section: HFX.Section.Global,
       name: "Collapse Possibly Related Threads",
       default: 0,
       description: "Automatically collapse 'Possibly Related Threads' results.\n\nClick the toggle image to view results",

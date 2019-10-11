@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class PMFromPost extends HFX.Feature {
   constructor() {
     super({
-      section: "threads",
+      section: HFX.Section.Threads,
       name: "PM From Post",
       default: 1,
       description: "Allows you to PM members from their post.",

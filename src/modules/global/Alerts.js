@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class Alerts extends HFX.Feature {
   constructor () {
     super({
-      section: "global",
+      section: HFX.Section.Global,
       name: "HFX Alerts",
       default: 1,
       description: "Alert system for new features and changes",

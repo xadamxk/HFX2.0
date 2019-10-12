@@ -3,6 +3,11 @@ var concat = require("gulp-concat");
 var browserify = require("gulp-browserify");
 
 gulp.task("build", asyncComplete => {
+  gulp.src(["src/_core/HFX.js"])
+    .pipe(concat("HFX.js"))
+    .pipe(browserify())
+    .pipe(gulp.dest("./release/js/"));
+
   gulp.src(["src/modules/global/**.js", "src/_core/modules/**.js"])
     .pipe(concat("Global.js"))
     .pipe(browserify())

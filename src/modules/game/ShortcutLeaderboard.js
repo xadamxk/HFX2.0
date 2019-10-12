@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class ShortcutLeaderboard extends HFX.Feature {
   constructor() {
     super({

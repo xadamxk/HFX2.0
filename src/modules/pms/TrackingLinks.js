@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class TrackingLinks extends HFX.Feature {
   constructor() {
     super({

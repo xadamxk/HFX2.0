@@ -2,7 +2,7 @@ const queue = {};
 class Settings {
   // TODO: Update all attributes so if an extension update moves a feature, it will update
   getFeatureSettings(section, key, defaultOpt, name, description, id, author, Feature, cb) {
-    chrome.storage.sync.get(section, (items) => {
+    chrome.storage.local.get(section, (items) => {
       if (Object.keys(items).length === 0) {
         return cb(null, Feature);
       }
@@ -45,7 +45,7 @@ class Settings {
     queue[section].running = true;
     const purpose = queue[section].items[0].purpose;
 
-    chrome.storage.sync.get(section, (items) => {
+    chrome.storage.local.get(section, (items) => {
       if (purpose === "create") {
         const key = queue[section].items[0].key;
         const defaultOpt = queue[section].items[0].defaultOpt;
@@ -64,7 +64,7 @@ class Settings {
           items[section][key]["description"] = description;
           items[section][key]["id"] = id;
           items[section][key]["author"] = author;
-          chrome.storage.sync.set(items, () => {
+          chrome.storage.local.set(items, () => {
             HFX.Logger.debug(`Added ${key} AND ${section}`);
             HFX.Settings.proceedQueue(section);
             cb();
@@ -77,7 +77,7 @@ class Settings {
           items[section][key]["description"] = description;
           items[section][key]["id"] = id;
           items[section][key]["author"] = author;
-          chrome.storage.sync.set(items, () => {
+          chrome.storage.local.set(items, () => {
             HFX.Logger.debug(`Added ${key} in ${section}`);
             HFX.Settings.proceedQueue(section);
             cb();
@@ -89,7 +89,7 @@ class Settings {
         const value = queue[section].items[0].value;
 
         items[section][key][setting] = value;
-        chrome.storage.sync.set(items, () => {
+        chrome.storage.local.set(items, () => {
           HFX.Logger.debug(`Updated ${key}:${setting}`);
           HFX.Settings.proceedQueue(section);
         });
@@ -104,41 +104,41 @@ class Settings {
   }
 
   printSettings() {
-    chrome.storage.sync.get(null, (items) => {
+    chrome.storage.local.get(null, (items) => {
       HFX.Logger.debug("Items: ", items);
     });
   }
 
   exists(section, key, setting, cb) {
-    chrome.storage.sync.get(section, (items) => {
+    chrome.storage.local.get(section, (items) => {
       return cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting));
     });
   }
 
   get(section, key, setting, cb) {
-    chrome.storage.sync.get(section, (items) => {
+    chrome.storage.local.get(section, (items) => {
       return cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting) ? items[section][key][setting] : null);
     });
   }
 
   set(section, key, setting, value) {
     HFX.Logger.warn("Unsafe storage updating.");
-    chrome.storage.sync.get(section, (items) => {
+    chrome.storage.local.get(section, (items) => {
       items[section][key][setting] = value;
-      chrome.storage.sync.set(items, () => {
+      chrome.storage.local.set(items, () => {
         HFX.Logger.debug(`Updated ${key}:${setting}`);
       });
     });
   }
 
   clear() {
-    chrome.storage.sync.clear(() => {
+    chrome.storage.local.clear(() => {
       HFX.Logger.log("Cleared storage");
     });
   }
 
   getTotal(cb) {
-    chrome.storage.sync.get(null, (items) => {
+    chrome.storage.local.get(null, (items) => {
       return cb(Object.keys(items).length);
     });
   }

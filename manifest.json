@@ -45,8 +45,7 @@
         "release/js/Global.js",
         "release/js/Game.js",
         "release/js/Threads.js",
-        "release/js/PMs.js",
-        "release/js/Temp.js"
+        "release/js/PMs.js"
       ],
       "css": [
         "assets/css/HFX.css"

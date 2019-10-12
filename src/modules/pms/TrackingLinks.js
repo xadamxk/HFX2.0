@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class TrackingLinks extends HFX.Feature {
   constructor() {
     super({
-      section: "PMs",
+      section: HFX.Section.PMs,
       name: "Tracking Links",
       default: 1,
       description: "Turns all messages in 'Message Tracking' to clickable hyperlinks.",

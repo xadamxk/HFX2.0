@@ -23,11 +23,6 @@ gulp.task("build", asyncComplete => {
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
 
-  gulp.src(["src/modules/temp/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("Temp.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
-
   asyncComplete();
 });
 

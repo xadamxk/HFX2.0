@@ -13,7 +13,7 @@
   "description": "Enhance your HF Experience!",
   "options_ui": {
     "chrome_style": true,
-    "page": "assets/pages/new_options.html"
+    "page": "assets/pages/options.html"
   },
   "incognito": "spanning",
   "author": "xadamxk",
@@ -26,7 +26,7 @@
       "128": "assets/images/icon128.png"
     },
     "default_title": "HFX Settings",
-    "default_popup": "assets/pages/new_options.html"
+    "default_popup": "assets/pages/options.html"
   },
   "background": {
     "scripts": [

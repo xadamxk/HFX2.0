@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class BatteryAbsoluteTime extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Game,
       name: "Battery Absolute Time",
@@ -10,7 +10,7 @@ class BatteryAbsoluteTime extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     if ($("#game_content_currentpage").length > 0) {
       var extractedRechargeTime = (
         $("#game_content_currentpage").find(".tinytext > span").attr("title")

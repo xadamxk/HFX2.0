@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class TrackingLinks extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.PMs,
       name: "Tracking Links",
@@ -10,7 +10,7 @@ class TrackingLinks extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     if (this.isMessageTrackingPage()) {
       // Read tbody
       var readTable = this.getTrackingTableBody("Read Messages");
@@ -22,16 +22,16 @@ class TrackingLinks extends HFX.Feature {
     }
   }
 
-  isMessageTrackingPage () {
+  isMessageTrackingPage() {
     return $(".breadcrumb").find("a:contains('Message Tracking')").length > 0;
   }
 
-  getTrackingTableBody (string) {
+  getTrackingTableBody(string) {
     return $("#content").find("strong:contains('" + string + "')").parent().parent().parent();
   }
 
-  trackingTableLinks (table) {
-    table.find("tr").each(function () {
+  trackingTableLinks(table) {
+    table.find("tr").each(function() {
       if ($(this).find(".checkbox").attr("name") !== undefined) {
         $(this).find("td:eq(1)").html("<a href=\"https://hackforums.net/private.php?action=read&pmid=" +
           (parseInt($(this).find(".checkbox").attr("name").replace(/\D/g, "")) + 1) + "\">" +

@@ -1,5 +1,5 @@
 module.exports = class Feature {
-  constructor (opts) {
+  constructor(opts) {
     const required = ["section", "name", "default", "description", "id"];
     const childClass = this.constructor.name;
 

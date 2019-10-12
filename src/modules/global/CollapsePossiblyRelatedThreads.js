@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class CollapsePossiblyRelatedThreads extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Global,
       name: "Collapse Possibly Related Threads",
@@ -10,7 +10,7 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     var collapseImages = { "collapse": chrome.extension.getURL("/assets/images/collapse_collapsed.gif"), "collapsed": chrome.extension.getURL("/assets/images/collapse_collapsed.gif") };
     var prtTitle = $("strong:contains(Possibly Related Threads...)");
     // If Table exists
@@ -21,14 +21,14 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
       prtTitle.parent().append($("<div>").addClass("expcolimage")
         .append(`<img id='relatedThreadsCollapse' alt='[+]' title='[+]' style='cursor: pointer;' src='${collapseImages.collapse}' />`));
 
-      $("#relatedThreadsCollapse").on("click", function () {
+      $("#relatedThreadsCollapse").on("click", function() {
         prtTableRows.toggle();
 
         togglePRTCollapseAttr(prtTableRows);
       });
     }
 
-    function togglePRTCollapseAttr (prtTableRows) {
+    function togglePRTCollapseAttr(prtTableRows) {
       // Not visible
       if (!prtTableRows.is(":visible")) {
         $("#relatedThreadsCollapse").attr("alt", "[-]").attr("title", "[-]").attr("src", collapseImages.collapse);

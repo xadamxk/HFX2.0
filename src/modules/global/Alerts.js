@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class Alerts extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Global,
       name: "HFX Alerts",
@@ -10,7 +10,7 @@ class Alerts extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     var showAlert = this.showAlert;
     HFX.Settings.get("global", "Alerts", "lastchecked", (lastChecked) => {
       if (lastChecked !== null) {
@@ -26,7 +26,7 @@ class Alerts extends HFX.Feature {
         }
       }
 
-      $.getJSON("https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json", function (res) {
+      $.getJSON("https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json", function(res) {
         HFX.Settings.update("global", "Alerts", "lastchecked", Number(new Date()));
 
         HFX.Settings.get("global", "Alerts", "current_alert", (currentAlert) => {
@@ -40,7 +40,7 @@ class Alerts extends HFX.Feature {
     });
   }
 
-  showAlert (alert) {
+  showAlert(alert) {
     $("#content").prepend($("<div>").addClass("HFXAlert").attr("id", "HFXAlert")
       .append($("<div>").addClass("float_right").attr("id", "DismissHFXAlert")
         .append($("<a>").attr("href", "javascript:void(0);")
@@ -48,7 +48,7 @@ class Alerts extends HFX.Feature {
       .append($("<div>").append($("<b>").append(alert.AlertValue)))
     );
 
-    $("#DismissHFXAlert").click(function () {
+    $("#DismissHFXAlert").click(function() {
       $("#HFXAlert").fadeOut("slow");
       alert.hidden = true;
       HFX.Settings.set("global", "Alerts", "current_alert", alert);

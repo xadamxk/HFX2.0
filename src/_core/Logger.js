@@ -1,21 +1,21 @@
 class Logger {
-  constructor () {
+  constructor() {
     this.debugMode = true;
   }
 
-  error (message, ...opts) {
+  error(message, ...opts) {
     console.error(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
   }
 
-  warn (message, ...opts) {
+  warn(message, ...opts) {
     console.warn(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
   }
 
-  log (message, ...opts) {
+  log(message, ...opts) {
     console.log(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
   }
 
-  debug (message, ...opts) {
+  debug(message, ...opts) {
     if (this.debugMode) {
       console.log(`[HFX] DEBUG: ${message}`, (opts.length > 0 ? opts : ""));
     }

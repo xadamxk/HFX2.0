@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class ExpandBlockedPosts extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Threads,
       name: "Expand Blocked Posts",
@@ -10,11 +10,11 @@ class ExpandBlockedPosts extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     if ($("a[onclick*='showIgnoredPost']").length >= 1) {
       // Load posts
       var posts = $("#posts");
-      $("a[onclick*='showIgnoredPost']").each(function (index) {
+      $("a[onclick*='showIgnoredPost']").each(function(index) {
         // Hide Post
         this.click();
 

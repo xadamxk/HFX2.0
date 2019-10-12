@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class MedalOfHonorTracker extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Game,
       name: "Metal of Honor Tracker",
@@ -14,7 +14,7 @@ class MedalOfHonorTracker extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     if ($("#progress-bar-percentage").length > 0) {
       var goal = 250000;
       // Get current level
@@ -61,15 +61,15 @@ class MedalOfHonorTracker extends HFX.Feature {
       $("#myProgressBar").parent().find(".tinytext").text(this.numberWithCommas(totalXP) + " / " + this.numberWithCommas(goal) + " xp");
     }
   }
-  determineLevelXP (level) {
+  determineLevelXP(level) {
     return Math.pow(level, 2) * 100;
   }
 
-  numberWithCommas (x) {
+  numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
-  getWholePercent (percentFor, percentOf) {
+  getWholePercent(percentFor, percentOf) {
     return Math.floor(percentFor / percentOf * 100);
   }
 };

@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class HideBlockedPosts extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Threads,
       name: "Hide Blocked Posts",
@@ -10,9 +10,9 @@ class HideBlockedPosts extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     if ($("a[onclick*='showIgnoredPost']").length >= 1) {
-      $("a[onclick*='showIgnoredPost']").each(function () {
+      $("a[onclick*='showIgnoredPost']").each(function() {
         // Remove Ignore Table
         $(this).parent().closest(".ignored_post").remove();
       });

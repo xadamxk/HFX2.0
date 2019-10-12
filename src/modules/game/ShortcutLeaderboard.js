@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class ShortcutLeaderboard extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Game,
       name: "Shortcut: Leaderboard",
@@ -10,7 +10,7 @@ class ShortcutLeaderboard extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     if ($(".game-top-right-icons").length > 0) {
       $(".game-top-right-icons")
         .prepend($("<a>").attr("href", "gamecp.php?action=leaderboard&type=1")
@@ -21,9 +21,9 @@ class ShortcutLeaderboard extends HFX.Feature {
               "font-size": "24px",
               "color": "#ababab"
             }).hover(
-              function () {
+              function() {
                 $(this).css({ "color": "#4d2f5d" });
-              }, function () {
+              }, function() {
                 $(this).css({ "color": "#ababab" });
               })
           )

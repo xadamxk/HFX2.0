@@ -1,5 +1,5 @@
 class Section {
-  constructor (name, ...locations) {
+  constructor(name, ...locations) {
     this.name = name;
     this.locations = locations.length === 0 ? ["/"] : locations;
     this.runnable = this.locations.some((location) => document.location.pathname.startsWith(location));
@@ -7,25 +7,25 @@ class Section {
 };
 
 class Game extends Section {
-  constructor () {
+  constructor() {
     super("game", "/gamecp.php");
   }
 };
 
 class Global extends Section {
-  constructor () {
+  constructor() {
     super("global", "/");
   }
 };
 
 class Threads extends Section {
-  constructor () {
+  constructor() {
     super("threads", "/showthread.php");
   }
 };
 
 class PMs extends Section {
-  constructor () {
+  constructor() {
     super("pms", "/private.php");
   }
 }

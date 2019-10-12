@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class PMFromPost extends HFX.Feature {
-  constructor () {
+  constructor() {
     super({
       section: HFX.Section.Threads,
       name: "PM From Post",
@@ -10,9 +10,9 @@ class PMFromPost extends HFX.Feature {
     });
   }
 
-  run () {
+  run() {
     let threadTitle = $(".breadcrumb").find("a").last().text().substring(0, 50);
-    $(".post").each(function (index) {
+    $(".post").each(function(index) {
       let pmFromPostQuoteText = "";
       let postLink = "";
       let pmFromPostQuotePID = "";
@@ -21,7 +21,7 @@ class PMFromPost extends HFX.Feature {
       // let usernameUID = $(this).find(".author_information > strong > span > a").attr('href').replace(/\D/g, '');
       let usernameName = $(this).find(".author_information > strong > span > a").text();
       let myPostKey = document.getElementsByTagName("head")[0].innerHTML.split("my_post_key = \"")[1].split("\";")[0];
-      $(postIDSelector).each(function (index) {
+      $(postIDSelector).each(function(index) {
         pmFromPostQuotePID = $(this).attr("href").substring($(this).attr("href").indexOf("#pid") + 4);
         postLink = $(this).attr("href");
       });
@@ -77,7 +77,7 @@ class PMFromPost extends HFX.Feature {
       $("#pmContainerRow" + index).append("<div>");
       $("#pmContainerRow" + index + " > div").append(finalform);
       // Event Listener on send
-      $(".sendQuickPM").click(function () {
+      $(".sendQuickPM").click(function() {
         $("#pmContainerRow" + index).hide();
       });
     });

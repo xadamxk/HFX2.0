@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class ShortcutLogs extends HFX.Feature {
-  constructor() {
+  constructor () {
     super({
       section: HFX.Section.Game,
       name: "Shortcut: Logs",
@@ -10,7 +10,7 @@ class ShortcutLogs extends HFX.Feature {
     });
   }
 
-  run() {
+  run () {
     if ($(".game-top-right-icons").length > 0) {
       $(".game-top-right-icons")
         .prepend($("<a>").attr("href", "gamecp.php?action=logs")

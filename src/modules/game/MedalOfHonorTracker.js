@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class MedalOfHonorTracker extends HFX.Feature {
-  constructor() {
+  constructor () {
     super({
       section: HFX.Section.Game,
       name: "Metal of Honor Tracker",
@@ -14,11 +14,11 @@ class MedalOfHonorTracker extends HFX.Feature {
     });
   }
 
-  run() {
+  run () {
     if ($("#progress-bar-percentage").length > 0) {
       var goal = 250000;
       // Get current level
-      var currentlevel = $("#game_content_currentpage > tr:nth-child(2) > td > div.gtable > div:nth-child(2) > div.gtd.tcenter").text().replace('Level: ', '');
+      var currentlevel = $("#game_content_currentpage > tr:nth-child(2) > td > div.gtable > div:nth-child(2) > div.gtd.tcenter").text().replace("Level: ", "");
 
       // Exracts the current XP for the level and removes everything after the space
       var currentlevelXP = $("#game_content_currentpage > tr:nth-child(2) > td > div.game-profile-player.gboxshadow > div:nth-child(2) > div:nth-child(2) > span").text()
@@ -61,15 +61,15 @@ class MedalOfHonorTracker extends HFX.Feature {
       $("#myProgressBar").parent().find(".tinytext").text(this.numberWithCommas(totalXP) + " / " + this.numberWithCommas(goal) + " xp");
     }
   }
-  determineLevelXP(level) {
+  determineLevelXP (level) {
     return Math.pow(level, 2) * 100;
   }
 
-  numberWithCommas(x) {
+  numberWithCommas (x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
-  getWholePercent(percentFor, percentOf) {
+  getWholePercent (percentFor, percentOf) {
     return Math.floor(percentFor / percentOf * 100);
   }
 };

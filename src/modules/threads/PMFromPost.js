@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class PMFromPost extends HFX.Feature {
-  constructor() {
+  constructor () {
     super({
       section: HFX.Section.Threads,
       name: "PM From Post",
@@ -10,7 +10,7 @@ class PMFromPost extends HFX.Feature {
     });
   }
 
-  run() {
+  run () {
     let threadTitle = $(".breadcrumb").find("a").last().text().substring(0, 50);
     $(".post").each(function (index) {
       let pmFromPostQuoteText = "";

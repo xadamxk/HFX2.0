@@ -1,6 +1,6 @@
 require("../../_core/HFX");
 class Alerts extends HFX.Feature {
-  constructor() {
+  constructor () {
     super({
       section: HFX.Section.Global,
       name: "HFX Alerts",
@@ -10,7 +10,7 @@ class Alerts extends HFX.Feature {
     });
   }
 
-  run() {
+  run () {
     var showAlert = this.showAlert;
     HFX.Settings.get("global", "Alerts", "lastchecked", (lastChecked) => {
       if (lastChecked !== null) {
@@ -40,7 +40,7 @@ class Alerts extends HFX.Feature {
     });
   }
 
-  showAlert(alert) {
+  showAlert (alert) {
     $("#content").prepend($("<div>").addClass("HFXAlert").attr("id", "HFXAlert")
       .append($("<div>").addClass("float_right").attr("id", "DismissHFXAlert")
         .append($("<a>").attr("href", "javascript:void(0);")

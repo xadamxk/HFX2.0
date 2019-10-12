@@ -1,6 +1,10 @@
 class Logger {
   constructor () {
-    this.debugMode = true;
+    this.debugMode = !("update_url" in chrome.runtime.getManifest());
+  }
+
+  toggleDebug () {
+    this.debugMode = !this.debugMode;
   }
 
   error (message, ...opts) {

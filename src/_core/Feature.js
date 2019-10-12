@@ -1,5 +1,5 @@
 module.exports = class Feature {
-  constructor (opts) {
+  constructor(opts) {
     const required = ["section", "name", "default", "description", "id"];
     const childClass = this.constructor.name;
 
@@ -14,9 +14,9 @@ module.exports = class Feature {
       opts.subsection = "general";
     }
 
-    HFX.Settings.getFeatureSettings(opts.section.name, childClass, opts.default, opts.name, opts.description, opts.id, this, (settings, Feature) => {
+    HFX.Settings.getFeatureSettings(opts.section.name, childClass, opts.default, opts.name, opts.description, opts.id, opts.author, this, (settings, Feature) => {
       if (!settings) {
-        HFX.Settings.create(opts.section.name, childClass, opts.default, opts.name, opts.description, opts.id, () => {
+        HFX.Settings.create(opts.section.name, childClass, opts.default, opts.name, opts.description, opts.id, opts.author, () => {
           HFX.Logger.debug(`${childClass} loaded.`);
           if (opts.default && opts.section.runnable) {
             Feature.run(opts.default);

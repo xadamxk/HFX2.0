@@ -77,6 +77,10 @@ body{
     border-radius: 10px;
 }
 
+.section-name{
+  font-weight: 700;
+}
+
 #hfAvatarImage{
     width: 90px;
     height: 90px;

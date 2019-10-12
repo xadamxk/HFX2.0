@@ -12,7 +12,7 @@ class HideBlockedPosts extends HFX.Feature {
 
   run() {
     if ($("a[onclick*='showIgnoredPost']").length >= 1) {
-      $("a[onclick*='showIgnoredPost']").each(function () {
+      $("a[onclick*='showIgnoredPost']").each(function() {
         // Remove Ignore Table
         $(this).parent().closest(".ignored_post").remove();
       });

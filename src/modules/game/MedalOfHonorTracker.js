@@ -6,7 +6,11 @@ class MedalOfHonorTracker extends HFX.Feature {
       name: "Metal of Honor Tracker",
       default: 1,
       description: "Show progress bar toward level 50.",
-      id: "medalofhonortracker"
+      id: "medalofhonortracker",
+      author: {
+        name: "+mK",
+        profile: "https://hackforums.net/member.php?action=profile&uid=585389"
+      }
     });
   }
 
@@ -14,7 +18,7 @@ class MedalOfHonorTracker extends HFX.Feature {
     if ($("#progress-bar-percentage").length > 0) {
       var goal = 250000;
       // Get current level
-      var currentlevel = $("#game_content_currentpage > tr:nth-child(2) > td > div.gtable > div:nth-child(2) > div.gtd.tcenter").text().replace('Level: ', '');
+      var currentlevel = $("#game_content_currentpage > tr:nth-child(2) > td > div.gtable > div:nth-child(2) > div.gtd.tcenter").text().replace("Level: ", "");
 
       // Exracts the current XP for the level and removes everything after the space
       var currentlevelXP = $("#game_content_currentpage > tr:nth-child(2) > td > div.game-profile-player.gboxshadow > div:nth-child(2) > div:nth-child(2) > span").text()

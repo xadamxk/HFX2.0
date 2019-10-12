@@ -1,12 +1,12 @@
 class Storage {
-  constructor () {
+  constructor() {
     this.timeout = undefined;
     this.queuedChanges = {};
     this.syncDelay = 3000;
     this.initializeLocal(() => this.keepSynced());
   };
 
-  initializeLocal (cb) {
+  initializeLocal(cb) {
     chrome.storage.sync.get(null, (items) => {
       chrome.storage.local.set(items, () => {
         if (chrome.runtime.lastError) {
@@ -18,7 +18,7 @@ class Storage {
     });
   };
 
-  keepSynced () {
+  keepSynced() {
     if (chrome.storage.onChanged.hasListeners()) {
       HFX.Logger.warn("Potentially browserifying the Storage module in multiple locations");
       return;
@@ -49,7 +49,7 @@ class Storage {
     });
   };
 
-  commitChanges (area, storage, changes) {
+  commitChanges(area, storage, changes) {
     HFX.Logger.debug(`Committing changes to ${area}`);
     const items = {};
 

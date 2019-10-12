@@ -53,17 +53,26 @@ $(document).ready(function () {
     const checked = Boolean(setting.enabled) === true ? "checked" : "";
     setting.description = setting.description.replace(/(?:\r?\n)/g, "<br />");
 
+    const author = setting.author
+      ? `<br /><br /><div>Author: 
+      <a href="${setting.author.profile}" target="_blank">${setting.author.name}</a>
+      </div>`
+      : "";
     // TODO: Logic for more setting options (ie. textbox)
     $(`#${sectionName}`).find(".card").append(`
     <div class="d-flex justify-content-start">
-      <div class="mr-auto p-2">${setting.name}</div>
-      <div class="p-2">${setting.description}</div>
+      <div class="mr-auto p-2 section-name">${setting.name}</div>
+      <div class="p-2">
+      ${setting.description}
+      ${author}
+      </div>
       <div class="mt-auto p-2">
         <div class="checkbox-slider--default">
           <label><input type="checkbox" data-section="${sectionName}" data-setting="${setting.id}" ${checked}><span></span><label>
         </div>
       </div>
     </div>
+    <hr />
     `);
   }
 

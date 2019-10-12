@@ -7,21 +7,32 @@ class Section {
 };
 
 class Game extends Section {
-  constructor () {
+  constructor() {
     super("game", "/gamecp.php");
   }
 };
 
 class Global extends Section {
-  constructor () {
+  constructor() {
     super("global", "/");
   }
 };
 
 class Threads extends Section {
-  constructor () {
+  constructor() {
     super("threads", "/showthread.php");
   }
 };
 
-module.exports = {"Game": new Game(), "Global": new Global(), "Threads": new Threads()};
+class PMs extends Section {
+  constructor() {
+    super("pms", "/private.php");
+  }
+}
+
+module.exports = {
+  "Game": new Game(),
+  "Global": new Global(),
+  "Threads": new Threads(),
+  "PMs": new PMs()
+};

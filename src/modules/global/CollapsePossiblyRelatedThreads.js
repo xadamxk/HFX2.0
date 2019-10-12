@@ -20,7 +20,7 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
       prtTitle.parent().append($("<div>").addClass("expcolimage")
         .append(`<img id='relatedThreadsCollapse' alt='[+]' title='[+]' style='cursor: pointer;' src='${collapseImages.collapse}' />`));
 
-      $("#relatedThreadsCollapse").on("click", function () {
+      $("#relatedThreadsCollapse").on("click", function() {
         prtTableRows.toggle();
 
         togglePRTCollapseAttr(prtTableRows);

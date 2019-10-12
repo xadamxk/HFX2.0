@@ -22,6 +22,12 @@ gulp.task("build", asyncComplete => {
     .pipe(concat("Threads.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
+
+  gulp.src(["src/modules/pms/**.js", "src/_core/modules/**.js"])
+    .pipe(concat("PMs.js"))
+    .pipe(browserify())
+    .pipe(gulp.dest("./release/js/"));
+
   asyncComplete();
 });
 

@@ -1,9 +1,9 @@
 class Util {
-  clearStorage () {
+  clearStorage() {
     HFX.Settings.clear();
   }
 
-  hasOwnPropertyStructure (object, ...properties) {
+  hasOwnPropertyStructure(object, ...properties) {
     for (const property of properties) {
       if (property === null) {
         return true;

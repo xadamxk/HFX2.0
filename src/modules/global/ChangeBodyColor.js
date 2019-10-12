@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class ChangeBodyColor extends HFX.Feature {
   constructor() {
     super({

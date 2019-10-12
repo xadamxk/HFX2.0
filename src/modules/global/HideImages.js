@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class HideImages extends HFX.Feature {
   constructor() {
     super({

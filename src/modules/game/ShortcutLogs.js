@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class ShortcutLogs extends HFX.Feature {
   constructor() {
     super({

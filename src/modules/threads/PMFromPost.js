@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class PMFromPost extends HFX.Feature {
   constructor() {
     super({

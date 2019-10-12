@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class BatteryAbsoluteTime extends HFX.Feature {
   constructor() {
     super({

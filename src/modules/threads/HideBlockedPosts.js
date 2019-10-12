@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class HideBlockedPosts extends HFX.Feature {
   constructor() {
     super({

@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class BatteryPercent extends HFX.Feature {
   constructor() {
     super({

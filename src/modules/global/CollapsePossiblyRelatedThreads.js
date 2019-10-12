@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class CollapsePossiblyRelatedThreads extends HFX.Feature {
   constructor() {
     super({

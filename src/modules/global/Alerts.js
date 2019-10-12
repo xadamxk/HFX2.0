@@ -1,4 +1,3 @@
-require("../../_core/HFX");
 class Alerts extends HFX.Feature {
   constructor () {
     super({
@@ -51,7 +50,7 @@ class Alerts extends HFX.Feature {
     $("#DismissHFXAlert").click(function () {
       $("#HFXAlert").fadeOut("slow");
       alert.hidden = true;
-      HFX.Settings.set("global", "Alerts", "current_alert", alert);
+      HFX.Settings.update("global", "Alerts", "current_alert", alert);
     });
   }
 };

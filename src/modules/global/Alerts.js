@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class Alerts extends HFX.Feature {
   constructor() {
     super({
-      section: "global",
+      section: HFX.Section.Global,
       name: "HFX Alerts",
       default: 1,
       description: "Alert system for new features and changes",
@@ -12,13 +12,13 @@ class Alerts extends HFX.Feature {
 
   run() {
     var showAlert = this.showAlert;
-    HFX.Settings.get("global", "Alerts", "lastchecked", function (lastchecked) {
-      if (lastchecked !== null) {
-        var timepassed = Math.floor((new Date() - lastchecked) / 60000);
+    HFX.Settings.get("global", "Alerts", "lastchecked", (lastChecked) => {
+      if (lastChecked !== null) {
+        var timepassed = Math.floor((new Date() - lastChecked) / 60000);
         if (Math.floor(timepassed < 5)) { // below 5 minutes
           HFX.Logger.debug(`Alerts: ${timepassed} - needs 5 minutes. Skipping.`);
-          HFX.Settings.get("global", "Alerts", "current_alert", function (currentAlert) {
-            if (!currentAlert.hidden) {
+          HFX.Settings.get("global", "Alerts", "current_alert", (currentAlert) => {
+            if (currentAlert !== null && !currentAlert.hidden) {
               showAlert(currentAlert);
             }
           });
@@ -27,12 +27,13 @@ class Alerts extends HFX.Feature {
       }
 
       $.getJSON("https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json", function (res) {
-        HFX.Settings.set("global", "Alerts", "lastchecked", Number(new Date()));
+        HFX.Settings.update("global", "Alerts", "lastchecked", Number(new Date()));
 
-        HFX.Settings.get("global", "Alerts", "current_alert", function (currentAlert) {
+        HFX.Settings.get("global", "Alerts", "current_alert", (currentAlert) => {
           if (currentAlert === null || currentAlert.hidden === false) {
             res.hidden = false;
-            HFX.Settings.set("global", "Alerts", "current_alert", res);
+            showAlert(res);
+            HFX.Settings.update("global", "Alerts", "current_alert", res);
           }
         });
       });

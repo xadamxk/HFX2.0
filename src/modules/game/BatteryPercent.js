@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class BatteryPercent extends HFX.Feature {
   constructor() {
     super({
-      section: "game",
+      section: HFX.Section.Game,
       name: "Battery Percent",
       default: 1,
       description: "Show percentage next to battery icon.",

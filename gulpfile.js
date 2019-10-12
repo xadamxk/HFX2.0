@@ -64,7 +64,4 @@ gulp.task("watch", asyncComplete => {
   asyncComplete();
 });
 
-gulp.task("default", asyncComplete => {
-  gulp.series("build");
-  asyncComplete();
-});
+gulp.task("default", gulp.series("build"));

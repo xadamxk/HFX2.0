@@ -2,7 +2,7 @@ require("../../_core/HFX");
 class MedalOfHonorTracker extends HFX.Feature {
   constructor() {
     super({
-      section: "game",
+      section: HFX.Section.Game,
       name: "Metal of Honor Tracker",
       default: 1,
       description: "Show progress bar toward level 50.",

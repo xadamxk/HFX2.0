@@ -1,11 +1,7 @@
-require("./HFX");
-var queue = [];
+const queue = {};
 class Settings {
-  constructor() {
-    this.running = false;
-  }
-  getFeatureSettings(section, key, defaultOpt, name, description, id, Feature, cb) {
-    chrome.storage.sync.get(section, function (items) {
+  getFeatureSettings (section, key, defaultOpt, name, description, id, Feature, cb) {
+    chrome.storage.sync.get(section, (items) => {
       if (Object.keys(items).length === 0) {
         return cb(null, Feature);
       }
@@ -18,104 +14,130 @@ class Settings {
     });
   }
 
-  create(section, key, defaultOpt, name, description, id) {
-    queue.push({ "section": section, "key": key, "defaultOpt": defaultOpt, "name": name, "description": description, "id": id });
-    this.processQueue();
+  create (section, key, defaultOpt, name, description, id, cb) {
+    if (!(section in queue)) {
+      queue[section] = {};
+      queue[section].items = [];
+      queue[section].running = false;
+    }
+
+    queue[section].items.push({ "key": key, "defaultOpt": defaultOpt, "name": name, "description": description, "id": id, "cb": cb, "purpose": "create" });
+    this.processQueue(section);
   }
 
-  processQueue() {
-    if (queue.length === 0 || this.running) {
+  update (section, key, setting, value) {
+    if (!(section in queue)) {
+      queue[section] = {};
+      queue[section].items = [];
+      queue[section].running = false;
+    }
+
+    queue[section].items.push({ "key": key, "setting": setting, "value": value, "purpose": "update" });
+    this.processQueue(section);
+  }
+
+  processQueue (section) {
+    if (queue[section].items.length === 0 || queue[section].running) {
       return false;
     }
-    this.running = true;
-    var section = queue[0].section;
-    var key = queue[0].key;
-    var defaultOpt = queue[0].defaultOpt;
-    var name = queue[0].name;
-    var description = queue[0].description;
-    var id = queue[0].id;
-    chrome.storage.sync.get(section, function (items) {
-      var keys = Object.keys(items);
-      var obj = {};
-      if (keys.length === 0) {
-        obj[section] = {};
-        obj[section][key] = {};
-        obj[section][key]["default"] = defaultOpt;
-        obj[section][key]["enabled"] = defaultOpt;
-        obj[section][key]["name"] = name;
-        obj[section][key]["description"] = description;
-        obj[section][key]["id"] = id;
-        chrome.storage.sync.set(obj, function () {
-          HFX.Logger.debug(`Added ${key} AND ${section}`);
-          HFX.Settings.proceedQueue();
-        });
-      } else {
-        obj = items;
-        obj[section][key] = {};
-        obj[section][key]["default"] = defaultOpt;
-        obj[section][key]["enabled"] = defaultOpt;
-        obj[section][key]["name"] = name;
-        obj[section][key]["description"] = description;
-        obj[section][key]["id"] = id;
-        chrome.storage.sync.set(obj, function () {
-          HFX.Logger.debug(`Added ${key} in ${section}`);
-          HFX.Settings.proceedQueue();
+
+    queue[section].running = true;
+    const purpose = queue[section].items[0].purpose;
+
+    chrome.storage.sync.get(section, (items) => {
+      if (purpose === "create") {
+        const key = queue[section].items[0].key;
+        const defaultOpt = queue[section].items[0].defaultOpt;
+        const name = queue[section].items[0].name;
+        const description = queue[section].items[0].description;
+        const id = queue[section].items[0].id;
+        const cb = queue[section].items[0].cb;
+
+        if (Object.keys(items).length === 0) {
+          items[section] = {};
+          items[section][key] = {};
+          items[section][key]["default"] = defaultOpt;
+          items[section][key]["enabled"] = defaultOpt;
+          items[section][key]["name"] = name;
+          items[section][key]["description"] = description;
+          items[section][key]["id"] = id;
+          chrome.storage.sync.set(items, () => {
+            HFX.Logger.debug(`Added ${key} AND ${section}`);
+            HFX.Settings.proceedQueue(section);
+            cb();
+          });
+        } else {
+          items[section][key] = {};
+          items[section][key]["default"] = defaultOpt;
+          items[section][key]["enabled"] = defaultOpt;
+          items[section][key]["name"] = name;
+          items[section][key]["description"] = description;
+          items[section][key]["id"] = id;
+          chrome.storage.sync.set(items, () => {
+            HFX.Logger.debug(`Added ${key} in ${section}`);
+            HFX.Settings.proceedQueue(section);
+            cb();
+          });
+        }
+      } else if (purpose === "update") {
+        const key = queue[section].items[0].key;
+        const setting = queue[section].items[0].setting;
+        const value = queue[section].items[0].value;
+
+        items[section][key][setting] = value;
+        chrome.storage.sync.set(items, () => {
+          HFX.Logger.debug(`Updated ${key}:${setting}`);
+          HFX.Settings.proceedQueue(section);
         });
       }
     });
   }
 
-  proceedQueue() {
-    this.running = false;
-    queue.shift();
-    this.processQueue();
+  proceedQueue (section) {
+    queue[section].running = false;
+    queue[section].items.shift();
+    this.processQueue(section);
   }
 
-  printSettings() {
-    chrome.storage.sync.get(null, function (items) {
+  printSettings () {
+    chrome.storage.sync.get(null, (items) => {
       HFX.Logger.debug("Items: ", items);
     });
   }
 
-  exists(section, key, setting, cb) {
-    chrome.storage.sync.get(section, function (items) {
-      if (setting === null) {
-        return cb(Boolean(items[section][key]));
-      } else {
-        return cb(Boolean(items[section][key][setting]));
-      }
+  exists (section, key, setting, cb) {
+    chrome.storage.sync.get(section, (items) => {
+      return cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting));
     });
   }
 
-  get(section, key, setting, cb) {
-    chrome.storage.sync.get(section, function (items) {
-      if (typeof items[section][key] === 'undefined' || typeof items[section][key][setting] === 'undefined') {
-        return cb(null);
-      }
-      return cb(items[section][key][setting]);
+  get (section, key, setting, cb) {
+    chrome.storage.sync.get(section, (items) => {
+      return cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting) ? items[section][key][setting] : null);
     });
   }
 
-  set(section, key, setting, value) {
-    chrome.storage.sync.get(section, function (items) {
-      var obj = items;
-      obj[section][key][setting] = value;
-      chrome.storage.sync.set(obj, function () {
+  set (section, key, setting, value) {
+    HFX.Logger.warn("Unsafe storage updating.");
+    chrome.storage.sync.get(section, (items) => {
+      items[section][key][setting] = value;
+      chrome.storage.sync.set(items, () => {
         HFX.Logger.debug(`Updated ${key}:${setting}`);
       });
     });
   }
 
-  clear() {
-    chrome.storage.sync.clear(function () {
+  clear () {
+    chrome.storage.sync.clear(() => {
       HFX.Logger.log("Cleared storage");
     });
   }
 
-  getTotal(cb) {
-    chrome.storage.sync.get(null, function (items) {
+  getTotal (cb) {
+    chrome.storage.sync.get(null, (items) => {
       return cb(Object.keys(items).length);
     });
   }
 };
+
 module.exports = new Settings();

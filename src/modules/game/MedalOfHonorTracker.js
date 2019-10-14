@@ -2,7 +2,7 @@ class MedalOfHonorTracker extends HFX.Feature {
   constructor() {
     super({
       section: HFX.Section.Game,
-      name: "Metal of Honor Tracker",
+      name: "Medal of Honor Tracker",
       default: 1,
       description: "Show progress bar toward level 50.",
       id: "medalofhonortracker",
@@ -11,23 +11,24 @@ class MedalOfHonorTracker extends HFX.Feature {
         profile: "https://hackforums.net/member.php?action=profile&uid=585389"
       }
     });
+    this.numberFormatter = new Intl.NumberFormat("en-US");
   }
 
   run() {
     if ($("#progress-bar-percentage").length > 0) {
-      var goal = 250000;
+      const goal = 250000;
       // Get current level
-      var currentlevel = $("#game_content_currentpage > tr:nth-child(2) > td > div.gtable > div:nth-child(2) > div.gtd.tcenter").text().replace("Level: ", "");
+      const currentlevel = $("#game_content_currentpage > tr:nth-child(2) > td > div.gtable > div:nth-child(2) > div.gtd.tcenter").text().replace("Level: ", "");
 
-      // Exracts the current XP for the level and removes everything after the space
-      var currentlevelXP = $("#game_content_currentpage > tr:nth-child(2) > td > div.game-profile-player.gboxshadow > div:nth-child(2) > div:nth-child(2) > span").text()
+      // Extracts the current XP for the level and removes everything after the space
+      const currentlevelXP = $("#game_content_currentpage > tr:nth-child(2) > td > div.game-profile-player.gboxshadow > div:nth-child(2) > div:nth-child(2) > span").text()
         .replace(/\s(.*)/, "").replace(",", "");
 
       // Total XP
-      var totalXP = parseInt(this.determineLevelXP(currentlevel)) + parseInt(currentlevelXP);
+      const totalXP = parseInt(this.determineLevelXP(currentlevel)) + parseInt(currentlevelXP);
 
       // Tooltip percentage
-      var wholePercent = this.getWholePercent(totalXP, goal);
+      const wholePercent = this.getWholePercent(totalXP, goal);
 
       // Clone existing progress bar (and children) but change the IDs to be unique
       $("#progress-bar").parent().clone().appendTo(".game-profile-player")
@@ -47,7 +48,7 @@ class MedalOfHonorTracker extends HFX.Feature {
           "title": "Medal of Honor Progress: " + wholePercent + "%"
         })
         .css({
-          "width": (Math.round((totalXP / goal) * 100 * 10000) / 10000) + "%",
+          "width": ((totalXP / goal) * 100).toFixed(5) + "%",
           "transition": "0.1s",
           "background-color": "#e2ba2f",
           "box-shadow": "inset 0px 0px 3px 1px #ffffff12",
@@ -60,12 +61,13 @@ class MedalOfHonorTracker extends HFX.Feature {
       $("#myProgressBar").parent().find(".tinytext").text(this.numberWithCommas(totalXP) + " / " + this.numberWithCommas(goal) + " xp");
     }
   }
+
   determineLevelXP(level) {
     return Math.pow(level, 2) * 100;
   }
 
   numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return this.numberFormatter.format(x);
   }
 
   getWholePercent(percentFor, percentOf) {

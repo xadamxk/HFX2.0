@@ -10,28 +10,27 @@ class Alerts extends HFX.Feature {
   }
 
   run() {
-    var showAlert = this.showAlert;
     HFX.Settings.get("global", "Alerts", "lastchecked", (lastChecked) => {
       if (lastChecked !== null) {
-        var timepassed = Math.floor((new Date() - lastChecked) / 60000);
-        if (Math.floor(timepassed < 5)) { // below 5 minutes
-          HFX.Logger.debug(`Alerts: ${timepassed} - needs 5 minutes. Skipping.`);
+        var timePassed = Math.floor((new Date() - lastChecked) / 60000);
+        if (Math.floor(timePassed < 5)) { // below 5 minutes
+          HFX.Logger.debug(`Alerts: ${timePassed} - needs 5 minutes. Skipping.`);
           HFX.Settings.get("global", "Alerts", "current_alert", (currentAlert) => {
             if (currentAlert !== null && !currentAlert.hidden) {
-              showAlert(currentAlert);
+              this.showAlert(currentAlert);
             }
           });
           return false;
         }
       }
 
-      $.getJSON("https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json", function(res) {
+      $.getJSON("https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json", (res) => {
         HFX.Settings.update("global", "Alerts", "lastchecked", Number(new Date()));
 
         HFX.Settings.get("global", "Alerts", "current_alert", (currentAlert) => {
           if (currentAlert === null || currentAlert.hidden === false) {
             res.hidden = false;
-            showAlert(res);
+            this.showAlert(res);
             HFX.Settings.update("global", "Alerts", "current_alert", res);
           }
         });
@@ -47,7 +46,7 @@ class Alerts extends HFX.Feature {
       .append($("<div>").append($("<b>").append(alert.AlertValue)))
     );
 
-    $("#DismissHFXAlert").click(function() {
+    $("#DismissHFXAlert").click(() => {
       $("#HFXAlert").fadeOut("slow");
       alert.hidden = true;
       HFX.Settings.update("global", "Alerts", "current_alert", alert);

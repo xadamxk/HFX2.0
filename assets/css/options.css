@@ -5,6 +5,16 @@ body{
     display: table;
 }
 
+.hfx-section .hfx-feature {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.hfx-section .hfx-feature:nth-child(n+2) {
+  border: 0;
+  border-top: 1px solid rgba(0,0,0,.1);
+}
+
 #optionBodyTag{
     width: 650px;
 }

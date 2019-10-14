@@ -1,69 +1,74 @@
-const queue = {};
 class Settings {
+  constructor() {
+    this.queue = {};
+  }
+
   // TODO: Update all attributes so if an extension update moves a feature, it will update
-  getFeatureSettings(section, key, defaultOpt, name, description, id, author, Feature, cb) {
+  getFeatureSettings(section, key, cb) {
     chrome.storage.local.get(section, (items) => {
-      if (Object.keys(items).length === 0) {
-        return cb(null, Feature);
+      if (Object.keys(items).length === 0 || items[section][key] === undefined) {
+        cb(null);
+      } else {
+        cb(items[section][key]);
       }
-
-      if (items[section][key] === undefined) {
-        return cb(null, Feature);
-      }
-
-      return cb(items[section][key], Feature);
     });
   }
 
-  create(section, key, defaultOpt, name, description, id, author, cb) {
-    if (!(section in queue)) {
-      queue[section] = {};
-      queue[section].items = [];
-      queue[section].running = false;
-    }
+  // Uses the queue in background so that queued items aren't lost on tab close/navigation
+  create(section, key, defaultOpt, id, cb) {
+    if (HFX.Util.isContentScript()) {
+      HFX.Util.sendMessage({ "action": "create", "object": { "section": section, "key": key, "defaultOpt": defaultOpt, "id": id } }, (response) => {
+        cb();
+      });
+    } else if (HFX.Util.isBackground()) {
+      if (!(section in this.queue)) {
+        this.queue[section] = {};
+        this.queue[section].items = [];
+        this.queue[section].running = false;
+      }
 
-    queue[section].items.push({ "key": key, "defaultOpt": defaultOpt, "name": name, "description": description, "id": id, "author": author, "cb": cb, "purpose": "create" });
-    this.processQueue(section);
+      this.queue[section].items.push({ "key": key, "defaultOpt": defaultOpt, "id": id, "cb": cb, "purpose": "create" });
+      this.processQueue(section);
+    }
   }
 
+  // Uses the queue in background so that queued items aren't lost on tab close/navigation
   update(section, key, setting, value) {
-    if (!(section in queue)) {
-      queue[section] = {};
-      queue[section].items = [];
-      queue[section].running = false;
-    }
+    if (HFX.Util.isContentScript()) {
+      HFX.Util.sendMessage({ "action": "update", "object": { "section": section, "key": key, "setting": setting, "value": value } });
+    } else if (HFX.Util.isBackground()) {
+      if (!(section in this.queue)) {
+        this.queue[section] = {};
+        this.queue[section].items = [];
+        this.queue[section].running = false;
+      }
 
-    queue[section].items.push({ "key": key, "setting": setting, "value": value, "purpose": "update" });
-    this.processQueue(section);
+      this.queue[section].items.push({ "key": key, "setting": setting, "value": value, "purpose": "update" });
+      this.processQueue(section);
+    }
   }
 
   processQueue(section) {
-    if (queue[section].items.length === 0 || queue[section].running) {
+    if (this.queue[section].items.length === 0 || this.queue[section].running) {
       return false;
     }
 
-    queue[section].running = true;
-    const purpose = queue[section].items[0].purpose;
+    this.queue[section].running = true;
+    const purpose = this.queue[section].items[0].purpose;
 
     chrome.storage.local.get(section, (items) => {
       if (purpose === "create") {
-        const key = queue[section].items[0].key;
-        const defaultOpt = queue[section].items[0].defaultOpt;
-        const name = queue[section].items[0].name;
-        const description = queue[section].items[0].description;
-        const id = queue[section].items[0].id;
-        const author = queue[section].items[0].author;
-        const cb = queue[section].items[0].cb;
+        const key = this.queue[section].items[0].key;
+        const defaultOpt = this.queue[section].items[0].defaultOpt;
+        const id = this.queue[section].items[0].id;
+        const cb = this.queue[section].items[0].cb;
 
         if (Object.keys(items).length === 0) {
           items[section] = {};
           items[section][key] = {};
           items[section][key]["default"] = defaultOpt;
           items[section][key]["enabled"] = defaultOpt;
-          items[section][key]["name"] = name;
-          items[section][key]["description"] = description;
           items[section][key]["id"] = id;
-          items[section][key]["author"] = author;
           chrome.storage.local.set(items, () => {
             HFX.Logger.debug(`Added ${key} AND ${section}`);
             HFX.Settings.proceedQueue(section);
@@ -73,10 +78,7 @@ class Settings {
           items[section][key] = {};
           items[section][key]["default"] = defaultOpt;
           items[section][key]["enabled"] = defaultOpt;
-          items[section][key]["name"] = name;
-          items[section][key]["description"] = description;
           items[section][key]["id"] = id;
-          items[section][key]["author"] = author;
           chrome.storage.local.set(items, () => {
             HFX.Logger.debug(`Added ${key} in ${section}`);
             HFX.Settings.proceedQueue(section);
@@ -84,9 +86,9 @@ class Settings {
           });
         }
       } else if (purpose === "update") {
-        const key = queue[section].items[0].key;
-        const setting = queue[section].items[0].setting;
-        const value = queue[section].items[0].value;
+        const key = this.queue[section].items[0].key;
+        const setting = this.queue[section].items[0].setting;
+        const value = this.queue[section].items[0].value;
 
         items[section][key][setting] = value;
         chrome.storage.local.set(items, () => {
@@ -98,8 +100,8 @@ class Settings {
   }
 
   proceedQueue(section) {
-    queue[section].running = false;
-    queue[section].items.shift();
+    this.queue[section].running = false;
+    this.queue[section].items.shift();
     this.processQueue(section);
   }
 
@@ -111,13 +113,13 @@ class Settings {
 
   exists(section, key, setting, cb) {
     chrome.storage.local.get(section, (items) => {
-      return cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting));
+      cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting));
     });
   }
 
   get(section, key, setting, cb) {
     chrome.storage.local.get(section, (items) => {
-      return cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting) ? items[section][key][setting] : null);
+      cb(HFX.Util.hasOwnPropertyStructure(items, section, key, setting) ? items[section][key][setting] : null);
     });
   }
 
@@ -139,7 +141,7 @@ class Settings {
 
   getTotal(cb) {
     chrome.storage.local.get(null, (items) => {
-      return cb(Object.keys(items).length);
+      cb(Object.keys(items).length);
     });
   }
 };

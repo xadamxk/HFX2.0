@@ -1,4 +1,8 @@
 class Util {
+  constructor() {
+    this.features = {};
+  }
+
   clearStorage() {
     HFX.Settings.clear();
   }
@@ -10,10 +14,36 @@ class Util {
       } else if (!(property in object)) {
         return false;
       }
+
       object = object[property];
     }
+
     return true;
   }
-}
+
+  sendMessage(message, response) {
+    chrome.runtime.sendMessage(message, response);
+  }
+
+  isBackground() {
+    return chrome !== undefined && chrome.extension !== undefined && chrome.extension.getBackgroundPage !== undefined && chrome.extension.getBackgroundPage() === window;
+  }
+
+  isPopup() {
+    return chrome !== undefined && chrome.extension !== undefined && chrome.extension.getBackgroundPage !== undefined && chrome.extension.getBackgroundPage() !== window;
+  }
+
+  isContentScript() {
+    return chrome !== undefined && chrome.extension !== undefined && chrome.extension.getBackgroundPage === undefined;
+  }
+
+  getLoadedFeatures() {
+    return this.features;
+  }
+
+  trackLoadedFeature(feature) {
+    this.features[feature.class] = feature;
+  }
+};
 
 module.exports = new Util();

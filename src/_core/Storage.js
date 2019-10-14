@@ -3,8 +3,14 @@ class Storage {
     this.timeout = undefined;
     this.queuedChanges = {};
     this.syncDelay = 3000;
-    this.initializeLocal(() => this.keepSynced());
-  };
+    this.start();
+  }
+
+  start() {
+    if (HFX.Util.isBackground()) {
+      this.initializeLocal(() => this.keepSynced());
+    }
+  }
 
   initializeLocal(cb) {
     chrome.storage.sync.get(null, (items) => {
@@ -16,7 +22,7 @@ class Storage {
         cb();
       });
     });
-  };
+  }
 
   keepSynced() {
     if (chrome.storage.onChanged.hasListeners()) {
@@ -47,7 +53,7 @@ class Storage {
         this.commitChanges("local", chrome.storage.local, changes);
       }
     });
-  };
+  }
 
   commitChanges(area, storage, changes) {
     HFX.Logger.debug(`Committing changes to ${area}`);

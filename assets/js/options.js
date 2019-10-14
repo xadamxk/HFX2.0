@@ -49,7 +49,7 @@ $(document).ready(function () {
   });
 
   function addSectionToList(section) {
-    $(".nav").append(`<li class="nav-item"><a class="nav-link text-capitalize" data-toggle="tab" href="#${section}" role="tab">${section}</a></li>`);
+    $(".nav").append(`<li class="nav-item w-100"><a class="nav-link text-capitalize" data-toggle="tab" href="#${section}" role="tab">${section}</a></li>`);
   }
 
   function buildSectionBase(section) {

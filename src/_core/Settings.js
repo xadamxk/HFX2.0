@@ -15,9 +15,9 @@ class Settings {
   }
 
   // Uses the queue in background so that queued items aren't lost on tab close/navigation
-  create(section, key, defaultOpt, name, description, id, author, cb) {
+  create(section, key, defaultOpt, id, cb) {
     if (HFX.Util.isContentScript()) {
-      HFX.Util.sendMessage({ "action": "create", "object": { "section": section, "key": key, "defaultOpt": defaultOpt, "name": name, "description": description, "id": id, "author": author } }, (response) => {
+      HFX.Util.sendMessage({ "action": "create", "object": { "section": section, "key": key, "defaultOpt": defaultOpt, "id": id } }, (response) => {
         cb();
       });
     } else if (HFX.Util.isBackground()) {
@@ -27,7 +27,7 @@ class Settings {
         this.queue[section].running = false;
       }
 
-      this.queue[section].items.push({ "key": key, "defaultOpt": defaultOpt, "name": name, "description": description, "id": id, "author": author, "cb": cb, "purpose": "create" });
+      this.queue[section].items.push({ "key": key, "defaultOpt": defaultOpt, "id": id, "cb": cb, "purpose": "create" });
       this.processQueue(section);
     }
   }
@@ -60,10 +60,7 @@ class Settings {
       if (purpose === "create") {
         const key = this.queue[section].items[0].key;
         const defaultOpt = this.queue[section].items[0].defaultOpt;
-        const name = this.queue[section].items[0].name;
-        const description = this.queue[section].items[0].description;
         const id = this.queue[section].items[0].id;
-        const author = this.queue[section].items[0].author;
         const cb = this.queue[section].items[0].cb;
 
         if (Object.keys(items).length === 0) {
@@ -71,10 +68,7 @@ class Settings {
           items[section][key] = {};
           items[section][key]["default"] = defaultOpt;
           items[section][key]["enabled"] = defaultOpt;
-          items[section][key]["name"] = name;
-          items[section][key]["description"] = description;
           items[section][key]["id"] = id;
-          items[section][key]["author"] = author;
           chrome.storage.local.set(items, () => {
             HFX.Logger.debug(`Added ${key} AND ${section}`);
             HFX.Settings.proceedQueue(section);
@@ -84,10 +78,7 @@ class Settings {
           items[section][key] = {};
           items[section][key]["default"] = defaultOpt;
           items[section][key]["enabled"] = defaultOpt;
-          items[section][key]["name"] = name;
-          items[section][key]["description"] = description;
           items[section][key]["id"] = id;
-          items[section][key]["author"] = author;
           chrome.storage.local.set(items, () => {
             HFX.Logger.debug(`Added ${key} in ${section}`);
             HFX.Settings.proceedQueue(section);

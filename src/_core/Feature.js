@@ -20,9 +20,13 @@ module.exports = class Feature {
       this.subsection = "general";
     }
 
+    if (opts.author !== undefined) {
+      this.author = opts.author;
+    }
+
     HFX.Settings.getFeatureSettings(this.section.name, this.class, (settings) => {
       if (settings === null) {
-        HFX.Settings.create(this.section.name, this.class, this.default, this.name, this.description, this.id, this.author, () => {
+        HFX.Settings.create(this.section.name, this.class, this.default, this.id, () => {
           HFX.Logger.debug(`${this.class} loaded.`);
           HFX.Util.trackLoadedFeature(this);
           if (this.default && this.section.runnable) {

@@ -7,11 +7,8 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
         const section = message.object.section;
         const key = message.object.key;
         const defaultOpt = message.object.defaultOpt;
-        const name = message.object.name;
-        const description = message.object.description;
         const id = message.object.id;
-        const author = message.object.author;
-        HFX.Settings.create(section, key, defaultOpt, name, description, id, author, response);
+        HFX.Settings.create(section, key, defaultOpt, id, response);
         processed = true;
       } else if (message.action === "update") {
         const section = message.object.section;

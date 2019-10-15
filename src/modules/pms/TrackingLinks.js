@@ -3,7 +3,7 @@ class TrackingLinks extends HFX.Feature {
     super({
       section: HFX.Section.PMs,
       name: "Tracking Links",
-      default: 1,
+      default: true,
       description: "Turns all messages in 'Message Tracking' to clickable hyperlinks.",
       id: "trackinglinks"
     });
@@ -12,11 +12,11 @@ class TrackingLinks extends HFX.Feature {
   run() {
     if (this.isMessageTrackingPage()) {
       // Read tbody
-      var readTable = this.getTrackingTableBody("Read Messages");
+      const readTable = this.getTrackingTableBody("Read Messages");
       this.trackingTableLinks(readTable);
 
       // Unread tbody
-      var unreadTable = this.getTrackingTableBody("Unread Messages");
+      const unreadTable = this.getTrackingTableBody("Unread Messages");
       this.trackingTableLinks(unreadTable);
     }
   }

@@ -1,10 +1,10 @@
-$(document).ready(function () {
+$(document).ready(function() {
   // Load HFX from background
   const page = chrome.extension.getBackgroundPage();
   const HFX = page.HFX;
   const features = HFX.Util.getLoadedFeatures();
   const sections = {};
-  
+
   for (const feature in features) {
     const section = features[feature].section.name;
 
@@ -16,21 +16,9 @@ $(document).ready(function () {
   }
 
   // Load version string
-  $("#HFXVersion").text(chrome.runtime.getManifest().version);
+  $("#HFXVersion").text(HFX.Util.getVersion());
 
-  function getSettings() {
-    const deferred = $.Deferred(function () {
-      $("#main").hide();
-    });
-
-    chrome.storage.local.get(null, (data) => {
-      deferred.resolve(data);
-    });
-
-    return deferred.promise();
-  }
-
-  $.when(getSettings()).done((data) => {
+  HFX.Settings.getAll((items) => {
     $("#spinner").hide();
     $("#main").show();
 
@@ -39,9 +27,9 @@ $(document).ready(function () {
       buildSectionBase(section);
 
       for (const feature in sections[section]) {
-        const setting = sections[section][feature];
-        setting.enabled = section in data && feature in data[section] ? data[section][feature].enabled : sections[section][feature].default;
-        addSettingOptionToList(section, feature, setting);
+        const settings = sections[section][feature];
+        settings.enabled = feature in items ? items[feature].enabled : sections[section][feature].default;
+        addSettingOptionToList(section, feature, settings);
       }
     }
 
@@ -49,7 +37,13 @@ $(document).ready(function () {
   });
 
   function addSectionToList(section) {
-    $(".nav").append(`<li class="nav-item w-100"><a class="nav-link text-capitalize" data-toggle="tab" href="#${section}" role="tab">${section}</a></li>`);
+    $(".nav").append(`
+      <li class="nav-item w-100">
+        <a class="nav-link text-capitalize" data-toggle="tab" href="#${section}" role="tab">
+        ${section}
+        </a>
+      </li>
+    `);
   }
 
   function buildSectionBase(section) {
@@ -62,26 +56,24 @@ $(document).ready(function () {
     `);
   }
 
-  function addSettingOptionToList(section, feature, setting) {
-    const checked = Boolean(setting.enabled) === true ? "checked" : "";
-    setting.description = setting.description.replace(/\r?\n/g, "<br />");
+  function addSettingOptionToList(section, feature, settings) {
+    const checked = settings.enabled ? "checked" : "";
+    settings.description = settings.description.replace(/\r?\n/g, "<br />");
 
-    const author = setting.author
-      ? `<br /><br /><div>Author: 
-      <a href="${setting.author.profile}" target="_blank">${setting.author.name}</a>
-      </div>`
-      : "";
     // TODO: Logic for more setting options (ie. textbox)
     $(`#${section}`).find(".card").append(`
     <div class="d-flex justify-content-start hfx-feature">
-      <div class="mr-auto p-2 section-name">${setting.name}</div>
+      <div class="mr-auto p-2 section-name">${settings.name}</div>
       <div class="p-2">
-      ${setting.description}
-      ${author}
+      ${settings.description}
+      ${settings.author ? `<br /><br /><div>Author: <a href="${settings.author.profile}" target="_blank">${settings.author.name}</a></div>` : ""}
       </div>
       <div class="mt-auto p-2">
         <div class="checkbox-slider--default">
-          <label><input type="checkbox" data-section="${section}" data-feature="${feature}" ${checked}><span></span><label>
+          <label>
+            <input type="checkbox" data-section="${section}" data-feature="${feature}" ${checked}>
+            <span></span>
+          <label>
         </div>
       </div>
     </div>
@@ -90,7 +82,12 @@ $(document).ready(function () {
 
   function createChangeHandlers() {
     $("input[type=checkbox]").change(function() {
-      HFX.Settings.update($(this).data("section"), $(this).data("feature"), "enabled", $(this).prop("checked"));
+      const feature = features[$(this).data("feature")];
+
+      HFX.Settings.get(feature, (settings) => {
+        settings.enabled = $(this).prop("checked");
+        HFX.Settings.set(feature, settings);
+      });
     });
   }
 });

@@ -3,7 +3,7 @@ class ShortcutLogs extends HFX.Feature {
     super({
       section: HFX.Section.Game,
       name: "Shortcut: Logs",
-      default: 1,
+      default: true,
       description: "Show logs shortcut in game header",
       id: "shortcutlogs"
     });

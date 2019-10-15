@@ -3,53 +3,62 @@ class Alerts extends HFX.Feature {
     super({
       section: HFX.Section.Global,
       name: "HFX Alerts",
-      default: 1,
+      default: true,
       description: "Alert system for new features and changes",
       id: "alerts"
     });
+    this.fetchDelay = 5; // Delay (minutes) between new alert fetches
+    this.fetchLocation = "https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json";
   }
 
   run() {
-    HFX.Settings.get("global", "Alerts", "lastchecked", (lastChecked) => {
-      if (lastChecked !== null) {
-        var timePassed = Math.floor((new Date() - lastChecked) / 60000);
-        if (Math.floor(timePassed < 5)) { // below 5 minutes
-          HFX.Logger.debug(`Alerts: ${timePassed} - needs 5 minutes. Skipping.`);
-          HFX.Settings.get("global", "Alerts", "current_alert", (currentAlert) => {
-            if (currentAlert !== null && !currentAlert.hidden) {
-              this.showAlert(currentAlert);
-            }
-          });
-          return false;
+    HFX.Settings.get(this, (item) => {
+      const timePassed = item.lastChecked !== undefined ? Math.floor((new Date().getTime() - item.lastChecked) / 60000) : this.fetchDelay;
+
+      if (Math.floor(timePassed < this.fetchDelay)) {
+        HFX.Logger.debug(`Alerts: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
+
+        if (item.currentAlert !== undefined && !item.currentAlert.hidden) {
+          this.showAlert(item.currentAlert);
         }
-      }
+      } else {
+        $.getJSON(this.fetchLocation, (fetchedAlert) => {
+          item.lastChecked = new Date().getTime();
 
-      $.getJSON("https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json", (res) => {
-        HFX.Settings.update("global", "Alerts", "lastchecked", Number(new Date()));
-
-        HFX.Settings.get("global", "Alerts", "current_alert", (currentAlert) => {
-          if (currentAlert === null || currentAlert.hidden === false) {
-            res.hidden = false;
-            this.showAlert(res);
-            HFX.Settings.update("global", "Alerts", "current_alert", res);
+          if (item.currentAlert === undefined || item.currentAlert.hidden === false || item.currentAlert.AlertKey !== fetchedAlert.AlertKey) {
+            fetchedAlert.hidden = false;
+            item.currentAlert = fetchedAlert;
+            this.showAlert(item.currentAlert);
           }
+
+          HFX.Settings.set(this, item);
         });
-      });
+      }
     });
   }
 
   showAlert(alert) {
-    $("#content").prepend($("<div>").addClass("HFXAlert").attr("id", "HFXAlert")
-      .append($("<div>").addClass("float_right").attr("id", "DismissHFXAlert")
-        .append($("<a>").attr("href", "javascript:void(0);")
-          .append($("<img>").attr("src", chrome.extension.getURL("/assets/images/dismiss_notice.png")).attr("title", "Dismiss HFX Alert"))))
-      .append($("<div>").append($("<b>").append(alert.AlertValue)))
-    );
+    $("#content").prepend(`
+      <div class="HFXAlert" id="HFXAlert">
+        <div class="float-right" id="DismissHFXAlert">
+          <a href="javascript:void(0);" title="Dismiss HFX Alert">
+            <img src="${HFX.Util.getURL("/assets/images/dismiss_notice.png")}" />
+          </a>
+        </div>
+        <div>
+          <b>${alert.AlertValue}</b>
+        </div>
+      </div>
+    `);
 
     $("#DismissHFXAlert").click(() => {
       $("#HFXAlert").fadeOut("slow");
-      alert.hidden = true;
-      HFX.Settings.update("global", "Alerts", "current_alert", alert);
+      HFX.Settings.get(this, (settings) => {
+        if (alert.AlertKey === settings.currentAlert.AlertKey) {
+          settings.currentAlert.hidden = true;
+          HFX.Settings.set(this, settings);
+        }
+      });
     });
   }
 };

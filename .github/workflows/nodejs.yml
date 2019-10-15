@@ -1,6 +1,9 @@
 name: Node CI
 
-on: [push]
+on:
+  push:
+    branches:
+    - develop
 
 jobs:
   build:
@@ -20,7 +23,7 @@ jobs:
     - name: yarn install, build, and test
       run: |
         yarn
-        yarn config
+        yarn run config
         yarn test
       env:
         CI: true

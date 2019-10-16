@@ -3,7 +3,7 @@ class MedalOfHonorTracker extends HFX.Feature {
     super({
       section: HFX.Section.Game,
       name: "Medal of Honor Tracker",
-      default: 1,
+      default: true,
       description: "Show progress bar toward level 50.",
       id: "medalofhonortracker",
       author: {

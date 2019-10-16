@@ -3,24 +3,6 @@ class Util {
     this.features = {};
   }
 
-  clearStorage() {
-    HFX.Settings.clear();
-  }
-
-  hasOwnPropertyStructure(object, ...properties) {
-    for (const property of properties) {
-      if (property === null) {
-        return true;
-      } else if (!(property in object)) {
-        return false;
-      }
-
-      object = object[property];
-    }
-
-    return true;
-  }
-
   sendMessage(message, response) {
     chrome.runtime.sendMessage(message, response);
   }
@@ -43,6 +25,14 @@ class Util {
 
   trackLoadedFeature(feature) {
     this.features[feature.class] = feature;
+  }
+
+  getVersion() {
+    return chrome.runtime.getManifest().version;
+  }
+
+  getURL(resource) {
+    return chrome.extension.getURL(resource);
   }
 };
 

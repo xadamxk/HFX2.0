@@ -3,18 +3,22 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
     super({
       section: HFX.Section.Global,
       name: "Collapse Possibly Related Threads",
-      default: 0,
+      default: false,
       description: "Automatically collapse 'Possibly Related Threads' results.\n\nClick the toggle image to view results",
       id: "collapsepossiblylrelatedthreads"
     });
   }
 
   run() {
-    var collapseImages = { "collapse": chrome.extension.getURL("/assets/images/collapse_collapsed.gif"), "collapsed": chrome.extension.getURL("/assets/images/collapse_collapsed.gif") };
-    var prtTitle = $("strong:contains(Possibly Related Threads...)");
+    const collapseImages = {
+      "collapse": HFX.Util.getURL("/assets/images/collapse_collapsed.gif"),
+      "collapsed": HFX.Util.getURL("/assets/images/collapse_collapsed.gif")
+    };
+    const prtTitle = $("strong:contains(Possibly Related Threads...)");
+
     // If Table exists
     if (prtTitle.length > 0) {
-      var prtTableRows = prtTitle.parent().parent().siblings();
+      const prtTableRows = prtTitle.parent().parent().siblings();
 
       prtTableRows.toggle();
       prtTitle.parent().append($("<div>").addClass("expcolimage")
@@ -22,7 +26,6 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
 
       $("#relatedThreadsCollapse").on("click", function() {
         prtTableRows.toggle();
-
         togglePRTCollapseAttr(prtTableRows);
       });
     }

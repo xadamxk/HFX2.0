@@ -26,7 +26,7 @@ class Storage {
 
   keepSynced() {
     if (chrome.storage.onChanged.hasListeners()) {
-      HFX.Logger.warn("Potentially browserifying the Storage module in multiple locations");
+      HFX.Logger.warn("Potentially browserifying the Storage module in multiple locations.");
       return;
     }
 
@@ -56,7 +56,7 @@ class Storage {
   }
 
   commitChanges(area, storage, changes) {
-    HFX.Logger.debug(`Committing changes to ${area}`);
+    HFX.Logger.debug(`Committing changes to ${area}.`);
     const items = {};
 
     for (const key in changes) {

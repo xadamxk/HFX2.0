@@ -8,7 +8,7 @@ module.exports = class Feature {
         HFX.Logger.error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
         return;
       }
-    };
+    }
 
     this.section = opts.section;
     this.name = opts.name;
@@ -24,24 +24,24 @@ module.exports = class Feature {
       this.author = opts.author;
     }
 
-    HFX.Settings.getFeatureSettings(this.section.name, this.class, (settings) => {
-      if (settings === null) {
-        HFX.Settings.create(this.section.name, this.class, this.default, this.id, () => {
-          HFX.Logger.debug(`${this.class} loaded.`);
-          HFX.Util.trackLoadedFeature(this);
-          if (this.default && this.section.runnable) {
-            this.run(this.default);
-            HFX.Logger.debug(`${this.class} running.`);
-          }
+    HFX.Settings.get(this, (settings) => {
+      if (settings === undefined) {
+        HFX.Settings.create(this, (settings) => {
+          this.start(settings);
         });
       } else {
-        HFX.Logger.debug(`${this.class} loaded.`);
-        HFX.Util.trackLoadedFeature(this);
-        if (settings.enabled && this.section.runnable) {
-          this.run(settings.default);
-          HFX.Logger.debug(`${this.class} running.`);
-        }
+        this.start(settings);
       }
     });
+  }
+
+  start(settings) {
+    HFX.Util.trackLoadedFeature(this);
+    HFX.Logger.debug(`${this.class} loaded.`);
+
+    if (settings.enabled && this.section.runnable) {
+      this.run(this.default);
+      HFX.Logger.debug(`${this.class} running.`);
+    }
   }
 };

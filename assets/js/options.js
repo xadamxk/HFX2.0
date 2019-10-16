@@ -18,10 +18,10 @@ $(document).ready(function() {
   // Load version string
   $("#HFXVersion").text(HFX.Util.getVersion());
 
-  HFX.Settings.getAll((items) => {
-    $("#spinner").hide();
-    $("#main").show();
+  $("#spinner").show();
+  $("#main").hide();
 
+  HFX.Settings.getAll((items) => {
     for (const section in sections) {
       addSectionToList(section);
       buildSectionBase(section);
@@ -31,6 +31,9 @@ $(document).ready(function() {
         settings.enabled = feature in items ? items[feature].enabled : sections[section][feature].default;
         addSettingOptionToList(section, feature, settings);
       }
+
+      $("#spinner").hide();
+      $("#main").show();
     }
 
     createChangeHandlers();

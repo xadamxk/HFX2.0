@@ -31,10 +31,10 @@ $(document).ready(function() {
         settings.enabled = feature in items ? items[feature].enabled : sections[section][feature].default;
         addSettingOptionToList(section, feature, settings);
       }
-
-      $("#spinner").hide();
-      $("#main").show();
     }
+
+    $("#main").show();
+    $("#spinner").hide();
 
     createChangeHandlers();
   });

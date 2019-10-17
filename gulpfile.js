@@ -1,6 +1,6 @@
-var gulp = require("gulp");
-var concat = require("gulp-concat");
-var browserify = require("gulp-browserify");
+const gulp = require("gulp");
+const concat = require("gulp-concat");
+const browserify = require("gulp-browserify");
 
 gulp.task("build", asyncComplete => {
   gulp.src(["src/_core/HFX.js"])
@@ -8,23 +8,8 @@ gulp.task("build", asyncComplete => {
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
 
-  gulp.src(["src/modules/global/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("Global.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
-
-  gulp.src(["src/modules/game/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("Game.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
-
-  gulp.src(["src/modules/threads/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("Threads.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
-
-  gulp.src(["src/modules/pms/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("PMs.js"))
+  gulp.src(["src/modules/**/*.js", "src/_core/modules/*.js"])
+    .pipe(concat("Features.js"))
     .pipe(browserify())
     .pipe(gulp.dest("./release/js/"));
 
@@ -36,7 +21,7 @@ gulp.task("libs", asyncComplete => {
   gulp.src("./node_modules/jquery/dist/jquery.min.js")
     .pipe(gulp.dest("./assets/lib/jquery/"));
 
-  // Boostrap
+  // Bootstrap
   gulp.src(["./node_modules/bootstrap/dist/css/bootstrap.min.css", "./node_modules/bootstrap/dist/js/bootstrap.min.js"])
     .pipe(gulp.dest("./assets/lib/bootstrap"));
 

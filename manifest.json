@@ -32,10 +32,7 @@
     "scripts": [
       "assets/lib/hotreload/hot-reload.js",
       "release/js/HFX.js",
-      "release/js/Global.js",
-      "release/js/Game.js",
-      "release/js/Threads.js",
-      "release/js/PMs.js"
+      "release/js/Features.js"
     ]
   },
   "content_scripts": [
@@ -48,10 +45,7 @@
         "assets/lib/jquery/jquery.min.js",
         "assets/lib/moment/moment.min.js",
         "release/js/HFX.js",
-        "release/js/Global.js",
-        "release/js/Game.js",
-        "release/js/Threads.js",
-        "release/js/PMs.js"
+        "release/js/Features.js"
       ],
       "css": [
         "assets/css/HFX.css"

@@ -2,8 +2,7 @@ const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
 
-const template = `
-const HFX = require("../HFX");
+const template = `const HFX = require("../HFX");
 
 class {{{ name }}} extends HFX.Section {
   constructor() {

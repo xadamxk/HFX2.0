@@ -11,7 +11,7 @@ const standalone = "HFX";
 const main = "./src/HFX.js";
 const build = [main, "./src/sections/*.js", "./src/features/**/*.js"];
 const watch = build.concat(["./src/core/*.js"]);
-const browserifyOptions = (entries) => Object({
+const browserifyOptions = entries => Object({
   entries: entries,
   standalone: standalone
 });
@@ -19,8 +19,7 @@ const browserifyOptions = (entries) => Object({
 gulp.task("build", asyncComplete => {
   const bundledStream = through();
 
-  bundledStream
-    .pipe(source(main))
+  bundledStream.pipe(source(main))
     .pipe(rename(`${standalone}.js`))
     .pipe(buffer())
     .on("error", log.error)
@@ -38,7 +37,7 @@ gulp.task("build", asyncComplete => {
 });
 
 const copyNodeAssets = (name, assets) => {
-  assets = assets.map((asset) => `./node_modules/${name}/${asset}`);
+  assets = assets.map(asset => `./node_modules/${name}/${asset}`);
   gulp.src(assets)
     .pipe(gulp.dest(`./extension/assets/lib/${name}`));
 };
@@ -50,7 +49,6 @@ gulp.task("libs", asyncComplete => {
   copyNodeAssets("font-awesome", ["css/font-awesome.min.css"]);
   copyNodeAssets("moment", ["min/moment.min.js"]);
   copyNodeAssets("crx-hotreload", ["hot-reload.js"]);
-
   asyncComplete();
 });
 

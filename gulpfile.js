@@ -1,66 +1,61 @@
-var gulp = require("gulp");
-var concat = require("gulp-concat");
-var browserify = require("gulp-browserify");
+const browserify = require("browserify");
+const gulp = require("gulp");
+const log = require("gulplog");
+const rename = require("gulp-rename");
+const source = require("vinyl-source-stream");
+const buffer = require("vinyl-buffer");
+const globby = require("globby");
+const through = require("through2");
+
+const standalone = "HFX";
+const main = "./src/HFX.js";
+const build = [main, "./src/sections/*.js", "./src/features/**/*.js"];
+const watch = build.concat(["./src/core/*.js"]);
+const browserifyOptions = (entries) => Object({
+  entries: entries,
+  standalone: standalone
+});
 
 gulp.task("build", asyncComplete => {
-  gulp.src(["src/_core/HFX.js"])
-    .pipe(concat("HFX.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
+  const bundledStream = through();
 
-  gulp.src(["src/modules/global/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("Global.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
+  bundledStream
+    .pipe(source(main))
+    .pipe(rename(`${standalone}.js`))
+    .pipe(buffer())
+    .on("error", log.error)
+    .pipe(gulp.dest("./extension/release/js"));
 
-  gulp.src(["src/modules/game/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("Game.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
-
-  gulp.src(["src/modules/threads/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("Threads.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
-
-  gulp.src(["src/modules/pms/**.js", "src/_core/modules/**.js"])
-    .pipe(concat("PMs.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
+  globby(build).then(entries => {
+    browserify(browserifyOptions(entries))
+      .bundle()
+      .pipe(bundledStream);
+  }).catch(err => {
+    bundledStream.emit("error", err);
+  });
 
   asyncComplete();
 });
 
+const copyNodeAssets = (name, assets) => {
+  assets = assets.map((asset) => `./node_modules/${name}/${asset}`);
+  gulp.src(assets)
+    .pipe(gulp.dest(`./extension/assets/lib/${name}`));
+};
+
 gulp.task("libs", asyncComplete => {
-  // jQuery
-  gulp.src("./node_modules/jquery/dist/jquery.min.js")
-    .pipe(gulp.dest("./assets/lib/jquery/"));
-
-  // Boostrap
-  gulp.src(["./node_modules/bootstrap/dist/css/bootstrap.min.css", "./node_modules/bootstrap/dist/js/bootstrap.min.js"])
-    .pipe(gulp.dest("./assets/lib/bootstrap"));
-
-  // Titatoggle
-  gulp.src("./node_modules/titatoggle/dist/titatoggle-dist-min.css")
-    .pipe(gulp.dest("./assets/lib/titatoggle"));
-
-  // Font awesome
-  gulp.src("./node_modules/font-awesome/css/font-awesome.min.css")
-    .pipe(gulp.dest("./assets/lib/fontawesome"));
-
-  // Moment js
-  gulp.src("./node_modules/moment/min/moment.min.js")
-    .pipe(gulp.dest("./assets/lib/moment"));
-
-  // Hot Reload
-  gulp.src("./node_modules/crx-hotreload/hot-reload.js")
-    .pipe(gulp.dest("./assets/lib/hotreload"));
+  copyNodeAssets("jquery", ["dist/jquery.min.js"]);
+  copyNodeAssets("bootstrap", ["dist/css/bootstrap.min.css", "dist/js/bootstrap.min.js"]);
+  copyNodeAssets("titatoggle", ["dist/titatoggle-dist-min.css"]);
+  copyNodeAssets("font-awesome", ["css/font-awesome.min.css"]);
+  copyNodeAssets("moment", ["min/moment.min.js"]);
+  copyNodeAssets("crx-hotreload", ["hot-reload.js"]);
 
   asyncComplete();
 });
 
 gulp.task("watch", asyncComplete => {
-  gulp.watch("src/**/*.js", gulp.series("build"));
+  gulp.watch(watch, gulp.series("build"));
   asyncComplete();
 });
 

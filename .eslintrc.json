@@ -17,8 +17,6 @@
   "globals": {
     "$": true,
     "chrome": true,
-    "FileReader": true,
-    "HFX": true,
     "moment": true
   }
 }

@@ -10,20 +10,20 @@ module.exports = class Logger {
   }
 
   error(message, ...opts) {
-    console.error(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
+    console.error(...[`[HFX] ${message}`, ...opts]);
   }
 
   warn(message, ...opts) {
-    console.warn(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
+    console.warn(...[`[HFX] ${message}`, ...opts]);
   }
 
   log(message, ...opts) {
-    console.log(`[HFX] ${message}`, (opts.length > 0 ? opts : ""));
+    console.log(...[`[HFX] ${message}`, ...opts]);
   }
 
   debug(message, ...opts) {
     if (this.debugMode) {
-      console.log(`[HFX] DEBUG: ${message}`, (opts.length > 0 ? opts : ""));
+      console.log(...[`[HFX] DEBUG: ${message}`, ...opts]);
     }
   }
 };

@@ -18,5 +18,8 @@
     "$": true,
     "chrome": true,
     "moment": true
+  },
+  "env": {
+    "jest": true
   }
 }

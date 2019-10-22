@@ -2,6 +2,13 @@ global.chrome = require("sinon-chrome");
 const HFX = require("../../src/HFX");
 
 describe("Logger", () => {
+  it("ToggleDebug works", () => {
+    const startingDebugMode = HFX.Logger.debugMode;
+    expect(HFX.Logger.debugMode).toBe(startingDebugMode);
+    HFX.Logger.toggleDebug();
+    expect(HFX.Logger.debugMode).toBe(!startingDebugMode);
+  });
+
   it("Error calls console.error", () => {
     const spy = jest.spyOn(console, "error").mockImplementation();
     HFX.Logger.error("Error");

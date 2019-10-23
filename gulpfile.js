@@ -49,6 +49,7 @@ gulp.task("libs", asyncComplete => {
   copyNodeAssets("font-awesome", ["css/font-awesome.min.css"]);
   copyNodeAssets("moment", ["min/moment.min.js"]);
   copyNodeAssets("crx-hotreload", ["hot-reload.js"]);
+  copyNodeAssets("chart.js", ["/dist/Chart.bundle.min.js"]);
   asyncComplete();
 });
 

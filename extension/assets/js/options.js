@@ -22,11 +22,23 @@ $(document).ready(function() {
   $("#main").hide();
 
   HFX.Settings.getAll((items) => {
-    for (const section in sections) {
+    const sortedSections = Object.keys(sections).sort();
+
+    for (const section of sortedSections) {
       addSectionToList(section);
       buildSectionBase(section);
 
-      for (const feature in sections[section]) {
+      const sortedFeatures = Object.keys(sections[section]).sort((f1, f2) => {
+        if (sections[section][f1].name > sections[section][f2].name) {
+          return 1;
+        } else if (sections[section][f1].name < sections[section][f2].name) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
+
+      for (const feature of sortedFeatures) {
         const settings = sections[section][feature];
         settings.enabled = feature in items ? items[feature].enabled : sections[section][feature].default;
         addSettingOptionToList(section, feature, settings);
@@ -76,7 +88,7 @@ $(document).ready(function() {
           <label>
             <input type="checkbox" data-section="${section}" data-feature="${feature}" ${checked}>
             <span></span>
-          <label>
+          </label>
         </div>
       </div>
     </div>

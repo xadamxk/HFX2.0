@@ -43,6 +43,7 @@
       "js": [
         "assets/lib/jquery/jquery.min.js",
         "assets/lib/moment/moment.min.js",
+        "assets/lib/chart.js/Chart.bundle.min.js",
         "release/js/HFX.js"
       ],
       "css": [

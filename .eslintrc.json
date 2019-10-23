@@ -17,7 +17,8 @@
   "globals": {
     "$": true,
     "chrome": true,
-    "moment": true
+    "moment": true,
+    "Chart": true
   },
   "env": {
     "jest": true

@@ -58,16 +58,28 @@ function generate() {
   const prompt = require("./prompt");
 
   prompt(questions, answers => {
+    const name = answers[0];
+    const nameLower = name.toLowerCase();
+    const nameSpaced = name.split(/(?=[A-Z])/).join(" ");
+    const section = sections[answers[1]];
+    const sectionLower = section.toLowerCase();
+    const description = answers[2];
+    const enabled = answers[3];
+
     const feature = mustache.render(template, {
-      name: answers[0],
-      nameLower: answers[0].toLowerCase(),
-      nameSpaced: answers[0].split(/(?=[A-Z])/).join(" "),
-      section: sections[answers[1]],
-      description: answers[2],
-      enabled: answers[3]
+      name: name,
+      nameLower: nameLower,
+      nameSpaced: nameSpaced,
+      section: section,
+      description: description,
+      enabled: enabled
     });
 
-    fs.writeFileSync(`./src/features/${sections[answers[1]]}/${answers[0]}.js`, feature);
+    if (!fs.existsSync(`./src/features/${sectionLower}`)) {
+      fs.mkdirSync(`./src/features/${sectionLower}`);
+    }
+
+    fs.writeFileSync(`./src/features/${sectionLower}/${name}.js`, feature);
   });
 }
 

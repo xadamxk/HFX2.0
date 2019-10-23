@@ -41,13 +41,17 @@ function generate() {
   const prompt = require("./prompt");
 
   prompt(questions, answers => {
+    const name = answers[0];
+    const nameLower = name.toLowerCase();
+    const paths = answers[1];
+
     const section = mustache.render(template, {
-      name: answers[0],
-      nameLower: answers[0].toLowerCase(),
-      paths: answers[1]
+      name: name,
+      nameLower: nameLower,
+      paths: paths
     });
 
-    fs.writeFileSync(`./src/sections/${answers[0]}.js`, section);
+    fs.writeFileSync(`./src/sections/${name}.js`, section);
   });
 }
 

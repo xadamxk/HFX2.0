@@ -2,7 +2,7 @@
   "name": "hfx",
   "version": "0.0.1",
   "description": "Enhance your HF experience, a native browser extension.",
-  "main": "src/_core/HFX.js",
+  "main": "src/HFX.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint \"./src/**\" \"./tests/**\"",
     "test": "jest",
@@ -24,13 +24,12 @@
     "font-awesome": "^4.7.0",
     "global": "^4.4.0",
     "jquery": "^3.3.1",
-    "moment": "^2.24.0",
-    "titatoggle": "^2.0.1"
+    "moment": "^2.24.0"
   },
   "devDependencies": {
     "browserify": "^16.5.0",
     "eslint": "^6.5.0",
-    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jest": "^22.19.0",
     "eslint-plugin-node": "^6.0.0",

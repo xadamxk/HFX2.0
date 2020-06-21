@@ -53,11 +53,9 @@ $(document).ready(function() {
 
   function addSectionToList(section) {
     $(".nav").append(`
-      <li class="nav-item w-100">
-        <a class="nav-link text-capitalize" data-toggle="tab" href="#${section}" role="tab">
-        ${section}
-        </a>
-      </li>
+      <a href="#${section}" class="nav-link text-capitalize" role="tab" data-toggle="tab">
+      ${section}
+      </a>
     `);
   }
 
@@ -65,8 +63,7 @@ $(document).ready(function() {
     $(".tab-content").append(`
       <div id="${section}" class="tab-pane fade hfx-section">
         <h3 class="text-capitalize">${section}</h3>
-        <div class="card card-default" role="tabpanel">
-        </div>
+        <div class="card card-default" role="tabpanel"></div>
       </div>
     `);
   }
@@ -77,21 +74,20 @@ $(document).ready(function() {
 
     // TODO: Logic for more setting options (ie. textbox)
     $(`#${section}`).find(".card").append(`
-    <div class="d-flex justify-content-start hfx-feature">
-      <div class="mr-auto p-2 section-name">${settings.name}</div>
-      <div class="p-2">
-      ${settings.description}
-      ${settings.author ? `<br /><br /><div>Author: <a href="${settings.author.profile}" target="_blank">${settings.author.name}</a></div>` : ""}
-      </div>
-      <div class="mt-auto p-2">
-        <div class="checkbox-slider--default">
-          <label>
-            <input type="checkbox" data-section="${section}" data-feature="${feature}" ${checked}>
-            <span></span>
-          </label>
+      <div class="d-flex justify-content-start py-3 hfx-feature">
+        <div class="col-4 font-weight-bold section-name">${settings.name}</div>
+        <div class="col-7">
+          ${settings.description}
+          ${settings.author ? `<div>Author: <a href="${settings.author.profile}" target="_blank">${settings.author.name}</a></div>` : ""}
+        </div>
+        <div class="col-1">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="${settings.id}" data-section="${section}" data-feature="${feature}" ${checked}>
+              <label class="custom-control-label" for="${settings.id}"></label>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
     `);
   }
 

@@ -45,7 +45,6 @@ const copyNodeAssets = (name, assets) => {
 gulp.task("libs", asyncComplete => {
   copyNodeAssets("jquery", ["dist/jquery.min.js"]);
   copyNodeAssets("bootstrap", ["dist/css/bootstrap.min.css", "dist/js/bootstrap.min.js"]);
-  copyNodeAssets("titatoggle", ["dist/titatoggle-dist-min.css"]);
   copyNodeAssets("font-awesome", ["css/font-awesome.min.css"]);
   copyNodeAssets("moment", ["min/moment.min.js"]);
   copyNodeAssets("crx-hotreload", ["hot-reload.js"]);

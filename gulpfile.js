@@ -45,7 +45,7 @@ const copyNodeAssets = (name, assets, substitute = null) => {
     stream = stream.pipe(replace(substitute.pattern, substitute.replacement));
   }
 
-  stream.pipe(gulp.dest(`./extension/assets/lib/${name}`));
+  stream.pipe(gulp.dest(`./extension/assets/lib/${name.split("/").pop()}`));
 };
 
 gulp.task("libs", asyncComplete => {

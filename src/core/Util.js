@@ -38,4 +38,17 @@ module.exports = class Util {
   getURL(resource) {
     return chrome.extension.getURL(resource);
   }
+
+  getConfigurableValue(id, feature, settings) {
+    let value;
+
+    if (settings && id in settings) {
+      value = settings[id];
+    } else if (feature.configurables) {
+      value = feature.configurables.filter(cfg => cfg.id === id)[0];
+      value = value ? value.default : value;
+    }
+
+    return value;
+  }
 };

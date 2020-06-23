@@ -6,12 +6,20 @@ class ChangeBodyColor extends HFX.Feature {
       section: HFX.Section.Global,
       name: "Change Body Color",
       default: false,
-      description: "Change color."
+      description: "Change color.",
+      configurables: [
+        {
+          id: "color",
+          type: "color",
+          label: "Color",
+          default: "#ff0000"
+        }
+      ]
     });
   }
 
-  run() {
-    $("table").css("color", "red");
+  run(settings) {
+    $("table").css("color", HFX.Util.getConfigurableValue("color", this, settings));
   }
 };
 

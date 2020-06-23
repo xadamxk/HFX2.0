@@ -17,13 +17,9 @@ module.exports = class Feature {
     this.default = opts.default;
     this.description = opts.description;
 
-    if (opts.subsection === undefined) {
-      this.subsection = "general";
-    }
-
-    if (opts.author !== undefined) {
-      this.author = opts.author;
-    }
+    this.subsection = opts.subsection ? opts.subsection : "general";
+    this.author = opts.author;
+    this.configurables = opts.configurables;
 
     HFX.Settings.get(this, (settings) => {
       if (settings === undefined) {
@@ -41,7 +37,7 @@ module.exports = class Feature {
     HFX.Logger.debug(`${this.class} loaded.`);
 
     if (settings.enabled && this.section.runnable) {
-      this.run(this.default);
+      this.run(settings);
       HFX.Logger.debug(`${this.class} running.`);
     }
   }

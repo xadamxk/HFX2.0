@@ -6,13 +6,14 @@ $(document).ready(function() {
   const sections = {};
 
   for (const feature in features) {
-    const section = features[feature].section.name;
+    const section = features[feature].section;
 
-    if (!(section in sections)) {
-      sections[section] = {};
+    if (!(section.class in sections)) {
+      sections[section.class] = section;
+      sections[section.class]["features"] = {};
     }
 
-    sections[section][feature] = features[feature];
+    sections[section.class]["features"][feature] = features[feature];
   }
 
   // Load version string
@@ -25,13 +26,13 @@ $(document).ready(function() {
     const sortedSections = Object.keys(sections).sort();
 
     for (const section of sortedSections) {
-      addSectionToList(section);
-      buildSectionBase(section);
+      addSectionToList(sections[section]);
+      buildSectionBase(sections[section]);
 
-      const sortedFeatures = Object.keys(sections[section]).sort((f1, f2) => {
-        if (sections[section][f1].name > sections[section][f2].name) {
+      const sortedFeatures = Object.keys(sections[section]["features"]).sort((f1, f2) => {
+        if (sections[section]["features"][f1].name > sections[section]["features"][f2].name) {
           return 1;
-        } else if (sections[section][f1].name < sections[section][f2].name) {
+        } else if (sections[section]["features"][f1].name < sections[section]["features"][f2].name) {
           return -1;
         } else {
           return 0;
@@ -39,9 +40,8 @@ $(document).ready(function() {
       });
 
       for (const feature of sortedFeatures) {
-        const settings = sections[section][feature];
-        settings.enabled = feature in items ? items[feature].enabled : sections[section][feature].default;
-        addSettingOptionToList(section, feature, settings);
+        const settings = items[feature] || {enabled: feature.default};
+        addSettingOptionToList(sections[section], features[feature], settings);
       }
     }
 
@@ -53,42 +53,75 @@ $(document).ready(function() {
 
   function addSectionToList(section) {
     $(".nav").append(`
-      <a href="#${section}" class="nav-link text-capitalize" role="tab" data-toggle="tab">
-      ${section}
+      <a href="#${section.class}" class="nav-link text-capitalize" role="tab" data-toggle="tab">
+        ${section.name}
       </a>
     `);
   }
 
   function buildSectionBase(section) {
     $(".tab-content").append(`
-      <div id="${section}" class="tab-pane fade hfx-section">
-        <h3 class="text-capitalize">${section}</h3>
-        <div class="card card-default" role="tabpanel"></div>
+      <div id="${section.class}" class="tab-pane fade hfx-section">
+        <h3 class="text-capitalize">${section.name}</h3>
+        <div id="${section.class}Accordion" class="accordion" role="tabpanel">
+        </div>
       </div>
     `);
   }
 
   function addSettingOptionToList(section, feature, settings) {
-    const checked = settings.enabled ? "checked" : "";
-    settings.description = settings.description.replace(/\r?\n/g, "<br />");
-
-    // TODO: Logic for more setting options (ie. textbox)
-    $(`#${section}`).find(".card").append(`
-      <div class="d-flex justify-content-start py-3 hfx-feature">
-        <div class="col-4 font-weight-bold section-name">${settings.name}</div>
-        <div class="col-7">
-          ${settings.description}
-          ${settings.author ? `<div>Author: <a href="${settings.author.profile}" target="_blank">${settings.author.name}</a></div>` : ""}
-        </div>
-        <div class="col-1">
-            <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="${settings.id}" data-section="${section}" data-feature="${feature}" ${checked}>
-              <label class="custom-control-label" for="${settings.id}"></label>
+    $(`#${section.class}Accordion`).append(`
+      <div class="card">
+        <div class="card-header p-0">
+          <div class="d-flex justify-content-start py-3 hfx-feature">
+            <div class="col-4 font-weight-bold section-name">
+              <a class="stretched-link" data-toggle="collapse" ${feature.configurables ? `href="#${feature.class}Settings" role="button"` : ""}>
+                ${feature.name}
+              </a>
             </div>
+            <div class="col-7">
+              ${feature.description.replace(/\r?\n/g, "<br />")}
+              ${feature.author ? `<div>Author: <a href="${feature.author.profile}" target="_blank">${feature.author.name}</a></div>` : ""}
+            </div>
+            <div class="col-1">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="${feature.class}Toggle" data-section="${section.class}" data-feature="${feature.class}" data-setting="enabled" ${settings.enabled ? "checked" : ""}>
+                <label class="custom-control-label" for="${feature.class}Toggle"></label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="${feature.class}Settings" class="collapse" data-parent="#${section.class}Accordion">
+          <div class="card-body">
+            ${feature.configurables ? renderConfigurables(section, feature, settings) : "No extra settings."}
           </div>
         </div>
       </div>
     `);
+  }
+
+  const renderers = {
+    color: renderGeneric,
+    text: renderGeneric
+  };
+
+  function renderConfigurables(section, feature, settings) {
+    return `
+      <div class="row align-items-center">
+        ${feature.configurables.map(configurable => `
+          <div class="col-auto">
+            ${renderers[configurable.type] ? renderers[configurable.type](section, feature, configurable, HFX.Util.getConfigurableValue(configurable.id, feature, settings)) : `Cannot render ${configurable.type} type.`}
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function renderGeneric(section, feature, configurable, value) {
+    return `
+      <label class="mb-0">${configurable.label}</label>
+      <input type="${configurable.type}" data-section="${section.class}" data-feature="${feature.class}" data-setting="${configurable.id}" value="${value}">
+    `;
   }
 
   function createChangeHandlers() {
@@ -96,7 +129,16 @@ $(document).ready(function() {
       const feature = features[$(this).data("feature")];
 
       HFX.Settings.get(feature, (settings) => {
-        settings.enabled = $(this).prop("checked");
+        settings[$(this).data("setting")] = $(this).prop("checked");
+        HFX.Settings.set(feature, settings);
+      });
+    });
+
+    $("input[type=color],input[type=text]").change(function() {
+      const feature = features[$(this).data("feature")];
+
+      HFX.Settings.get(feature, (settings) => {
+        settings[$(this).data("setting")] = $(this).val();
         HFX.Settings.set(feature, settings);
       });
     });

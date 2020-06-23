@@ -2,6 +2,7 @@ const browserify = require("browserify");
 const gulp = require("gulp");
 const log = require("gulplog");
 const rename = require("gulp-rename");
+const replace = require("gulp-replace");
 const source = require("vinyl-source-stream");
 const buffer = require("vinyl-buffer");
 const globby = require("globby");
@@ -36,19 +37,24 @@ gulp.task("build", asyncComplete => {
   asyncComplete();
 });
 
-const copyNodeAssets = (name, assets) => {
+const copyNodeAssets = (name, assets, substitute = null) => {
   assets = assets.map(asset => `./node_modules/${name}/${asset}`);
-  gulp.src(assets)
-    .pipe(gulp.dest(`./extension/assets/lib/${name}`));
+  let stream = gulp.src(assets);
+
+  if (substitute !== null) {
+    stream = stream.pipe(replace(substitute.pattern, substitute.replacement));
+  }
+
+  stream.pipe(gulp.dest(`./extension/assets/lib/${name}`));
 };
 
 gulp.task("libs", asyncComplete => {
   copyNodeAssets("jquery", ["dist/jquery.min.js"]);
   copyNodeAssets("bootstrap", ["dist/css/bootstrap.min.css", "dist/js/bootstrap.min.js"]);
-  copyNodeAssets("font-awesome", ["css/font-awesome.min.css"]);
+  copyNodeAssets("font-awesome", ["css/font-awesome.min.css", "fonts/*"], {pattern: /url\((?:'|")\.\.\/fonts\/([^'"]+)(?:'|")\)/g, replacement: "url(\"./$1\")"});
   copyNodeAssets("moment", ["min/moment.min.js"]);
   copyNodeAssets("crx-hotreload", ["hot-reload.js"]);
-  copyNodeAssets("chart.js", ["/dist/Chart.bundle.min.js"]);
+  copyNodeAssets("chart.js", ["dist/Chart.bundle.min.js"]);
   asyncComplete();
 });
 

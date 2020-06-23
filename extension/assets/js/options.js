@@ -102,7 +102,8 @@ $(document).ready(function() {
 
   const renderers = {
     color: renderGeneric,
-    text: renderGeneric
+    text: renderGeneric,
+    checkbox: renderCheckbox
   };
 
   function renderConfigurables(section, feature, settings) {
@@ -121,6 +122,15 @@ $(document).ready(function() {
     return `
       <label class="mb-0">${configurable.label}</label>
       <input type="${configurable.type}" data-section="${section.class}" data-feature="${feature.class}" data-setting="${configurable.id}" value="${value}">
+    `;
+  }
+
+  function renderCheckbox(section, feature, configurable, value) {
+    return `
+      <div class="form-check form-check-inline mr-0">
+        <input type="${configurable.type}" class="form-check-input" data-section="${section.class}" data-feature="${feature.class}" data-setting="${configurable.id}" ${value ? "checked" : ""}>
+        <label class="form-check-label">${configurable.label}</label>
+      </div>
     `;
   }
 

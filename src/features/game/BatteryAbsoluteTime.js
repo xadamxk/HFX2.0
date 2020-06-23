@@ -6,8 +6,7 @@ class BatteryAbsoluteTime extends HFX.Feature {
       section: HFX.Section.Game,
       name: "Battery Absolute Time",
       default: true,
-      description: "Show absolute timestamp for battery full charge.",
-      id: "batteryabsolutetime"
+      description: "Show absolute timestamp for battery full charge."
     });
   }
 

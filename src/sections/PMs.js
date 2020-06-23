@@ -2,7 +2,7 @@ const HFX = require("../HFX");
 
 class PMs extends HFX.Section {
   constructor() {
-    super("pms", "/private.php");
+    super("/private.php");
   }
 };
 

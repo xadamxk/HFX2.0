@@ -6,8 +6,7 @@ class PMFromPost extends HFX.Feature {
       section: HFX.Section.Threads,
       name: "PM From Post",
       default: true,
-      description: "Allows you to PM members from their post.",
-      id: "pmfrompost"
+      description: "Allows you to PM members from their post."
     });
   }
 

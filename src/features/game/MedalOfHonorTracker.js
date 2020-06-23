@@ -7,7 +7,6 @@ class MedalOfHonorTracker extends HFX.Feature {
       name: "Medal of Honor Tracker",
       default: true,
       description: "Show progress bar toward level 50.",
-      id: "medalofhonortracker",
       author: {
         name: "+mK",
         profile: "https://hackforums.net/member.php?action=profile&uid=585389"

@@ -2,7 +2,7 @@ const HFX = require("../HFX");
 
 class Threads extends HFX.Section {
   constructor() {
-    super("threads", "/showthread.php");
+    super("/showthread.php");
   }
 };
 

@@ -2,7 +2,7 @@ const HFX = require("../HFX");
 
 class Global extends HFX.Section {
   constructor() {
-    super("global", "/");
+    super("/");
   }
 };
 

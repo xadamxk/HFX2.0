@@ -2,7 +2,7 @@ const HFX = require("../HFX");
 
 class Game extends HFX.Section {
   constructor() {
-    super("game", "/gamecp.php");
+    super("/gamecp.php");
   }
 };
 

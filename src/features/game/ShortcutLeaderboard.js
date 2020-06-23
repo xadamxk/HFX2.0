@@ -6,8 +6,7 @@ class ShortcutLeaderboard extends HFX.Feature {
       section: HFX.Section.Game,
       name: "Shortcut: Leaderboard",
       default: true,
-      description: "Show leaderboard shortcut in game header",
-      id: "shortcutleaderboard"
+      description: "Show leaderboard shortcut in game header"
     });
   }
 

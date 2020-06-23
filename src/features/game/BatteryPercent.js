@@ -6,8 +6,7 @@ class BatteryPercent extends HFX.Feature {
       section: HFX.Section.Game,
       name: "Battery Percent",
       default: true,
-      description: "Show percentage next to battery icon.",
-      id: "batterypercent"
+      description: "Show percentage next to battery icon."
     });
   }
 

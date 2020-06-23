@@ -6,8 +6,7 @@ class RepCharts extends HFX.Feature {
       section: HFX.Section.Reputation,
       name: "Rep Charts",
       default: true,
-      description: "Reputation details in a nice chart.",
-      id: "repcharts"
+      description: "Reputation details in a nice chart."
     });
   }
 

@@ -2,7 +2,7 @@ const HFX = require("../HFX");
 
 class Reputation extends HFX.Section {
   constructor() {
-    super("reputation", "/reputation.php", "/repsgiven.php");
+    super("/reputation.php", "/repsgiven.php");
   }
 };
 

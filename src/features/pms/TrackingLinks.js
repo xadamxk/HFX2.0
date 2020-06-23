@@ -6,8 +6,7 @@ class TrackingLinks extends HFX.Feature {
       section: HFX.Section.PMs,
       name: "Tracking Links",
       default: true,
-      description: "Turns all messages in 'Message Tracking' to clickable hyperlinks.",
-      id: "trackinglinks"
+      description: "Turns all messages in 'Message Tracking' to clickable hyperlinks."
     });
   }
 

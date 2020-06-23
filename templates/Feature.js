@@ -10,8 +10,7 @@ class {{{ name }}} extends HFX.Feature {
       section: HFX.Section.{{{ section }}},
       name: "{{{ nameSpaced }}}",
       default: {{{ enabled }}},
-      description: "{{{ description }}}",
-      id: "{{{ nameLower }}}"
+      description: "{{{ description }}}"
     });
   }
 
@@ -59,7 +58,6 @@ function generate() {
 
   prompt(questions, answers => {
     const name = answers[0];
-    const nameLower = name.toLowerCase();
     const nameSpaced = name.split(/(?=[A-Z])/).join(" ");
     const section = sections[answers[1]];
     const sectionLower = section.toLowerCase();
@@ -68,7 +66,6 @@ function generate() {
 
     const feature = mustache.render(template, {
       name: name,
-      nameLower: nameLower,
       nameSpaced: nameSpaced,
       section: section,
       description: description,

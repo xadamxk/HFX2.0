@@ -6,8 +6,7 @@ class ExpandBlockedPosts extends HFX.Feature {
       section: HFX.Section.Threads,
       name: "Expand Blocked Posts",
       default: true,
-      description: "Automatically expands blocked user's posts.",
-      id: "expandblockedposts"
+      description: "Automatically expands blocked user's posts."
     });
   }
 

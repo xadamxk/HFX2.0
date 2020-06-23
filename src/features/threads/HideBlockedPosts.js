@@ -6,8 +6,7 @@ class HideBlockedPosts extends HFX.Feature {
       section: HFX.Section.Threads,
       name: "Hide Blocked Posts",
       default: false,
-      description: "Automatically hides blocked user's posts.",
-      id: "showblockedposts"
+      description: "Automatically hides blocked user's posts."
     });
   }
 

@@ -2,7 +2,7 @@ const HFX = require("../HFX");
 
 module.exports = class Feature {
   constructor(opts) {
-    const required = ["section", "name", "default", "description", "id"];
+    const required = ["section", "name", "default", "description"];
     this.class = this.constructor.name;
 
     for (const index in required) {
@@ -16,7 +16,6 @@ module.exports = class Feature {
     this.name = opts.name;
     this.default = opts.default;
     this.description = opts.description;
-    this.id = opts.id;
 
     if (opts.subsection === undefined) {
       this.subsection = "general";

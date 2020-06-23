@@ -6,7 +6,7 @@ const template = `const HFX = require("../HFX");
 
 class {{{ name }}} extends HFX.Section {
   constructor() {
-    super("{{{ nameLower }}}", "{{{ paths }}}");
+    super("{{{ paths }}}");
   }
 };
 
@@ -42,12 +42,10 @@ function generate() {
 
   prompt(questions, answers => {
     const name = answers[0];
-    const nameLower = name.toLowerCase();
     const paths = answers[1];
 
     const section = mustache.render(template, {
       name: name,
-      nameLower: nameLower,
       paths: paths
     });
 

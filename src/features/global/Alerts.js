@@ -6,8 +6,7 @@ class Alerts extends HFX.Feature {
       section: HFX.Section.Global,
       name: "HFX Alerts",
       default: true,
-      description: "Alert system for new features and changes",
-      id: "alerts"
+      description: "Alert system for new features and changes"
     });
     this.fetchDelay = 5; // Delay (minutes) between new alert fetches
     this.fetchLocation = "https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json";

@@ -1,4 +1,5 @@
 const HFX = require("../../HFX");
+const Color = require("../../configurables/Color");
 
 class ChangeBodyColor extends HFX.Feature {
   constructor() {
@@ -8,12 +9,7 @@ class ChangeBodyColor extends HFX.Feature {
       default: false,
       description: "Change color.",
       configurables: [
-        {
-          id: "color",
-          type: "color",
-          label: "Color",
-          default: "#ff0000"
-        }
+        new Color({id: "color", label: "Color", default: "#ff0000"})
       ]
     });
   }

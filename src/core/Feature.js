@@ -41,4 +41,8 @@ module.exports = class Feature {
       HFX.Logger.debug(`${this.class} running.`);
     }
   }
+
+  run() {
+    HFX.Logger.error("Cannot run this feature.", this);
+  }
 };

@@ -93,43 +93,21 @@ $(document).ready(function() {
         </div>
         <div id="${feature.class}Settings" class="collapse" data-parent="#${section.class}Accordion">
           <div class="card-body">
-            ${feature.configurables ? renderConfigurables(section, feature, settings) : "No extra settings."}
+            ${feature.configurables ? renderConfigurables(section, feature, settings) : "No extra configurables."}
           </div>
         </div>
       </div>
     `);
   }
 
-  const renderers = {
-    color: renderGeneric,
-    text: renderGeneric,
-    checkbox: renderCheckbox
-  };
-
   function renderConfigurables(section, feature, settings) {
     return `
       <div class="row align-items-center">
         ${feature.configurables.map(configurable => `
           <div class="col-auto">
-            ${renderers[configurable.type] ? renderers[configurable.type](section, feature, configurable, HFX.Util.getConfigurableValue(configurable.id, feature, settings)) : `Cannot render ${configurable.type} type.`}
+            ${configurable instanceof HFX.Configurable ? configurable.render(section, feature, settings) : "Cannot render non-configurable."}
           </div>
         `).join("")}
-      </div>
-    `;
-  }
-
-  function renderGeneric(section, feature, configurable, value) {
-    return `
-      <label class="mb-0">${configurable.label}</label>
-      <input type="${configurable.type}" data-section="${section.class}" data-feature="${feature.class}" data-setting="${configurable.id}" value="${value}">
-    `;
-  }
-
-  function renderCheckbox(section, feature, configurable, value) {
-    return `
-      <div class="form-check form-check-inline mr-0">
-        <input type="${configurable.type}" class="form-check-input" data-section="${section.class}" data-feature="${feature.class}" data-setting="${configurable.id}" ${value ? "checked" : ""}>
-        <label class="form-check-label">${configurable.label}</label>
       </div>
     `;
   }

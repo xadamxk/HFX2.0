@@ -1,7 +1,7 @@
 const Configurable = require("../core/Configurable");
 const Util = require("../core/Util");
 
-class Generic extends Configurable {
+module.exports = class Generic extends Configurable {
   render(section, feature, settings) {
     const value = Util.getConfigurableValue(this.id, feature, settings);
 
@@ -11,7 +11,3 @@ class Generic extends Configurable {
     `;
   }
 };
-
-Configurable.Generic = Generic;
-
-module.exports = Generic;

@@ -1,7 +1,7 @@
 const Configurable = require("../core/Configurable");
 const Util = require("../core/Util");
 
-class Checkbox extends Configurable {
+module.exports = class Checkbox extends Configurable {
   constructor(opts) {
     super(Object.assign(opts, {type: "checkbox"}));
   }
@@ -17,7 +17,3 @@ class Checkbox extends Configurable {
     `;
   }
 };
-
-Configurable.Checkbox = Checkbox;
-
-module.exports = Checkbox;

@@ -1,12 +1,13 @@
-const HFX = require("../HFX");
+const Configurable = require("../core/Configurable");
+const Util = require("../core/Util");
 
-class Checkbox extends HFX.Configurable {
+class Checkbox extends Configurable {
   constructor(opts) {
     super(Object.assign(opts, {type: "checkbox"}));
   }
 
   render(section, feature, settings) {
-    const value = HFX.Util.getConfigurableValue(this.id, feature, settings);
+    const value = Util.getConfigurableValue(this.id, feature, settings);
 
     return `
       <div class="form-check form-check-inline mr-0">
@@ -17,6 +18,6 @@ class Checkbox extends HFX.Configurable {
   }
 };
 
-HFX.Configurable.Checkbox = Checkbox;
+Configurable.Checkbox = Checkbox;
 
 module.exports = Checkbox;

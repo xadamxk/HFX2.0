@@ -1,10 +1,12 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Global = require("../../sections/Global");
 const Color = require("../../configurables/Color");
+const Util = require("../../core/Util");
 
-class ChangeBodyColor extends HFX.Feature {
+class ChangeBodyColor extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Global,
+      section: Global,
       name: "Change Body Color",
       default: false,
       description: "Change color.",
@@ -15,10 +17,8 @@ class ChangeBodyColor extends HFX.Feature {
   }
 
   run(settings) {
-    $("table").css("color", HFX.Util.getConfigurableValue("color", this, settings));
+    $("table").css("color", Util.getConfigurableValue("color", this, settings));
   }
 };
 
-HFX.Feature.ChangeBodyColor = new ChangeBodyColor();
-
-module.exports = HFX;
+module.exports = new ChangeBodyColor();

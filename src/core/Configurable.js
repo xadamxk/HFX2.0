@@ -1,4 +1,4 @@
-const HFX = require("../HFX");
+const Logger = require("../core/Logger");
 
 module.exports = class Configurable {
   constructor(opts) {
@@ -7,7 +7,7 @@ module.exports = class Configurable {
 
     for (const index in required) {
       if (opts[required[index]] === undefined) {
-        HFX.Logger.error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
+        Logger.error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
         return;
       }
     }
@@ -19,7 +19,7 @@ module.exports = class Configurable {
   }
 
   render() {
-    HFX.Logger.error(`Cannot render ${this.type} configurable.`, this);
+    Logger.error(`Cannot render ${this.type} configurable.`, this);
     return `Cannot render ${this.type} configurable.`;
   }
 };

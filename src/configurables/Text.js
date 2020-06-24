@@ -1,5 +1,5 @@
-const HFX = require("../HFX");
 const Generic = require("../configurables/Generic");
+const Configurable = require("../core/Configurable");
 
 class Text extends Generic {
   constructor(opts) {
@@ -7,6 +7,6 @@ class Text extends Generic {
   }
 };
 
-HFX.Configurable.Text = Text;
+Configurable.Text = Text;
 
 module.exports = Text;

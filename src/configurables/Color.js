@@ -1,4 +1,4 @@
-const HFX = require("../HFX");
+const Configurable = require("../core/Configurable");
 const Generic = require("../configurables/Generic");
 
 class Color extends Generic {
@@ -7,6 +7,6 @@ class Color extends Generic {
   }
 };
 
-HFX.Configurable.Color = Color;
+Configurable.Color = Color;
 
 module.exports = Color;

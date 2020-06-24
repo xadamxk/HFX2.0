@@ -4,35 +4,33 @@ const log = require("gulplog");
 const rename = require("gulp-rename");
 const replace = require("gulp-replace");
 const source = require("vinyl-source-stream");
-const buffer = require("vinyl-buffer");
-const globby = require("globby");
-const through = require("through2");
+
+const generateSections = require("./templates/Sections");
+const generateFeatures = require("./templates/Features");
+const generateConfigurables = require("./templates/Configurables");
 
 const standalone = "HFX";
 const main = "./src/HFX.js";
-const build = [main, "./src/sections/*.js", "./src/features/**/*.js"];
-const watch = build.concat(["./src/core/*.js"]);
-const browserifyOptions = entries => Object({
-  entries: entries,
+const core = "./src/core/*.js";
+const sections = "./src/sections/*.js";
+const features = "./src/features/**/*.js";
+
+const browserifyOptions = {
+  entries: main,
   standalone: standalone
-});
+};
 
 gulp.task("build", asyncComplete => {
-  const bundledStream = through();
-
-  bundledStream.pipe(source(main))
-    .pipe(rename(`${standalone}.js`))
-    .pipe(buffer())
+  browserify(browserifyOptions)
     .on("error", log.error)
+    .bundle()
+    .pipe(source(main))
+    .pipe(rename(`${standalone}.js`))
     .pipe(gulp.dest("./extension/release/js"));
 
-  globby(build).then(entries => {
-    browserify(browserifyOptions(entries))
-      .bundle()
-      .pipe(bundledStream);
-  }).catch(err => {
-    bundledStream.emit("error", err);
-  });
+  generateSections();
+  generateFeatures();
+  generateConfigurables();
 
   asyncComplete();
 });
@@ -59,7 +57,7 @@ gulp.task("libs", asyncComplete => {
 });
 
 gulp.task("watch", asyncComplete => {
-  gulp.watch(watch, gulp.series("build"));
+  gulp.watch([main, core, sections, features], gulp.series("build"));
   asyncComplete();
 });
 

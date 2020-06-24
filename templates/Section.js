@@ -2,17 +2,15 @@ const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
 
-const template = `const HFX = require("../HFX");
+const template = `const Section = require("../core/Section");
 
-class {{{ name }}} extends HFX.Section {
+class {{{ name }}} extends Section {
   constructor() {
     super("{{{ paths }}}");
   }
 };
 
-HFX.Section.{{{ name }}} = new {{{ name }}}();
-
-module.exports = HFX;
+module.exports = new {{{ name }}}();
 `;
 
 mustache.parse(template);
@@ -39,6 +37,7 @@ const questions = [
 
 function generate() {
   const prompt = require("./prompt");
+  const generateSections = require("../templates/Sections");
 
   prompt(questions, answers => {
     const name = answers[0];
@@ -50,6 +49,7 @@ function generate() {
     });
 
     fs.writeFileSync(`./src/sections/${name}.js`, section);
+    generateSections();
   });
 }
 

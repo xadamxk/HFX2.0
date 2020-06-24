@@ -2,12 +2,13 @@ const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
 
-const template = `const HFX = require("../../HFX");
+const template = `const Feature = require("../../core/Feature");
+const {{{ section }}} = require("../../sections/{{{ section }}}");
 
-class {{{ name }}} extends HFX.Feature {
+class {{{ name }}} extends Feature {
   constructor() {
     super({
-      section: HFX.Section.{{{ section }}},
+      section: {{{ section }}},
       name: "{{{ nameSpaced }}}",
       default: {{{ enabled }}},
       description: "{{{ description }}}"
@@ -18,9 +19,7 @@ class {{{ name }}} extends HFX.Feature {
   }
 };
 
-HFX.Feature.{{{ name }}} = new {{{ name }}}();
-
-module.exports = HFX;
+module.exports = new {{{ name }}}();
 `;
 
 mustache.parse(template);
@@ -55,6 +54,7 @@ const questions = [
 
 function generate() {
   const prompt = require("./prompt");
+  const generateFeatures = require("../templates/Features");
 
   prompt(questions, answers => {
     const name = answers[0];
@@ -77,6 +77,7 @@ function generate() {
     }
 
     fs.writeFileSync(`./src/features/${sectionLower}/${name}.js`, feature);
+    generateFeatures();
   });
 }
 

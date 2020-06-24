@@ -1,9 +1,11 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Global = require("../../sections/Global");
+const Util = require("../../core/Util");
 
-class CollapsePossiblyRelatedThreads extends HFX.Feature {
+class CollapsePossiblyRelatedThreads extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Global,
+      section: Global,
       name: "Collapse Possibly Related Threads",
       default: false,
       description: "Automatically collapse 'Possibly Related Threads' results.\n\nClick the toggle image to view results"
@@ -12,8 +14,8 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
 
   run() {
     const collapseImages = {
-      "collapse": HFX.Util.getURL("/assets/images/collapse_collapsed.gif"),
-      "collapsed": HFX.Util.getURL("/assets/images/collapse_collapsed.gif")
+      "collapse": Util.getURL("/assets/images/collapse_collapsed.gif"),
+      "collapsed": Util.getURL("/assets/images/collapse_collapsed.gif")
     };
     const prtTitle = $("strong:contains(Possibly Related Threads...)");
 
@@ -42,6 +44,4 @@ class CollapsePossiblyRelatedThreads extends HFX.Feature {
   }
 };
 
-HFX.Feature.CollapsePossiblyRelatedThreads = new CollapsePossiblyRelatedThreads();
-
-module.exports = HFX;
+module.exports = new CollapsePossiblyRelatedThreads();

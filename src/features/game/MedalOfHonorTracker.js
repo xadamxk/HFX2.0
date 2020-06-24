@@ -1,9 +1,10 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Game = require("../../sections/Game");
 
-class MedalOfHonorTracker extends HFX.Feature {
+class MedalOfHonorTracker extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Game,
+      section: Game,
       name: "Medal of Honor Tracker",
       default: true,
       description: "Show progress bar toward level 50.",
@@ -76,6 +77,4 @@ class MedalOfHonorTracker extends HFX.Feature {
   }
 };
 
-HFX.Feature.MedalOfHonorTracker = new MedalOfHonorTracker();
-
-module.exports = HFX;
+module.exports = new MedalOfHonorTracker();

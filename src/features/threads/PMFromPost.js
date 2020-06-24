@@ -1,9 +1,10 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Threads = require("../../sections/Threads");
 
-class PMFromPost extends HFX.Feature {
+class PMFromPost extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Threads,
+      section: Threads,
       name: "PM From Post",
       default: true,
       description: "Allows you to PM members from their post."
@@ -100,6 +101,4 @@ class PMFromPost extends HFX.Feature {
   }
 };
 
-HFX.Feature.PMFromPost = new PMFromPost();
-
-module.exports = HFX;
+module.exports = new PMFromPost();

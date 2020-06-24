@@ -1,9 +1,10 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const PMs = require("../../sections/PMs");
 
-class TrackingLinks extends HFX.Feature {
+class TrackingLinks extends Feature {
   constructor() {
     super({
-      section: HFX.Section.PMs,
+      section: PMs,
       name: "Tracking Links",
       default: true,
       description: "Turns all messages in 'Message Tracking' to clickable hyperlinks."
@@ -41,6 +42,4 @@ class TrackingLinks extends HFX.Feature {
   }
 };
 
-HFX.Feature.TrackingLinks = new TrackingLinks();
-
-module.exports = HFX;
+module.exports = new TrackingLinks();

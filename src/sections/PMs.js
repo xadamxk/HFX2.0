@@ -1,11 +1,9 @@
-const HFX = require("../HFX");
+const Section = require("../core/Section");
 
-class PMs extends HFX.Section {
+class PMs extends Section {
   constructor() {
     super("/private.php");
   }
 };
 
-HFX.Section.PMs = new PMs();
-
-module.exports = HFX;
+module.exports = new PMs();

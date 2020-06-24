@@ -1,9 +1,10 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Game = require("../../sections/Game");
 
-class ShortcutLogs extends HFX.Feature {
+class ShortcutLogs extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Game,
+      section: Game,
       name: "Shortcut: Logs",
       default: true,
       description: "Show logs shortcut in game header"
@@ -30,6 +31,4 @@ class ShortcutLogs extends HFX.Feature {
   }
 };
 
-HFX.Feature.ShortcutLogs = new ShortcutLogs();
-
-module.exports = HFX;
+module.exports = new ShortcutLogs();

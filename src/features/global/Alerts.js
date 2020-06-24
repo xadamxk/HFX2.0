@@ -1,9 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Global = require("../../sections/Global");
+const Settings = require("../../core/Settings");
+const Logger = require("../../core/Logger");
+const Util = require("../../core/Util");
 
-class Alerts extends HFX.Feature {
+class Alerts extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Global,
+      section: Global,
       name: "HFX Alerts",
       default: true,
       description: "Alert system for new features and changes"
@@ -13,11 +17,11 @@ class Alerts extends HFX.Feature {
   }
 
   run() {
-    HFX.Settings.get(this, (item) => {
+    Settings.get(this, (item) => {
       const timePassed = item.lastChecked !== undefined ? Math.floor((new Date().getTime() - item.lastChecked) / 60000) : this.fetchDelay;
 
       if (Math.floor(timePassed < this.fetchDelay)) {
-        HFX.Logger.debug(`Alerts: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
+        Logger.debug(`Alerts: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
 
         if (item.currentAlert !== undefined && !item.currentAlert.hidden) {
           this.showAlert(item.currentAlert);
@@ -32,7 +36,7 @@ class Alerts extends HFX.Feature {
             this.showAlert(item.currentAlert);
           }
 
-          HFX.Settings.set(this, item);
+          Settings.set(this, item);
         });
       }
     });
@@ -43,7 +47,7 @@ class Alerts extends HFX.Feature {
       <div class="HFXAlert" id="HFXAlert">
         <div class="float-right" id="DismissHFXAlert">
           <a href="javascript:void(0);" title="Dismiss HFX Alert">
-            <img src="${HFX.Util.getURL("/assets/images/dismiss_notice.png")}" />
+            <img src="${Util.getURL("/assets/images/dismiss_notice.png")}" />
           </a>
         </div>
         <div>
@@ -54,16 +58,14 @@ class Alerts extends HFX.Feature {
 
     $("#DismissHFXAlert").click(() => {
       $("#HFXAlert").fadeOut("slow");
-      HFX.Settings.get(this, (settings) => {
+      Settings.get(this, (settings) => {
         if (alert.AlertKey === settings.currentAlert.AlertKey) {
           settings.currentAlert.hidden = true;
-          HFX.Settings.set(this, settings);
+          Settings.set(this, settings);
         }
       });
     });
   }
 };
 
-HFX.Feature.Alerts = new Alerts();
-
-module.exports = HFX;
+module.exports = new Alerts();

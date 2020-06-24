@@ -1,4 +1,6 @@
-const HFX = require("../HFX");
+const Logger = require("../core/Logger");
+const Settings = require("../core/Settings");
+const Util = require("../core/Util");
 
 module.exports = class Feature {
   constructor(opts) {
@@ -7,7 +9,7 @@ module.exports = class Feature {
 
     for (const index in required) {
       if (opts[required[index]] === undefined) {
-        HFX.Logger.error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
+        Logger.error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
         return;
       }
     }
@@ -21,9 +23,9 @@ module.exports = class Feature {
     this.author = opts.author;
     this.configurables = opts.configurables;
 
-    HFX.Settings.get(this, (settings) => {
+    Settings.get(this, (settings) => {
       if (settings === undefined) {
-        HFX.Settings.create(this, (settings) => {
+        Settings.create(this, (settings) => {
           this.start(settings);
         });
       } else {
@@ -33,16 +35,16 @@ module.exports = class Feature {
   }
 
   start(settings) {
-    HFX.Util.trackLoadedFeature(this);
-    HFX.Logger.debug(`${this.class} loaded.`);
+    Util.trackLoadedFeature(this);
+    Logger.debug(`${this.class} loaded.`);
 
     if (settings.enabled && this.section.runnable) {
       this.run(settings);
-      HFX.Logger.debug(`${this.class} running.`);
+      Logger.debug(`${this.class} running.`);
     }
   }
 
   run() {
-    HFX.Logger.error("Cannot run this feature.", this);
+    Logger.error("Cannot run this feature.", this);
   }
 };

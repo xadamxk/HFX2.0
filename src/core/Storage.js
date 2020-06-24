@@ -1,34 +1,34 @@
-const HFX = require("../HFX");
+const Util = require("../core/Util");
+const Logger = require("../core/Logger");
 
-module.exports = class Storage {
-  constructor() {
-    this.timeout = undefined;
-    this.queuedChanges = {};
-    this.syncDelay = 3000;
-    this.start();
-  }
+module.exports = {
+  timeout: undefined,
+
+  queuedChanges: {},
+
+  syncDelay: 3000,
 
   start() {
-    if (HFX.Util.isBackground()) {
+    if (Util.isBackground()) {
       this.initializeLocal(() => this.keepSynced());
     }
-  }
+  },
 
   initializeLocal(cb) {
     chrome.storage.sync.get(null, (items) => {
       chrome.storage.local.set(items, () => {
         if (chrome.runtime.lastError) {
-          HFX.Logger.error(chrome.runtime.lastError.message);
+          Logger.error(chrome.runtime.lastError.message);
         }
 
         cb();
       });
     });
-  }
+  },
 
   keepSynced() {
     if (chrome.storage.onChanged.hasListeners()) {
-      HFX.Logger.warn("Potentially browserifying the Storage module in multiple locations.");
+      Logger.warn("Potentially browserifying the Storage module in multiple locations.");
       return;
     }
 
@@ -55,10 +55,10 @@ module.exports = class Storage {
         this.commitChanges("local", chrome.storage.local, changes);
       }
     });
-  }
+  },
 
   commitChanges(area, storage, changes) {
-    HFX.Logger.debug(`Committing changes to ${area}.`);
+    Logger.debug(`Committing changes to ${area}.`);
     const items = {};
 
     for (const key in changes) {
@@ -69,7 +69,7 @@ module.exports = class Storage {
 
     storage.set(items, () => {
       if (chrome.runtime.lastError) {
-        HFX.Logger.error(chrome.runtime.lastError.message);
+        Logger.error(chrome.runtime.lastError.message);
       }
     });
   }

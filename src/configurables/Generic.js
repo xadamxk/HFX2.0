@@ -1,9 +1,9 @@
-const HFX = require("../HFX");
 const Configurable = require("../core/Configurable");
+const Util = require("../core/Util");
 
 class Generic extends Configurable {
   render(section, feature, settings) {
-    const value = HFX.Util.getConfigurableValue(this.id, feature, settings);
+    const value = Util.getConfigurableValue(this.id, feature, settings);
 
     return `
       <label class="mb-0">${this.label}</label>
@@ -12,6 +12,6 @@ class Generic extends Configurable {
   }
 };
 
-HFX.Configurable.Generic = Generic;
+Configurable.Generic = Generic;
 
 module.exports = Generic;

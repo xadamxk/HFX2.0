@@ -1,9 +1,10 @@
-const HFX = require("../HFX");
+const Util = require("../core/Util");
 
 module.exports = class Section {
-  constructor(name, ...locations) {
-    this.name = name;
+  constructor(...locations) {
+    this.class = this.constructor.name;
+    this.name = this.class;
     this.locations = locations.length === 0 ? ["/"] : locations;
-    this.runnable = HFX.Util.isContentScript() && this.locations.some((location) => document.location.pathname.startsWith(location));
+    this.runnable = Util.isContentScript() && this.locations.some((location) => document.location.pathname.startsWith(location));
   }
 };

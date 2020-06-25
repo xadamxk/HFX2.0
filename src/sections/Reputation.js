@@ -1,11 +1,9 @@
-const HFX = require("../HFX");
+const Section = require("../core/Section");
 
-class Reputation extends HFX.Section {
+class Reputation extends Section {
   constructor() {
-    super("reputation", "/reputation.php", "/repsgiven.php");
+    super("/reputation.php", "/repsgiven.php");
   }
 };
 
-HFX.Section.Reputation = new Reputation();
-
-module.exports = HFX;
+module.exports = new Reputation();

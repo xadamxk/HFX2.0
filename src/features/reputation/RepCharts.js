@@ -1,13 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Reputation = require("../../sections/Reputation");
 
-class RepCharts extends HFX.Feature {
+class RepCharts extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Reputation,
+      section: Reputation,
       name: "Rep Charts",
       default: true,
-      description: "Reputation details in a nice chart.",
-      id: "repcharts"
+      description: "Reputation details in a nice chart."
     });
   }
 
@@ -237,6 +237,4 @@ class RepCharts extends HFX.Feature {
   }
 };
 
-HFX.Feature.RepCharts = new RepCharts();
-
-module.exports = HFX;
+module.exports = new RepCharts();

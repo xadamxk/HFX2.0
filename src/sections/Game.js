@@ -1,11 +1,9 @@
-const HFX = require("../HFX");
+const Section = require("../core/Section");
 
-class Game extends HFX.Section {
+class Game extends Section {
   constructor() {
-    super("game", "/gamecp.php");
+    super("/gamecp.php");
   }
 };
 
-HFX.Section.Game = new Game();
-
-module.exports = HFX;
+module.exports = new Game();

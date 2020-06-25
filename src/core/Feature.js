@@ -1,13 +1,15 @@
-const HFX = require("../HFX");
+const Logger = require("../core/Logger");
+const Settings = require("../core/Settings");
+const Util = require("../core/Util");
 
 module.exports = class Feature {
   constructor(opts) {
-    const required = ["section", "name", "default", "description", "id"];
+    const required = ["section", "name", "default", "description"];
     this.class = this.constructor.name;
 
     for (const index in required) {
       if (opts[required[index]] === undefined) {
-        HFX.Logger.error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
+        Logger.error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
         return;
       }
     }
@@ -16,19 +18,14 @@ module.exports = class Feature {
     this.name = opts.name;
     this.default = opts.default;
     this.description = opts.description;
-    this.id = opts.id;
 
-    if (opts.subsection === undefined) {
-      this.subsection = "general";
-    }
+    this.subsection = opts.subsection ? opts.subsection : "general";
+    this.author = opts.author;
+    this.configurables = opts.configurables;
 
-    if (opts.author !== undefined) {
-      this.author = opts.author;
-    }
-
-    HFX.Settings.get(this, (settings) => {
+    Settings.get(this, (settings) => {
       if (settings === undefined) {
-        HFX.Settings.create(this, (settings) => {
+        Settings.create(this, (settings) => {
           this.start(settings);
         });
       } else {
@@ -38,12 +35,16 @@ module.exports = class Feature {
   }
 
   start(settings) {
-    HFX.Util.trackLoadedFeature(this);
-    HFX.Logger.debug(`${this.class} loaded.`);
+    Util.trackLoadedFeature(this);
+    Logger.debug(`${this.class} loaded.`);
 
     if (settings.enabled && this.section.runnable) {
-      this.run(this.default);
-      HFX.Logger.debug(`${this.class} running.`);
+      this.run(settings);
+      Logger.debug(`${this.class} running.`);
     }
+  }
+
+  run() {
+    Logger.error("Cannot run this feature.", this);
   }
 };

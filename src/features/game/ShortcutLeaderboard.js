@@ -1,13 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Game = require("../../sections/Game");
 
-class ShortcutLeaderboard extends HFX.Feature {
+class ShortcutLeaderboard extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Game,
+      section: Game,
       name: "Shortcut: Leaderboard",
       default: true,
-      description: "Show leaderboard shortcut in game header",
-      id: "shortcutleaderboard"
+      description: "Show leaderboard shortcut in game header"
     });
   }
 
@@ -33,6 +33,4 @@ class ShortcutLeaderboard extends HFX.Feature {
   }
 };
 
-HFX.Feature.ShortcutLeaderboard = new ShortcutLeaderboard();
-
-module.exports = HFX;
+module.exports = new ShortcutLeaderboard();

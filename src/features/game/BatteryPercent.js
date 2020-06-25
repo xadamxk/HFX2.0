@@ -1,13 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Game = require("../../sections/Game");
 
-class BatteryPercent extends HFX.Feature {
+class BatteryPercent extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Game,
+      section: Game,
       name: "Battery Percent",
       default: true,
-      description: "Show percentage next to battery icon.",
-      id: "batterypercent"
+      description: "Show percentage next to battery icon."
     });
   }
 
@@ -23,6 +23,4 @@ class BatteryPercent extends HFX.Feature {
   }
 };
 
-HFX.Feature.BatteryPercent = new BatteryPercent();
-
-module.exports = HFX;
+module.exports = new BatteryPercent();

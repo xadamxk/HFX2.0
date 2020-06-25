@@ -1,13 +1,13 @@
-const Util = require("./core/Util");
-const Logger = require("./core/Logger");
-const Storage = require("./core/Storage");
-const Settings = require("./core/Settings");
-const Section = require("./core/Section");
-const Feature = require("./core/Feature");
+module.exports.Util = require("./core/Util");
+module.exports.Logger = require("./core/Logger");
+module.exports.Storage = require("./core/Storage");
+module.exports.Settings = require("./core/Settings");
+module.exports.Section = require("./core/Section");
+module.exports.Feature = require("./core/Feature");
+module.exports.Configurable = require("./core/Configurable");
 
-module.exports.Util = new Util();
-module.exports.Logger = new Logger();
-module.exports.Storage = new Storage();
-module.exports.Settings = new Settings();
-module.exports.Section = Section;
-module.exports.Feature = Feature;
+module.exports.Storage.start();
+
+module.exports.Sections = require("./Sections");
+module.exports.Features = require("./Features");
+module.exports.Configurables = require("./Configurables");

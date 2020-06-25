@@ -1,6 +1,9 @@
 const templates = {
   section: require("./Section"),
-  feature: require("./Feature")
+  feature: require("./Feature"),
+  sections: require("./Sections"),
+  features: require("./Features"),
+  configurables: require("./Configurables")
 };
 
 function capitalize(word) {

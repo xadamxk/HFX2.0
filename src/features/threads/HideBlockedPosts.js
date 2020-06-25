@@ -1,13 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Threads = require("../../sections/Threads");
 
-class HideBlockedPosts extends HFX.Feature {
+class HideBlockedPosts extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Threads,
+      section: Threads,
       name: "Hide Blocked Posts",
       default: false,
-      description: "Automatically hides blocked user's posts.",
-      id: "showblockedposts"
+      description: "Automatically hides blocked user's posts."
     });
   }
 
@@ -21,6 +21,4 @@ class HideBlockedPosts extends HFX.Feature {
   }
 };
 
-HFX.Feature.HideBlockedPosts = new HideBlockedPosts();
-
-module.exports = HFX;
+module.exports = new HideBlockedPosts();

@@ -1,13 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Global = require("../../sections/Global");
 
-class HideImages extends HFX.Feature {
+class HideImages extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Global,
+      section: Global,
       name: "Hides images",
       default: false,
-      description: "Hides images",
-      id: "hidesimages"
+      description: "Hides images"
     });
   }
 
@@ -16,6 +16,4 @@ class HideImages extends HFX.Feature {
   }
 };
 
-HFX.Feature.HideImages = new HideImages();
-
-module.exports = HFX;
+module.exports = new HideImages();

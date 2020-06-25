@@ -1,13 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Threads = require("../../sections/Threads");
 
-class ExpandBlockedPosts extends HFX.Feature {
+class ExpandBlockedPosts extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Threads,
+      section: Threads,
       name: "Expand Blocked Posts",
       default: true,
-      description: "Automatically expands blocked user's posts.",
-      id: "expandblockedposts"
+      description: "Automatically expands blocked user's posts."
     });
   }
 
@@ -32,6 +32,4 @@ class ExpandBlockedPosts extends HFX.Feature {
   }
 };
 
-HFX.Feature.ExpandBlockedPosts = new ExpandBlockedPosts();
-
-module.exports = HFX;
+module.exports = new ExpandBlockedPosts();

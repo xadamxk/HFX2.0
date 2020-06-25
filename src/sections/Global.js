@@ -1,11 +1,9 @@
-const HFX = require("../HFX");
+const Section = require("../core/Section");
 
-class Global extends HFX.Section {
+class Global extends Section {
   constructor() {
-    super("global", "/");
+    super("/");
   }
 };
 
-HFX.Section.Global = new Global();
-
-module.exports = HFX;
+module.exports = new Global();

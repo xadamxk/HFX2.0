@@ -1,13 +1,13 @@
-const HFX = require("../../HFX");
+const Feature = require("../../core/Feature");
+const Game = require("../../sections/Game");
 
-class BatteryAbsoluteTime extends HFX.Feature {
+class BatteryAbsoluteTime extends Feature {
   constructor() {
     super({
-      section: HFX.Section.Game,
+      section: Game,
       name: "Battery Absolute Time",
       default: true,
-      description: "Show absolute timestamp for battery full charge.",
-      id: "batteryabsolutetime"
+      description: "Show absolute timestamp for battery full charge."
     });
   }
 
@@ -29,6 +29,4 @@ class BatteryAbsoluteTime extends HFX.Feature {
   }
 };
 
-HFX.Feature.BatteryAbsoluteTime = new BatteryAbsoluteTime();
-
-module.exports = HFX;
+module.exports = new BatteryAbsoluteTime();

@@ -1,11 +1,9 @@
-const HFX = require("../HFX");
+const Section = require("../core/Section");
 
-class Threads extends HFX.Section {
+class Threads extends Section {
   constructor() {
-    super("threads", "/showthread.php");
+    super("/showthread.php");
   }
 };
 
-HFX.Section.Threads = new Threads();
-
-module.exports = HFX;
+module.exports = new Threads();

@@ -2,6 +2,7 @@ global.chrome = require("sinon-chrome");
 const Color = require("../../src/configurables/Color");
 const Section = require("../../src/core/Section");
 const Feature = require("../../src/core/Feature");
+const ConfigurableArray = require("../../src/core/ConfigurableArray");
 
 const opts = {
   id: "id",
@@ -18,7 +19,7 @@ const feature = new Feature({
   name: "name",
   default: false,
   description: "description",
-  configurables: [configurable]
+  configurables: new ConfigurableArray(configurable)
 });
 
 describe("Color", () => {
@@ -28,7 +29,16 @@ describe("Color", () => {
 
     expect(() => {
       new Color(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Color as 'id' is missing.");
+    }).toThrow("(id is missing)");
+  });
+
+  it("requires id to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.id = null;
+
+    expect(() => {
+      new Color(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(id is invalid)");
   });
 
   it("ignores type", () => {
@@ -43,7 +53,16 @@ describe("Color", () => {
 
     expect(() => {
       new Color(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Color as 'label' is missing.");
+    }).toThrow("(label is missing)");
+  });
+
+  it("requires label to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.label = null;
+
+    expect(() => {
+      new Color(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(label is invalid)");
   });
 
   it("requires default", () => {
@@ -52,7 +71,7 @@ describe("Color", () => {
 
     expect(() => {
       new Color(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Color as 'default' is missing.");
+    }).toThrow("(default is missing)");
   });
 
   it("sets properties", () => {
@@ -63,23 +82,47 @@ describe("Color", () => {
   });
 
   it("renders without settings", () => {
-    expect(configurable.render(section, feature).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <label class="mb-0">${opts.label}</label>
-      <input type="color" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" value="${opts.default}">
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe("color");
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.value).toBe(opts.default);
+    expect(label.innerHTML).toBe(opts.label);
   });
 
   it("renders with empty settings", () => {
-    expect(configurable.render(section, feature, {}).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <label class="mb-0">${opts.label}</label>
-      <input type="color" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" value="${opts.default}">
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature, {}), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe("color");
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.value).toBe(opts.default);
+    expect(label.innerHTML).toBe(opts.label);
   });
 
   it("renders with settings", () => {
-    expect(configurable.render(section, feature, settings).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <label class="mb-0">${opts.label}</label>
-      <input type="color" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" value="${settings[configurable.id]}">
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature, settings), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe("color");
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.value).toBe(settings[opts.id]);
+    expect(label.innerHTML).toBe(opts.label);
   });
 });

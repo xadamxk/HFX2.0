@@ -22,7 +22,7 @@ $(document).ready(function() {
   $("#spinner").show();
   $("#main").hide();
 
-  HFX.Settings.getAll((items) => {
+  HFX.Settings.getAll(items => {
     const sortedSections = Object.keys(sections).sort();
 
     for (const section of sortedSections) {
@@ -52,6 +52,7 @@ $(document).ready(function() {
   });
 
   function addSectionToList(section) {
+    // TODO: Move this rendering to Section class (Section.renderNav)
     $(".nav").append(`
       <a href="#${section.class}" class="nav-link text-capitalize" role="tab" data-toggle="tab">
         ${section.name}
@@ -60,6 +61,7 @@ $(document).ready(function() {
   }
 
   function buildSectionBase(section) {
+    // TODO: Move this rendering to Section class (Section.renderTab)
     $(".tab-content").append(`
       <div id="${section.class}" class="tab-pane fade hfx-section">
         <h3 class="text-capitalize">${section.name}</h3>
@@ -70,6 +72,7 @@ $(document).ready(function() {
   }
 
   function addSettingOptionToList(section, feature, settings) {
+    // TODO: Move this rendering to Feature class (Feature.render)
     $(`#${section.class}Accordion`).append(`
       <div class="card">
         <div class="card-header p-0">
@@ -93,30 +96,19 @@ $(document).ready(function() {
         </div>
         <div id="${feature.class}Settings" class="collapse" data-parent="#${section.class}Accordion">
           <div class="card-body">
-            ${feature.configurables ? renderConfigurables(section, feature, settings) : "No extra configurables."}
+            ${feature.configurables ? feature.configurables.render(section, feature, settings) : "No extra configurables."}
           </div>
         </div>
       </div>
     `);
   }
 
-  function renderConfigurables(section, feature, settings) {
-    return `
-      <div class="row align-items-center">
-        ${feature.configurables.map(configurable => `
-          <div class="col-auto">
-            ${configurable instanceof HFX.Configurable ? configurable.render(section, feature, settings) : "Cannot render non-configurable."}
-          </div>
-        `).join("")}
-      </div>
-    `;
-  }
-
+  // TODO: These change handlers should be created/registered by the Feature/Configurable class
   function createChangeHandlers() {
     $("input[type=checkbox]").change(function() {
       const feature = features[$(this).data("feature")];
 
-      HFX.Settings.get(feature, (settings) => {
+      HFX.Settings.get(feature, settings => {
         settings[$(this).data("setting")] = $(this).prop("checked");
         HFX.Settings.set(feature, settings);
       });
@@ -125,7 +117,7 @@ $(document).ready(function() {
     $("input[type=color],input[type=text]").change(function() {
       const feature = features[$(this).data("feature")];
 
-      HFX.Settings.get(feature, (settings) => {
+      HFX.Settings.get(feature, settings => {
         settings[$(this).data("setting")] = $(this).val();
         HFX.Settings.set(feature, settings);
       });

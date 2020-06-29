@@ -17,7 +17,7 @@ class Alerts extends Feature {
   }
 
   run() {
-    Settings.get(this, (item) => {
+    Settings.get(this, item => {
       const timePassed = item.lastChecked !== undefined ? Math.floor((new Date().getTime() - item.lastChecked) / 60000) : this.fetchDelay;
 
       if (Math.floor(timePassed < this.fetchDelay)) {
@@ -27,7 +27,7 @@ class Alerts extends Feature {
           this.showAlert(item.currentAlert);
         }
       } else {
-        $.getJSON(this.fetchLocation, (fetchedAlert) => {
+        $.getJSON(this.fetchLocation, fetchedAlert => {
           item.lastChecked = new Date().getTime();
 
           if (item.currentAlert === undefined || item.currentAlert.hidden === false || item.currentAlert.AlertKey !== fetchedAlert.AlertKey) {
@@ -58,7 +58,7 @@ class Alerts extends Feature {
 
     $("#DismissHFXAlert").click(() => {
       $("#HFXAlert").fadeOut("slow");
-      Settings.get(this, (settings) => {
+      Settings.get(this, settings => {
         if (alert.AlertKey === settings.currentAlert.AlertKey) {
           settings.currentAlert.hidden = true;
           Settings.set(this, settings);

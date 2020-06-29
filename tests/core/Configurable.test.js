@@ -17,7 +17,16 @@ describe("Configurable", () => {
 
     expect(() => {
       new Configurable(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Configurable as 'id' is missing.");
+    }).toThrow("(id is missing)");
+  });
+
+  it("requires id to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.id = null;
+
+    expect(() => {
+      new Configurable(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(id is invalid)");
   });
 
   it("requires type", () => {
@@ -26,7 +35,16 @@ describe("Configurable", () => {
 
     expect(() => {
       new Configurable(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Configurable as 'type' is missing.");
+    }).toThrow("(type is missing)");
+  });
+
+  it("requires type to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.type = null;
+
+    expect(() => {
+      new Configurable(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(type is invalid)");
   });
 
   it("requires label", () => {
@@ -35,7 +53,16 @@ describe("Configurable", () => {
 
     expect(() => {
       new Configurable(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Configurable as 'label' is missing.");
+    }).toThrow("(label is missing)");
+  });
+
+  it("requires label to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.label = null;
+
+    expect(() => {
+      new Configurable(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(label is invalid)");
   });
 
   it("requires default", () => {
@@ -44,7 +71,7 @@ describe("Configurable", () => {
 
     expect(() => {
       new Configurable(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Configurable as 'default' is missing.");
+    }).toThrow("(default is missing)");
   });
 
   it("sets properties", () => {
@@ -54,7 +81,9 @@ describe("Configurable", () => {
     expect(configurable.default).toBe(opts.default);
   });
 
-  it("renders", () => {
-    expect(configurable.render()).toBe(`Cannot render ${opts.type} configurable.`);
+  it("requires renderer", () => {
+    expect(() => {
+      configurable.render();
+    }).toThrow(`Rendering has not been implemented for ${configurable.type} configurable.`);
   });
 });

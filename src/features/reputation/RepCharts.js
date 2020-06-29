@@ -35,8 +35,8 @@ class RepCharts extends Feature {
     const rep = {};
 
     // Initialize reputation object
-    sentiments.forEach((sentiment) => {
-      periods.forEach((period) => {
+    sentiments.forEach(sentiment => {
+      periods.forEach(period => {
         rep[sentiment] = {};
         rep[sentiment][period] = null;
       });
@@ -45,14 +45,14 @@ class RepCharts extends Feature {
     // Parse values from the reputation table on right-side
     const repMatrix = $("span.smalltext:contains(Last 6 months)").closest("table").first()
       .text().match(/(\d+)\s*(\d+)\s*(\d+)/g)
-      .map((row) => row.split("\n").map((col) => parseInt(col.trim())));
+      .map(row => row.split("\n").map(col => parseInt(col.trim())));
 
     // The reputations given page does not have an "All Time" row on the right-side reputation table
     // Get the "All Time" from the details underneath username
     if (isRepsGiven) {
       const allTimeContainer = $("span.smalltext:contains(Total Given)");
 
-      sentiments.forEach((sentiment) => {
+      sentiments.forEach(sentiment => {
         rep[sentiment]["allTime"] = parseInt(allTimeContainer.find(`strong.reputation_${sentiment}`).next().text());
       });
     }

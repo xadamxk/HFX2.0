@@ -1,8 +1,8 @@
-const Logger = require("../core/Logger");
+const Logger = require("./Logger");
 
 module.exports = {
   get(feature, cb) {
-    chrome.storage.local.get(feature.class, (settings) => {
+    chrome.storage.local.get(feature.class, settings => {
       cb(feature.class in settings ? settings[feature.class] : undefined);
     });
   },
@@ -35,19 +35,19 @@ module.exports = {
   },
 
   getAll(cb) {
-    chrome.storage.local.get(null, (items) => {
+    chrome.storage.local.get(null, items => {
       cb(items);
     });
   },
 
   getTotal(cb) {
-    this.getAll((items) => {
+    this.getAll(items => {
       cb(Object.keys(items).length);
     });
   },
 
   printSettings() {
-    this.getAll((items) => {
+    this.getAll(items => {
       Logger.debug("Items: ", items);
     });
   }

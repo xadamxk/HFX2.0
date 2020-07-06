@@ -1,4 +1,5 @@
 node_modules/
 extension/release/
 extension/assets/lib/
+coverage/
 .DS_Store

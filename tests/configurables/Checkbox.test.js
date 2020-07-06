@@ -2,6 +2,7 @@ global.chrome = require("sinon-chrome");
 const Checkbox = require("../../src/configurables/Checkbox");
 const Section = require("../../src/core/Section");
 const Feature = require("../../src/core/Feature");
+const ConfigurableArray = require("../../src/core/ConfigurableArray");
 
 const opts = {
   id: "id",
@@ -18,7 +19,7 @@ const feature = new Feature({
   name: "name",
   default: false,
   description: "description",
-  configurables: [configurable]
+  configurables: new ConfigurableArray(configurable)
 });
 
 describe("Checkbox", () => {
@@ -28,7 +29,16 @@ describe("Checkbox", () => {
 
     expect(() => {
       new Checkbox(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Checkbox as 'id' is missing.");
+    }).toThrow("(id is missing)");
+  });
+
+  it("requires id to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.id = null;
+
+    expect(() => {
+      new Checkbox(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(id is invalid)");
   });
 
   it("ignores type", () => {
@@ -43,7 +53,16 @@ describe("Checkbox", () => {
 
     expect(() => {
       new Checkbox(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Checkbox as 'label' is missing.");
+    }).toThrow("(label is missing)");
+  });
+
+  it("requires label to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.label = null;
+
+    expect(() => {
+      new Checkbox(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(label is invalid)");
   });
 
   it("requires default", () => {
@@ -52,7 +71,7 @@ describe("Checkbox", () => {
 
     expect(() => {
       new Checkbox(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Checkbox as 'default' is missing.");
+    }).toThrow("(default is missing)");
   });
 
   it("sets properties", () => {
@@ -63,29 +82,47 @@ describe("Checkbox", () => {
   });
 
   it("renders without settings", () => {
-    expect(configurable.render(section, feature).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <div class="form-check form-check-inline mr-0">
-        <input type="checkbox" class="form-check-input" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" ${opts.default ? "checked" : ""}>
-        <label class="form-check-label">${opts.label}</label>
-      </div>
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe("checkbox");
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.checked).toBe(opts.default);
+    expect(label.innerHTML).toBe(opts.label);
   });
 
   it("renders with empty settings", () => {
-    expect(configurable.render(section, feature, {}).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <div class="form-check form-check-inline mr-0">
-        <input type="checkbox" class="form-check-input" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" ${opts.default ? "checked" : ""}>
-        <label class="form-check-label">${opts.label}</label>
-      </div>
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature, {}), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe("checkbox");
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.checked).toBe(opts.default);
+    expect(label.innerHTML).toBe(opts.label);
   });
 
   it("renders with settings", () => {
-    expect(configurable.render(section, feature, settings).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <div class="form-check form-check-inline mr-0">
-        <input type="checkbox" class="form-check-input" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" ${settings[opts.id] ? "checked" : ""}>
-        <label class="form-check-label">${opts.label}</label>
-      </div>
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature, settings), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe("checkbox");
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.checked).toBe(settings[opts.id]);
+    expect(label.innerHTML).toBe(opts.label);
   });
 });

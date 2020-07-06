@@ -21,6 +21,7 @@
     "Chart": true
   },
   "env": {
+    "browser": true,
     "jest": true
   }
 }

@@ -1,5 +1,5 @@
-const Util = require("../core/Util");
-const Logger = require("../core/Logger");
+const Util = require("./Util");
+const Logger = require("./Logger");
 
 module.exports = {
   timeout: undefined,
@@ -15,7 +15,7 @@ module.exports = {
   },
 
   initializeLocal(cb) {
-    chrome.storage.sync.get(null, (items) => {
+    chrome.storage.sync.get(null, items => {
       chrome.storage.local.set(items, () => {
         if (chrome.runtime.lastError) {
           Logger.error(chrome.runtime.lastError.message);
@@ -28,7 +28,7 @@ module.exports = {
 
   keepSynced() {
     if (chrome.storage.onChanged.hasListeners()) {
-      Logger.warn("Potentially browserifying the Storage module in multiple locations.");
+      Logger.warn("Potentially starting the Storage module in multiple locations.");
       return;
     }
 

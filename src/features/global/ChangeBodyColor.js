@@ -1,5 +1,6 @@
 const Feature = require("../../core/Feature");
 const Global = require("../../sections/Global");
+const ConfigurableArray = require("../../core/ConfigurableArray");
 const Color = require("../../configurables/Color");
 const Util = require("../../core/Util");
 
@@ -10,9 +11,9 @@ class ChangeBodyColor extends Feature {
       name: "Change Body Color",
       default: false,
       description: "Change color.",
-      configurables: [
+      configurables: new ConfigurableArray(
         new Color({id: "color", label: "Color", default: "#ff0000"})
-      ]
+      )
     });
   }
 

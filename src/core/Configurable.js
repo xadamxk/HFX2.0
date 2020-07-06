@@ -1,12 +1,23 @@
+const Util = require("./Util");
+
 module.exports = class Configurable {
   constructor(opts) {
-    const required = ["id", "type", "label", "default"];
     this.class = this.constructor.name;
 
-    for (const index in required) {
-      if (opts[required[index]] === undefined) {
-        throw new Error(`Not able to load ${this.class} as '${required[index]}' is missing.`);
-      }
+    const required = Util.checkParameters({
+      "id": "string",
+      "type": "string",
+      "label": "string",
+      "default": undefined // TODO: Default primitive/class based on type option
+    }, opts);
+
+    if (required.unset.length > 0 || required.invalid.length > 0) {
+      const errors = [
+        required.unset.map(parameter => `${parameter} is missing`).join(", "),
+        required.invalid.map(parameter => `${parameter} is invalid`).join(", ")
+      ].filter(error => error.length > 0).join(", ");
+
+      throw new Error(`Unable to instantiate ${this.class} due to incorrect options. (${errors})`);
     }
 
     this.id = opts.id;
@@ -16,6 +27,40 @@ module.exports = class Configurable {
   }
 
   render() {
-    return `Cannot render ${this.type} configurable.`;
+    throw new Error(`Rendering has not been implemented for ${this.type} configurable.`);
   }
+
+  // #region Property Getter/Setters
+  get id() {
+    return this._id;
+  }
+
+  set id(_id) {
+    this._id = _id;
+  }
+
+  get type() {
+    return this._type;
+  }
+
+  set type(_type) {
+    this._type = _type;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  set label(_label) {
+    this._label = _label;
+  }
+
+  get default() {
+    return this._default;
+  }
+
+  set default(_default) {
+    this._default = _default;
+  }
+  // #endregion
 };

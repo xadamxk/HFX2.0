@@ -40,13 +40,42 @@ module.exports = {
   getConfigurableValue(id, feature, settings) {
     let value;
 
-    if (settings && id in settings) {
+    if (settings !== undefined && id in settings) {
+      // Configurable matching ID has a value stored in settings
       value = settings[id];
-    } else if (feature.configurables) {
-      value = feature.configurables.filter(cfg => cfg.id === id)[0];
-      value = value ? value.default : value;
+    } else if (feature.configurables !== undefined) {
+      // Get the default value of the Configurable matching ID
+      const configurable = feature.configurables.get(id);
+      value = configurable ? configurable.default : value;
     }
 
     return value;
+  },
+
+  checkParameters(parameters, options) {
+    const result = {
+      unset: [],
+      invalid: []
+    };
+
+    // Check every defined parameter
+    for (const parameter in parameters) {
+      if (options[parameter] === undefined) {
+        // Parameter is not provided (unset)
+        result.unset.push(parameter);
+      } else if (typeof parameters[parameter] === "function" && !(options[parameter] instanceof parameters[parameter])) {
+        // Parameter does not match the correct class (invalid)
+        result.invalid.push(parameter);
+      } else if (typeof parameters[parameter] === "string" && !(typeof options[parameter] === parameters[parameter])) { // eslint-disable-line valid-typeof
+        // Parameter does not match the correct primitive (invalid)
+        result.invalid.push(parameter);
+      } else if (typeof parameters[parameter] === "object") {
+        const subresult = this.checkParameters(parameters[parameter], options[parameter]);
+        result.unset.push(...subresult.unset.map(subparameter => `${parameter}.${subparameter}`));
+        result.invalid.push(...subresult.invalid.map(subparameter => `${parameter}.${subparameter}`));
+      }
+    }
+
+    return result;
   }
 };

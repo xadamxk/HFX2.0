@@ -2,6 +2,7 @@ global.chrome = require("sinon-chrome");
 const Generic = require("../../src/configurables/Generic");
 const Section = require("../../src/core/Section");
 const Feature = require("../../src/core/Feature");
+const ConfigurableArray = require("../../src/core/ConfigurableArray");
 
 const opts = {
   id: "id",
@@ -19,7 +20,7 @@ const feature = new Feature({
   name: "name",
   default: false,
   description: "description",
-  configurables: [configurable]
+  configurables: new ConfigurableArray(configurable)
 });
 
 describe("Generic", () => {
@@ -29,7 +30,16 @@ describe("Generic", () => {
 
     expect(() => {
       new Generic(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Generic as 'id' is missing.");
+    }).toThrow("(id is missing)");
+  });
+
+  it("requires id to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.id = null;
+
+    expect(() => {
+      new Generic(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(id is invalid)");
   });
 
   it("requires type", () => {
@@ -38,7 +48,16 @@ describe("Generic", () => {
 
     expect(() => {
       new Generic(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Generic as 'type' is missing.");
+    }).toThrow("(type is missing)");
+  });
+
+  it("requires type to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.type = null;
+
+    expect(() => {
+      new Generic(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(type is invalid)");
   });
 
   it("requires label", () => {
@@ -47,7 +66,16 @@ describe("Generic", () => {
 
     expect(() => {
       new Generic(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Generic as 'label' is missing.");
+    }).toThrow("(label is missing)");
+  });
+
+  it("requires label to be a string", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.label = null;
+
+    expect(() => {
+      new Generic(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(label is invalid)");
   });
 
   it("requires default", () => {
@@ -56,7 +84,7 @@ describe("Generic", () => {
 
     expect(() => {
       new Generic(partialOpts); // eslint-disable-line no-new
-    }).toThrow("Not able to load Generic as 'default' is missing.");
+    }).toThrow("(default is missing)");
   });
 
   it("sets properties", () => {
@@ -67,23 +95,47 @@ describe("Generic", () => {
   });
 
   it("renders without settings", () => {
-    expect(configurable.render(section, feature).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <label class="mb-0">${opts.label}</label>
-      <input type="${opts.type}" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" value="${opts.default}">
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe(opts.type);
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.value).toBe(opts.default);
+    expect(label.innerHTML).toBe(opts.label);
   });
 
   it("renders with empty settings", () => {
-    expect(configurable.render(section, feature, {}).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <label class="mb-0">${opts.label}</label>
-      <input type="${opts.type}" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" value="${opts.default}">
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature, {}), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe(opts.type);
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.value).toBe(opts.default);
+    expect(label.innerHTML).toBe(opts.label);
   });
 
   it("renders with settings", () => {
-    expect(configurable.render(section, feature, settings).replace(/^\s+|\s+$/gm, "")).toBe(`
-      <label class="mb-0">${opts.label}</label>
-      <input type="${opts.type}" data-section="${section.class}" data-feature="${feature.class}" data-setting="${opts.id}" value="${settings[configurable.id]}">
-    `.replace(/^\s+|\s+$/gm, ""));
+    const rendered = new DOMParser().parseFromString(configurable.render(section, feature, settings), "text/html").body;
+    const input = rendered.querySelector("input");
+    const label = rendered.querySelector("label");
+
+    expect(input.type).toBe(opts.type);
+    expect(input.dataset).toMatchObject({
+      section: section.class,
+      feature: feature.class,
+      setting: opts.id
+    });
+    expect(input.value).toBe(settings[opts.id]);
+    expect(label.innerHTML).toBe(opts.label);
   });
 });

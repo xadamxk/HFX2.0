@@ -1,3 +1,5 @@
 node_modules/
-release/
-assets/lib
+extension/release/
+extension/assets/lib/
+coverage/
+.DS_Store

@@ -1,0 +1,81 @@
+module.exports = {
+  features: {},
+
+  sendMessage(message, response) {
+    chrome.runtime.sendMessage(message, response);
+  },
+
+  isBackground() {
+    return chrome !== undefined && chrome.extension !== undefined && chrome.extension.getBackgroundPage !== undefined && chrome.extension.getBackgroundPage() === window;
+  },
+
+  isPopup() {
+    return chrome !== undefined && chrome.extension !== undefined && chrome.extension.getBackgroundPage !== undefined && chrome.extension.getBackgroundPage() !== window;
+  },
+
+  isContentScript() {
+    return chrome !== undefined && chrome.extension !== undefined && chrome.extension.getBackgroundPage === undefined;
+  },
+
+  isDevelopment() {
+    return chrome !== undefined && chrome.runtime !== undefined && chrome.runtime.getManifest !== undefined && chrome.runtime.getManifest() !== undefined && !("update_url" in chrome.runtime.getManifest());
+  },
+
+  getLoadedFeatures() {
+    return this.features;
+  },
+
+  trackLoadedFeature(feature) {
+    this.features[feature.class] = feature;
+  },
+
+  getVersion() {
+    return chrome.runtime.getManifest().version;
+  },
+
+  getURL(resource) {
+    return chrome.extension.getURL(resource);
+  },
+
+  getConfigurableValue(id, feature, settings) {
+    let value;
+
+    if (settings !== undefined && id in settings) {
+      // Configurable matching ID has a value stored in settings
+      value = settings[id];
+    } else if (feature.configurables !== undefined) {
+      // Get the default value of the Configurable matching ID
+      const configurable = feature.configurables.get(id);
+      value = configurable ? configurable.default : value;
+    }
+
+    return value;
+  },
+
+  checkParameters(parameters, options) {
+    const result = {
+      unset: [],
+      invalid: []
+    };
+
+    // Check every defined parameter
+    for (const parameter in parameters) {
+      if (options[parameter] === undefined) {
+        // Parameter is not provided (unset)
+        result.unset.push(parameter);
+      } else if (typeof parameters[parameter] === "function" && !(options[parameter] instanceof parameters[parameter])) {
+        // Parameter does not match the correct class (invalid)
+        result.invalid.push(parameter);
+      } else if (typeof parameters[parameter] === "string" && !(typeof options[parameter] === parameters[parameter])) { // eslint-disable-line valid-typeof
+        // Parameter does not match the correct primitive (invalid)
+        result.invalid.push(parameter);
+      } else if (typeof parameters[parameter] === "object") {
+        const subresult = this.checkParameters(parameters[parameter], options[parameter]);
+        result.unset.push(...subresult.unset.map(subparameter => `${parameter}.${subparameter}`));
+        result.invalid.push(...subresult.invalid.map(subparameter => `${parameter}.${subparameter}`));
+      }
+    }
+
+    return result;
+  }
+};

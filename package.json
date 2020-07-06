@@ -1,34 +1,49 @@
 {
-  "name": "hfx-rebase",
+  "name": "hfx",
   "version": "0.0.1",
-  "description": "",
-  "main": "src/_core/HFX.js",
-  "browser": [
-    "release/Global.js"
-  ],
+  "description": "Enhance your HF experience, a native browser extension.",
+  "main": "src/HFX.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint ./src/**",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "./node_modules/.bin/eslint \"./src/**\" \"./tests/**\"",
+    "test": "jest",
+    "config": "yarn && ./node_modules/.bin/gulp libs && ./node_modules/.bin/gulp build",
+    "template": "node ./templates/index.js"
   },
-  "author": "",
+  "engines": {
+    "node": ">=11.0",
+    "npm": ">=6.11.0",
+    "yarn": ">=1.13.0"
+  },
+  "author": "xadamxk",
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^4.0.0",
     "browserify-resolutions": "^1.1.0",
+    "chart.js": "^2.8.0",
+    "crx-hotreload": "^1.0.4",
     "font-awesome": "^4.7.0",
+    "global": "^4.4.0",
     "jquery": "^3.3.1",
-    "titatoggle": "^2.0.1"
+    "moment": "^2.24.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-browserify": "^0.5.1",
-    "gulp-concat": "^2.6.1",
-    "gulp-watch": "^5.0.0",
-    "eslint": "^4.17.0",
-    "eslint-config-standard": "^11.0.0-beta.0",
+    "browserify": "^16.5.0",
+    "eslint": "^6.5.0",
+    "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jest": "^22.19.0",
     "eslint-plugin-node": "^6.0.0",
     "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "eslint-plugin-standard": "^3.0.1",
+    "globby": "^10.0.1",
+    "gulp": "^4.0.2",
+    "gulp-rename": "^1.4.0",
+    "gulp-replace": "^1.0.0",
+    "gulp-watch": "^5.0.0",
+    "gulplog": "^1.0.0",
+    "jest": "^24.9.0",
+    "mustache": "^3.1.0",
+    "sinon-chrome": "^3.0.1",
+    "vinyl-source-stream": "^2.0.0"
   }
 }

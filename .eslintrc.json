@@ -1,13 +1,27 @@
 {
   "extends": "standard",
   "rules": {
-    "quotes": ["error", "double"],
-    "semi": ["error", "always"]
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "space-before-function-paren": [
+      "error",
+      "never"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ]
   },
   "globals": {
     "$": true,
     "chrome": true,
-    "FileReader": true,
-    "HFX": true
+    "moment": true,
+    "Chart": true
+  },
+  "env": {
+    "browser": true,
+    "jest": true
   }
 }

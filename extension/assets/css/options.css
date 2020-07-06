@@ -1,0 +1,32 @@
+body {
+  min-width: 720px;
+  min-height: 320px;
+}
+
+#spinner {
+  padding-top: calc(160px - 1rem);
+}
+
+.hfx-section .hfx-feature:nth-child(n+2) {
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.github-logo {
+  width: 250px;
+  height: 100px;
+  border: 1px solid black;
+  border-radius: 10px;
+}
+
+.custom-control.custom-switch {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: -0.5rem;
+  margin-left: -0.75rem;
+}
+
+.custom-control.custom-switch .custom-control-label {
+  cursor: pointer;
+}

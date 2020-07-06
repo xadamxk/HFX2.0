@@ -1,41 +1,64 @@
-var gulp = require("gulp");
-var concat = require("gulp-concat");
-// var uglify = require("gulp-uglify");
-var browserify = require("gulp-browserify");
-var watch = require("gulp-watch");
-gulp.task("build", [], function () {
-  gulp.src([
-    "src/modules/global/**.js",
-    "src/_core/modules/**.js"
-  ])
-    .pipe(concat("Global.js"))
-    .pipe(browserify())
-    .pipe(gulp.dest("./release/js/"));
+const browserify = require("browserify");
+const gulp = require("gulp");
+const log = require("gulplog");
+const rename = require("gulp-rename");
+const replace = require("gulp-replace");
+const source = require("vinyl-source-stream");
+
+const generateSections = require("./templates/Sections");
+const generateFeatures = require("./templates/Features");
+const generateConfigurables = require("./templates/Configurables");
+
+const standalone = "HFX";
+const main = "./src/HFX.js";
+const core = "./src/core/*.js";
+const sections = "./src/sections/*.js";
+const features = "./src/features/**/*.js";
+
+const browserifyOptions = {
+  entries: main,
+  standalone: standalone
+};
+
+gulp.task("build", asyncComplete => {
+  browserify(browserifyOptions)
+    .on("error", log.error)
+    .bundle()
+    .pipe(source(main))
+    .pipe(rename(`${standalone}.js`))
+    .pipe(gulp.dest("./extension/release/js"));
+
+  generateSections();
+  generateFeatures();
+  generateConfigurables();
+
+  asyncComplete();
 });
 
-gulp.task("libs", function () {
-  // jQuery
-  gulp.src("./node_modules/jquery/dist/jquery.min.js")
-    .pipe(gulp.dest("./assets/lib/jquery/"));
+const copyNodeAssets = (name, assets, substitute = null) => {
+  assets = assets.map(asset => `./node_modules/${name}/${asset}`);
+  let stream = gulp.src(assets);
 
-  // Boostrap
-  gulp.src(["./node_modules/bootstrap/dist/css/bootstrap.min.css", "./node_modules/bootstrap/dist/js/bootstrap.min.js"])
-    .pipe(gulp.dest("./assets/lib/bootstrap"));
+  if (substitute !== null) {
+    stream = stream.pipe(replace(substitute.pattern, substitute.replacement));
+  }
 
-  // Titatoggle
-  gulp.src("./node_modules/titatoggle/dist/titatoggle-dist-min.css")
-    .pipe(gulp.dest("./assets/lib/titatoggle"));
+  stream.pipe(gulp.dest(`./extension/assets/lib/${name.split("/").pop()}`));
+};
 
-  // Font awesome
-  gulp.src("./node_modules/font-awesome/css/font-awesome.min.css")
-    .pipe(gulp.dest("./assets/lib/fontawesome"));
+gulp.task("libs", asyncComplete => {
+  copyNodeAssets("jquery", ["dist/jquery.min.js"]);
+  copyNodeAssets("bootstrap", ["dist/css/bootstrap.min.css", "dist/js/bootstrap.min.js"]);
+  copyNodeAssets("font-awesome", ["css/font-awesome.min.css", "fonts/*"], {pattern: /url\((?:'|")\.\.\/fonts\/([^'"]+)(?:'|")\)/g, replacement: "url(\"./$1\")"});
+  copyNodeAssets("moment", ["min/moment.min.js"]);
+  copyNodeAssets("crx-hotreload", ["hot-reload.js"]);
+  copyNodeAssets("chart.js", ["dist/Chart.bundle.min.js"]);
+  asyncComplete();
 });
 
-gulp.task("default", ["build"], function () {
+gulp.task("watch", asyncComplete => {
+  gulp.watch([main, core, sections, features], gulp.series("build"));
+  asyncComplete();
 });
 
-gulp.task('watch', ['build'], function () {
-  watch("src/**/*.js", function () {
-    gulp.start("build");
-  });
-});
+gulp.task("default", gulp.series("build"));

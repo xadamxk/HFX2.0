@@ -3,3 +3,4 @@ extension/release/
 extension/assets/lib/
 coverage/
 .DS_Store
+.vscode/

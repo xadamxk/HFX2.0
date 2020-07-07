@@ -4,11 +4,14 @@
   "description": "Enhance your HF experience, a native browser extension.",
   "main": "src/HFX.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint \"./src/**\" \"./tests/**\"",
+    "lint": "./node_modules/.bin/eslint \"./src/**\" \"./tests/**\" --fix",
     "test": "jest",
     "config": "yarn && ./node_modules/.bin/gulp libs && ./node_modules/.bin/gulp build",
     "template": "node ./templates/index.js"
   },
+  "pre-commit": [
+    "lint"
+  ],
   "engines": {
     "node": ">=11.0",
     "npm": ">=6.11.0",
@@ -43,6 +46,7 @@
     "gulplog": "^1.0.0",
     "jest": "^24.9.0",
     "mustache": "^3.1.0",
+    "pre-commit": "^1.2.2",
     "sinon-chrome": "^3.0.1",
     "vinyl-source-stream": "^2.0.0"
   }

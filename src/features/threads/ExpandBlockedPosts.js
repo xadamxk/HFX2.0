@@ -7,7 +7,7 @@ class ExpandBlockedPosts extends Feature {
       section: Threads,
       name: "Expand Blocked Posts",
       default: true,
-      description: "Automatically expands blocked user's posts."
+      description: "Automatically expands blocked user's posts. (Overrides HideBlockedPosts)"
     });
   }
 
@@ -15,7 +15,7 @@ class ExpandBlockedPosts extends Feature {
     if ($("a[onclick*='showIgnoredPost']").length >= 1) {
       // Load posts
       const posts = $("#posts");
-      $("a[onclick*='showIgnoredPost']").each(function(index) {
+      $("a[onclick*='showIgnoredPost']").each(function (index) {
         // Hide Post
         this.click();
 

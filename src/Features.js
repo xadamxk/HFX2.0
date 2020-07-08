@@ -8,6 +8,7 @@ module.exports = {
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),
   HideImages: require("./features/global/HideImages"),
+  HidePostbitAttributes: require("./features/threads/HidePostbitAttributes"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
   RepCharts: require("./features/reputation/RepCharts"),

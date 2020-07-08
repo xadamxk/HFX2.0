@@ -24,7 +24,9 @@ class HidePostbitAttributes extends Feature {
         new Checkbox({ id: "HPAPopularity", label: "Popularity", default: false }),
         new Checkbox({ id: "HPABytes", label: "Bytes", default: false }),
         new Checkbox({ id: "HPAGameXP", label: "Game XP", default: false }),
-        new Checkbox({ id: "HPAWarningLevel", label: "Warning Level", default: false })
+        new Checkbox({ id: "HPAWarningLevel", label: "Warning Level", default: false }),
+        new Checkbox({ id: "HPASignature", label: "Signature", default: false })
+
       )
     });
   }
@@ -72,6 +74,9 @@ class HidePostbitAttributes extends Feature {
       }
       if (Util.getConfigurableValue("HPAWarningLevel", this, settings)) {
         $(this).find(".author_label:contains(Warning Level)").parent().hide();
+      }
+      if (Util.getConfigurableValue("HPASignature", this, settings)) {
+        $(this).find(".signature").hide();
       }
     });
     // All statistic attributes hidden, hide container

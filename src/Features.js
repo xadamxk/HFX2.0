@@ -6,6 +6,7 @@ module.exports = {
   CollapsePossiblyRelatedThreads: require("./features/global/CollapsePossiblyRelatedThreads"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),
+  HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),
   HideImages: require("./features/global/HideImages"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),

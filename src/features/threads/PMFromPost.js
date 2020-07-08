@@ -15,7 +15,7 @@ class PMFromPost extends Feature {
     const threadTitle = $(".breadcrumb a").last().text().substring(0, 50);
     this.startDynamicListeners();
 
-    $(".post").each(function(index) {
+    $(".post").each(function (index) {
       const myPostKey = $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop();
       const postId = $(this).attr("id").split("_").pop();
       const postLink = $(this).find(`#post_url_${postId}`).attr("href");
@@ -30,10 +30,10 @@ class PMFromPost extends Feature {
       postQuote = `[quote="${postUser}" pid="${postId}"]${postQuote}[/quote]`;
       postQuote = `[size=x-small]Sent from [url=${postLink}]your post[/url].[/size]\n${postQuote}\n`;
 
-      $(this).find(".author_buttons").append(`
+      $(this).find(".author_buttons").prepend(`
         <a class="pm-from-post-toggle postbit_quote" href="#" data-tooltip="PM From Post">
           <span>
-            <i class="fa fa-comment-o fa-lg"></i>
+            <i class="fa fa-comment fa-lg" aria-hidden="true"></i>
           </span>
         </a>
       `);
@@ -89,13 +89,13 @@ class PMFromPost extends Feature {
 
   startDynamicListeners() {
     // Listen for toggle
-    $(".post").on("click", ".pm-from-post-toggle", function(e) {
+    $(".post").on("click", ".pm-from-post-toggle", function (e) {
       e.preventDefault();
       $(this).closest(".post").find(".pm-from-post-container").toggle();
     });
 
     // Listen for send
-    $(".post").on("click", ".pm-from-post-button.send", function(e) {
+    $(".post").on("click", ".pm-from-post-button.send", function (e) {
       $(this).closest(".pm-from-post-container").hide();
     });
   }

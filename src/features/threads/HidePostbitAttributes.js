@@ -32,7 +32,7 @@ class HidePostbitAttributes extends Feature {
   }
 
   run(settings) {
-    $(".post").each(function () {
+    $(".post").each(function() {
       if (Util.getConfigurableValue("HPAOnlineStatus", this, settings)) {
         $(this).find(".post_author > .author_information img.buddy_status").hide();
       }

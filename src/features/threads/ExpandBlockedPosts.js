@@ -15,7 +15,7 @@ class ExpandBlockedPosts extends Feature {
     if ($("a[onclick*='showIgnoredPost']").length >= 1) {
       // Load posts
       const posts = $("#posts");
-      $("a[onclick*='showIgnoredPost']").each(function (index) {
+      $("a[onclick*='showIgnoredPost']").each(function(index) {
         // Hide Post
         this.click();
 

@@ -23,19 +23,21 @@ class HidePostbitAttributes extends Feature {
         new Checkbox({ id: "HPABRating", label: "B-Rating", default: false }),
         new Checkbox({ id: "HPAPopularity", label: "Popularity", default: false }),
         new Checkbox({ id: "HPABytes", label: "Bytes", default: false }),
-        new Checkbox({ id: "HPAGameXP", label: "Game XP", default: false })
+        new Checkbox({ id: "HPAGameXP", label: "Game XP", default: false }),
+        new Checkbox({ id: "HPAWarningLevel", label: "Warning Level", default: false })
       )
     });
   }
 
   run(settings) {
-    $(".post").each(function (index) {
+    $(".post").each(function () {
       if (Util.getConfigurableValue("HPAOnlineStatus", this, settings)) {
-        $(this).find(".post_author > .author_information img.buddy_status").remove();
+        $(this).find(".post_author > .author_information img.buddy_status").hide();
       }
       if (Util.getConfigurableValue("HPAAvatar", this, settings)) {
-        $(this).find(".post_author > .author_avatar").remove();
+        $(this).find(".post_author > .author_avatar").hide();
       }
+      // Usertitles are text nodes, which don't support the hidden attribute, must remove the text
       if (Util.getConfigurableValue("HPAUsertitle", this, settings)) {
         $(this).find(".post_author > .author_information > .smalltext").contents().filter((index) => {
           return index === 0;
@@ -50,31 +52,36 @@ class HidePostbitAttributes extends Feature {
       if (Util.getConfigurableValue("HPAAwards", this, settings)) {
         $(this).find(".post_author > .author_information > .post_myawards").hide();
       }
-      // Posts
       if (Util.getConfigurableValue("HPAPosts", this, settings)) {
-        // TODO $(this).find(".post_author > .author_information > .author_statistics > .author_row:eq(0)").remove();
+        $(this).find(".author_label:contains(Posts)").parent().hide();
       }
-      // // Threads
-      // if (Util.getConfigurableValue("", this, settings)) {
-      //   //
-      // }
-      // // B-Rating
-      // if (Util.getConfigurableValue("", this, settings)) {
-      //   //
-      // }
-      // // Popularity
-      // if (Util.getConfigurableValue("", this, settings)) {
-      //   //
-      // }
-      // // Bytes
-      // if (Util.getConfigurableValue("", this, settings)) {
-      //   //
-      // }
-      // // Game XP
-      // if (Util.getConfigurableValue("", this, settings)) {
-      //   //
-      // }
+      if (Util.getConfigurableValue("HPAThreads", this, settings)) {
+        $(this).find(".author_label:contains(Threads)").parent().hide();
+      }
+      if (Util.getConfigurableValue("HPABRating", this, settings)) {
+        $(this).find(".author_label:contains(B Rating)").parent().hide();
+      }
+      if (Util.getConfigurableValue("HPAPopularity", this, settings)) {
+        $(this).find(".author_label:contains(Popularity)").parent().hide();
+      }
+      if (Util.getConfigurableValue("HPABytes", this, settings)) {
+        $(this).find(".author_label:contains(βytes)").parent().hide();
+      }
+      if (Util.getConfigurableValue("HPAGameXP", this, settings)) {
+        $(this).find(".author_label:contains(Game XP)").parent().hide();
+      }
+      if (Util.getConfigurableValue("HPAWarningLevel", this, settings)) {
+        $(this).find(".author_label:contains(Warning Level)").parent().hide();
+      }
     });
+    // All statistic attributes hidden, hide container
+    if (["HPAPosts", "HPAThreads", "HPABRating", "HPAPopularity", "HPABytes", "HPAGameXP", "HPAWarningLevel"].every(key => this.getSetting(key, settings))) {
+      $(".author_statistics").hide();
+    }
+  }
+
+  getSetting(key, settings) {
+    return Util.getConfigurableValue(key, this, settings);
   }
 };
 

@@ -5,6 +5,7 @@ module.exports = {
   ChangeBodyColor: require("./features/global/ChangeBodyColor"),
   CollapsePossiblyRelatedThreads: require("./features/global/CollapsePossiblyRelatedThreads"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
+  HFToolBar: require("./features/global/HFToolBar"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),
   HideImages: require("./features/global/HideImages"),

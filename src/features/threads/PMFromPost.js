@@ -15,7 +15,7 @@ class PMFromPost extends Feature {
     const threadTitle = $(".breadcrumb a").last().text().substring(0, 50);
     this.startDynamicListeners();
 
-    $(".post").each(function(index) {
+    $(".post").each(function (index) {
       const myPostKey = $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop();
       const postId = $(this).attr("id").split("_").pop();
       const postLink = $(this).find(`#post_url_${postId}`).attr("href");
@@ -47,6 +47,11 @@ class PMFromPost extends Feature {
             <input type="hidden" name="icon" value="" />
             <input type="hidden" name="my_post_key" value="${myPostKey}" />
             <input type="hidden" name="uid" value="${postUser}" />
+            <div class="text-center my-3">
+              <span>
+                <strong>Notice: This is an HFX Feature!</strong>
+              </span>
+            </div>
             <div class="text-center my-3">
               <div class="mb-3">
                 <span>
@@ -89,13 +94,13 @@ class PMFromPost extends Feature {
 
   startDynamicListeners() {
     // Listen for toggle
-    $(".post").on("click", ".pm-from-post-toggle", function(e) {
+    $(".post").on("click", ".pm-from-post-toggle", function (e) {
       e.preventDefault();
       $(this).closest(".post").find(".pm-from-post-container").toggle();
     });
 
     // Listen for send
-    $(".post").on("click", ".pm-from-post-button.send", function(e) {
+    $(".post").on("click", ".pm-from-post-button.send", function (e) {
       $(this).closest(".pm-from-post-container").hide();
     });
   }

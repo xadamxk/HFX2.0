@@ -26,7 +26,11 @@ class HFToolBar extends Feature {
         new Text({ id: "HFTPFav4Text", label: "Favorite4 Text", default: "PM Tracking" }),
         new Text({ id: "HFTPFav4Link", label: "Favorite4 Link", default: "/private.php?action=tracking" }),
         new Text({ id: "HFTPFav5Text", label: "Favorite5 Text", default: "" }),
-        new Text({ id: "HFTPFav5Link", label: "Favorite5 Link", default: "" })
+        new Text({ id: "HFTPFav5Link", label: "Favorite5 Link", default: "" }),
+        new Text({ id: "HFTPFav6Text", label: "Favorite6 Text", default: "" }),
+        new Text({ id: "HFTPFav6Link", label: "Favorite6 Link", default: "" }),
+        new Text({ id: "HFTPFav7Text", label: "Favorite7 Text", default: "" }),
+        new Text({ id: "HFTPFav7Link", label: "Favorite7 Link", default: "" })
       )
     });
   }
@@ -48,6 +52,9 @@ class HFToolBar extends Feature {
     this.appendShortcut(this.getSetting("HFTPFav3Link", settings), this.getSetting("HFTPFav3Text", settings));
     this.appendShortcut(this.getSetting("HFTPFav4Link", settings), this.getSetting("HFTPFav4Text", settings));
     this.appendShortcut(this.getSetting("HFTPFav5Link", settings), this.getSetting("HFTPFav5Text", settings));
+    this.appendShortcut(this.getSetting("HFTPFav6Link", settings), this.getSetting("HFTPFav6Text", settings));
+    this.appendShortcut(this.getSetting("HFTPFav7Link", settings), this.getSetting("HFTPFav7Text", settings));
+
   }
 
   getSetting(key, settings) {

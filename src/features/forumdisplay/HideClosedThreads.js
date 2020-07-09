@@ -14,7 +14,7 @@ class HideClosedThreads extends Feature {
   run() {
     $(".thread_status").each(function(index) {
       if ($(this).attr("title").includes("Locked thread.")) {
-        $(this).parent().parent().remove();
+        $(this).parent().parent().hide();
       }
     });
   }

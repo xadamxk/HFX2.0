@@ -12,12 +12,12 @@ class PostsOnThread extends Feature {
   }
 
   run() {
-    $(".post").each(function (index) {
+    $(".post").each(function(index) {
       let userId = 0;
       let threadId = 0;
       try {
         userId = $(this).find(".author_information .largetext > a").attr("href").split("&uid=")[1];
-        $("input[type=hidden]").each(function () {
+        $("input[type=hidden]").each(function() {
           if ($(this).attr("name") === "tid") {
             threadId = $(this).attr("value");
           }

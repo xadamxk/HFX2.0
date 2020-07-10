@@ -7,7 +7,7 @@ class ShortcutLogs extends Feature {
       section: Game,
       name: "Shortcut: Logs",
       default: true,
-      description: "Show logs shortcut in game header"
+      description: "Show logs shortcut in game header."
     });
   }
 
@@ -22,9 +22,9 @@ class ShortcutLogs extends Feature {
               "font-size": "24px",
               "color": "#ababab"
             }).hover(
-              function() {
+              function () {
                 $(this).css({ "color": "#4d2f5d" });
-              }, function() {
+              }, function () {
                 $(this).css({ "color": "#ababab" });
               })));
     }

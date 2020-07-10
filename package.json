@@ -4,9 +4,9 @@
   "description": "Enhance your HF experience, a native browser extension.",
   "main": "src/HFX.js",
   "scripts": {
-    "lint": "./node_modules/.bin/eslint \"./src/**\" \"./tests/**\" --fix --no-eslintrc -c ./.eslintrc.json && exit 0",
-    "test": "jest && exit 0",
-    "config": "yarn && ./node_modules/.bin/gulp libs && ./node_modules/.bin/gulp build",
+    "lint": "eslint \"./src/**\" \"./tests/**\" \"./extension/assets/js/*\" --fix",
+    "test": "jest",
+    "config": "gulp libs && gulp build",
     "template": "node ./templates/index.js"
   },
   "pre-commit": [

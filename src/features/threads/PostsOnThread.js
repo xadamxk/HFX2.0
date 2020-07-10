@@ -7,7 +7,7 @@ class PostsOnThread extends Feature {
       section: Threads,
       name: "Posts On Thread",
       default: true,
-      description: "Filters posts on thread by selected user."
+      description: "Filters posts on current thread by selected user."
     });
   }
 

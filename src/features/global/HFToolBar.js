@@ -22,7 +22,7 @@ class HFToolBar extends Feature {
         new Text({ id: "HFTPFav2Text", label: "Favorite2 Text", default: "RANF" }),
         new Text({ id: "HFTPFav2Link", label: "Favorite2 Link", default: "/forumdisplay.php?fid=2" }),
         new Text({ id: "HFTPFav3Text", label: "Favorite3 Text", default: "Groups" }),
-        new Text({ id: "HFTPFav3Link", label: "Favorite3 Link", default: "/forumdisplay.php?fid=52" }),
+        new Text({ id: "HFTPFav3Link", label: "Favorite3 Link", default: "/forumdisplay.php?fid=53" }),
         new Text({ id: "HFTPFav4Text", label: "Favorite4 Text", default: "PM Tracking" }),
         new Text({ id: "HFTPFav4Link", label: "Favorite4 Link", default: "/private.php?action=tracking" }),
         new Text({ id: "HFTPFav5Text", label: "Favorite5 Text", default: "" }),

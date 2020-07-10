@@ -2,11 +2,11 @@ const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
 
-const template = `module.exports = {
-  {{ #configurables }}
-  {{{ name }}}: require("./configurables/{{{ name }}}"){{ #next }},{{ /next }}
-  {{ /configurables }}
-};
+const template = `module.exports = {\r
+  {{ #configurables }}\r
+  {{{ name }}}: require("./configurables/{{{ name }}}"){{ #next }},{{ /next }}\r
+  {{ /configurables }}\r
+};\r
 `;
 
 mustache.parse(template);

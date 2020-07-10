@@ -5,9 +5,9 @@ class HideImages extends Feature {
   constructor() {
     super({
       section: Global,
-      name: "Hides images",
+      name: "Hides Images",
       default: false,
-      description: "Hides images"
+      description: "Hides images."
     });
   }
 

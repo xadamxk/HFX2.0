@@ -8,7 +8,7 @@ class CollapsePossiblyRelatedThreads extends Feature {
       section: Global,
       name: "Collapse Possibly Related Threads",
       default: false,
-      description: "Automatically collapse 'Possibly Related Threads' results.\n\nClick the toggle image to view results"
+      description: "Automatically collapse 'Possibly Related Threads' results.\n\nClick the toggle image to view results."
     });
   }
 

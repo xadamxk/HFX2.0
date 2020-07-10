@@ -37,8 +37,17 @@ class HFToolBar extends Feature {
 
   run(settings) {
     if (this.getSetting("HFTPStickyHeader", settings)) {
-      $(".panel-nav-lower").attr({ "data-margin-top": "0" }).addClass("sticky").css({ "z-index": 100 });
-      let sticky = new Sticky(".sticky");
+      $(".panel-nav-lower").css({ "z-index": 100 });
+      let sticky = new Sticky(".panel-nav-lower", { marginTop: 0 });
+
+      // Wrap getRectangle function to be able to account for padding in final width
+      sticky.getRectangle = function(element) {
+        const rect = Sticky.prototype.getRectangle.apply(this, [element]);
+        const style = window.getComputedStyle(element);
+        rect.width -= parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        return rect;
+      };
+
       sticky.update();
     }
 

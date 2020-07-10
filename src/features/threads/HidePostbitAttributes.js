@@ -26,7 +26,6 @@ class HidePostbitAttributes extends Feature {
         new Checkbox({ id: "HPAGameXP", label: "Game XP", default: false }),
         new Checkbox({ id: "HPAWarningLevel", label: "Warning Level", default: false }),
         new Checkbox({ id: "HPASignature", label: "Signature", default: false })
-
       )
     });
   }

@@ -12,6 +12,7 @@ module.exports = {
   HidePostbitAttributes: require("./features/threads/HidePostbitAttributes"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
+  PostsOnThread: require("./features/threads/PostsOnThread"),
   RepCharts: require("./features/reputation/RepCharts"),
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),
   ShortcutLeaderboard: require("./features/game/ShortcutLeaderboard"),

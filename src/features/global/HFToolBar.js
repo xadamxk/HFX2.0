@@ -54,7 +54,6 @@ class HFToolBar extends Feature {
     this.appendShortcut(this.getSetting("HFTPFav5Link", settings), this.getSetting("HFTPFav5Text", settings));
     this.appendShortcut(this.getSetting("HFTPFav6Link", settings), this.getSetting("HFTPFav6Text", settings));
     this.appendShortcut(this.getSetting("HFTPFav7Link", settings), this.getSetting("HFTPFav7Text", settings));
-
   }
 
   getSetting(key, settings) {

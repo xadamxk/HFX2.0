@@ -5,13 +5,12 @@
   "main": "src/HFX.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint \"./src/**\" \"./tests/**\" --fix --no-eslintrc -c ./.eslintrc.json && exit 0",
-    "debug": "./node_modules/.bin/eslint --print-config ./src/HFX.js",
     "test": "jest && exit 0",
     "config": "yarn && ./node_modules/.bin/gulp libs && ./node_modules/.bin/gulp build",
     "template": "node ./templates/index.js"
   },
   "pre-commit": [
-    "debug",
+    "lint",
     "test"
   ],
   "engines": {

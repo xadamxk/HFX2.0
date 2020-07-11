@@ -1,6 +1,6 @@
-const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
+const writer = require("./CRLFWriter");
 
 const template = `const Feature = require("../../core/Feature");
 const {{{ section }}} = require("../../sections/{{{ section }}}");
@@ -54,7 +54,7 @@ const questions = [
 
 function generate() {
   const prompt = require("./prompt");
-  const generateFeatures = require("../templates/Features");
+  const generateFeatures = require("./Features");
 
   prompt(questions, answers => {
     const name = answers[0];
@@ -72,11 +72,7 @@ function generate() {
       enabled: enabled
     });
 
-    if (!fs.existsSync(`./src/features/${sectionLower}`)) {
-      fs.mkdirSync(`./src/features/${sectionLower}`);
-    }
-
-    fs.writeFileSync(`./src/features/${sectionLower}/${name}.js`, feature);
+    writer(`./src/features/${sectionLower}/${name}.js`, feature);
     generateFeatures();
   });
 }

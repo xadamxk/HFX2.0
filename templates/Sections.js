@@ -1,6 +1,6 @@
-const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
+const writer = require("./CRLFWriter");
 
 const template = `module.exports = {
   {{ #sections }}
@@ -28,7 +28,7 @@ function generate() {
   });
   sections[sections.length - 1].next = false;
 
-  fs.writeFileSync(`./src/Sections.js`, mustache.render(template, {sections: sections}));
+  writer("./src/Sections.js", mustache.render(template, {sections: sections}));
 }
 
 if (require.main === module) {

@@ -9,13 +9,13 @@
     "config": "gulp libs && gulp build",
     "template": "node ./templates/index.js"
   },
-  "pre-commit": [
-    "lint",
-    "test"
-  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run lint && yarn run test"
+    }
+  },
   "engines": {
     "node": ">=11.0",
-    "npm": ">=6.11.0",
     "yarn": ">=1.13.0"
   },
   "author": "xadamxk",
@@ -45,9 +45,9 @@
     "gulp-replace": "^1.0.0",
     "gulp-watch": "^5.0.0",
     "gulplog": "^1.0.0",
+    "husky": "^4.2.5",
     "jest": "^24.9.0",
     "mustache": "^3.1.0",
-    "pre-commit": "^1.2.2",
     "sinon-chrome": "^3.0.1",
     "vinyl-source-stream": "^2.0.0"
   }

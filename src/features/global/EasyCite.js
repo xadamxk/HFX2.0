@@ -23,6 +23,23 @@ class EasyCite extends Feature {
   run() {
     let address = location.href;
     let citationText = this.getAppropriateCitation(address);
+    console.log(citationText);
+    $("#citeButton").click(function(event) {
+      var target = $(event.target);
+      if (target.is("a") || target.is("span")) {
+        var textarea = $("<textarea/>");
+        textarea.text(`[url=${address}][b]${citationText}[/b][/url]`);
+        $("body").append(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      // TODO: Alert of some kind that citation was 'Copied'
+    });
+  }
+
+  copyToClipboard(text) {
+
   }
 
   getAppropriateCitation(address) {
@@ -45,10 +62,6 @@ class EasyCite extends Feature {
       case this.isMatch(address, "/reputation.php?uid="):
       case this.isMatch(address, "/repsgiven.php?uid="):
         return this.getDescription("'s Popularity", $("#content").find("strong:contains('Popularity Report for')").text().replace("Popularity Report for ", ""));
-        /*
-        case this.isMatch(address, "/"):
-        return this.getDescription("");
-        */
       default: return breadcrumb;
     }
   }

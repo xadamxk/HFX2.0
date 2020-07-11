@@ -37,7 +37,7 @@ function generate() {
   });
   features[features.length - 1].next = false;
 
-  writer(`./src/Features.js`, mustache.render(template, {features: features}));
+  writer("./src/Features.js", mustache.render(template, {features: features}));
 }
 
 if (require.main === module) {

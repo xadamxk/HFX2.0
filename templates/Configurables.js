@@ -28,7 +28,7 @@ const configurables = globby.sync("./src/configurables/*.js").map(configurable =
 configurables[configurables.length - 1].next = false;
 
 function generate() {
-  fs.writeFileSync(`./src/Configurables.js`, mustache.render(template, {configurables: configurables}));
+  fs.writeFileSync("./src/Configurables.js", mustache.render(template, {configurables: configurables}));
 }
 
 if (require.main === module) {

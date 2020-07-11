@@ -28,7 +28,7 @@ function generate() {
   });
   sections[sections.length - 1].next = false;
 
-  fs.writeFileSync(`./src/Sections.js`, mustache.render(template, {sections: sections}));
+  fs.writeFileSync("./src/Sections.js", mustache.render(template, {sections: sections}));
 }
 
 if (require.main === module) {

@@ -58,7 +58,7 @@ function generate() {
 
   prompt(questions, answers => {
     const name = answers[0];
-    const nameSpaced = name.split(/(?=[A-Z])/).join(" ");
+    const nameSpaced = name.replace(/([a-z])([A-Z])/g, "$1 $2");
     const section = sections[answers[1]];
     const sectionLower = section.toLowerCase();
     const description = answers[2];

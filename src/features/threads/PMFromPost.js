@@ -30,10 +30,10 @@ class PMFromPost extends Feature {
       postQuote = `[quote="${postUser}" pid="${postId}"]${postQuote}[/quote]`;
       postQuote = `[size=x-small]Sent from [url=${postLink}]your post[/url].[/size]\n${postQuote}\n`;
 
-      $(this).find(".author_buttons").append(`
+      $(this).find(".author_buttons").prepend(`
         <a class="pm-from-post-toggle postbit_quote" href="#" data-tooltip="PM From Post">
           <span>
-            <i class="fa fa-comment-o fa-lg"></i>
+            <i class="fa fa-comment fa-lg" aria-hidden="true"></i>
           </span>
         </a>
       `);
@@ -47,6 +47,11 @@ class PMFromPost extends Feature {
             <input type="hidden" name="icon" value="" />
             <input type="hidden" name="my_post_key" value="${myPostKey}" />
             <input type="hidden" name="uid" value="${postUser}" />
+            <div class="text-center my-3">
+              <span>
+                <strong>Notice: This is an HFX Feature!</strong>
+              </span>
+            </div>
             <div class="text-center my-3">
               <div class="mb-3">
                 <span>

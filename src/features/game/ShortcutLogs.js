@@ -7,7 +7,7 @@ class ShortcutLogs extends Feature {
       section: Game,
       name: "Shortcut: Logs",
       default: true,
-      description: "Show logs shortcut in game header"
+      description: "Show logs shortcut in game header."
     });
   }
 

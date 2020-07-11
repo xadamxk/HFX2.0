@@ -13,10 +13,10 @@ mustache.parse(template);
 
 function generate() {
   const features = globby.sync("./src/features/**/*.js").map(feature => {
-    feature = feature.split("/")
+    feature = feature.split("/");
     const name = feature.pop().split(".js").shift();
     const section = feature.pop();
-  
+
     return {
       name: name,
       section: section,

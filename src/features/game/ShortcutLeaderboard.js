@@ -7,7 +7,7 @@ class ShortcutLeaderboard extends Feature {
       section: Game,
       name: "Shortcut: Leaderboard",
       default: true,
-      description: "Show leaderboard shortcut in game header"
+      description: "Show leaderboard shortcut in game header."
     });
   }
 

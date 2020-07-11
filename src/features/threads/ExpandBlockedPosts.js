@@ -7,7 +7,7 @@ class ExpandBlockedPosts extends Feature {
       section: Threads,
       name: "Expand Blocked Posts",
       default: true,
-      description: "Automatically expands blocked user's posts."
+      description: "Automatically expands blocked user's posts. (Overrides HideBlockedPosts)"
     });
   }
 

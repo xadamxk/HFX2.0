@@ -2,7 +2,6 @@ const Feature = require("../../core/Feature");
 const Global = require("../../sections/Global");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");
-const Util = require("../../core/Util");
 
 class EasyCite extends Feature {
   constructor() {
@@ -14,13 +13,13 @@ class EasyCite extends Feature {
       configurables: new ConfigurableArray(
         new Checkbox({ id: "ECProfileColors", label: "Profile Colors", default: true }),
         new Checkbox({ id: "ECUsernameColors", label: "Username Colors", default: true }),
-        new Checkbox({ id: "ECLinkUsernameForPosts", label: "Link Username for Posts", default: true }),
         new Checkbox({ id: "ECProfileColors", label: "Cite Posts", default: true })
       )
     });
   }
 
   run() {
+    // TODO: Logic for Profile colors, username colors
     let address = location.href;
     let citationText = this.getAppropriateCitation(address);
     console.log(citationText);

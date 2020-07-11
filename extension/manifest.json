@@ -30,7 +30,7 @@
   },
   "background": {
     "scripts": [
-      "assets/lib/crx-hotreload/hot-reload.js",
+      "assets/js/hot-reload.js",
       "release/js/HFX.js"
     ]
   },
@@ -53,9 +53,7 @@
   ],
   "permissions": [
     "storage",
-    "https://raw.githubusercontent.com/xadamxk/HFX/master/Badges.json?nc=*",
-    "https://raw.githubusercontent.com/xadamxk/HFX/master/Alert.json?nc=*",
-    "https://gist.github.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/*"
+    "*://hackforums.net/*"
   ],
   "omnibox": {
     "keyword": "HF"

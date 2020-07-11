@@ -3,7 +3,6 @@ module.exports = {
   BatteryAbsoluteTime: require("./features/game/BatteryAbsoluteTime"),
   BatteryPercent: require("./features/game/BatteryPercent"),
   ChangeBodyColor: require("./features/global/ChangeBodyColor"),
-  CollapsePossiblyRelatedThreads: require("./features/global/CollapsePossiblyRelatedThreads"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
   HFToolBar: require("./features/global/HFToolBar"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),

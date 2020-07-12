@@ -2,6 +2,7 @@ const Feature = require("../../core/Feature");
 const Global = require("../../sections/Global");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");
+const Util = require("../../core/Util");
 
 class EasyCite extends Feature {
   constructor() {
@@ -11,17 +12,14 @@ class EasyCite extends Feature {
       default: true,
       description: "Click the breadcumb to quickly cite pages.",
       configurables: new ConfigurableArray(
-        new Checkbox({ id: "ECProfileColors", label: "Profile Colors", default: true }),
-        new Checkbox({ id: "ECUsernameColors", label: "Username Colors", default: true }),
-        new Checkbox({ id: "ECProfileColors", label: "Cite Posts", default: true })
+        new Checkbox({ id: "ECProfileColors", label: "Profile Colors", default: true })
       )
     });
   }
 
-  run() {
-    // TODO: Logic for Profile colors, username colors
+  run(settings) {
     let address = location.href;
-    let citationText = this.getAppropriateCitation(address);
+    let citationText = this.getAppropriateCitation(address, settings);
 
     $("#citeButton").click(function(event) {
       var target = $(event.target);
@@ -38,11 +36,7 @@ class EasyCite extends Feature {
     });
   }
 
-  copyToClipboard(text) {
-
-  }
-
-  getAppropriateCitation(address) {
+  getAppropriateCitation(address, settings) {
     let breadcrumb = $(".breadcrumb").find("a").last().attr({ "id": "citeButton", title: "Cite Page", "href": "javascript:void()" }).text();
     switch (address) {
       case this.isMatch(address, "/myawards.php?uid="):
@@ -54,7 +48,10 @@ class EasyCite extends Feature {
       case this.isMatch(address, "/forumdisplay.php?fid="):
         return this.getDescription("Section").replace("  ", " "); // RANF Section has two spaces between Rules, Announcements
       case this.isMatch(address, "/member.php?action=profile"):
-        return this.getDescription("'s Profile").replace("Profile of ", "");
+        if (Util.getConfigurableValue("ECProfileColors", this, settings)) {
+          return this.getDescription(" Profile", `[color=${this.rgb2hex($(".largetext:eq(0) span").css("color"))}]` + $("#citeButton").text().replace("Profile of ", "") + "[/color]");
+        }
+        return this.getDescription(" Profile").replace("Profile of ", "");
       case this.isMatch(address, "/misc.php?action=help"):
         return this.getDescription("- Help Documents");
       case this.isMatch(address, "/disputedb.php"):
@@ -64,6 +61,16 @@ class EasyCite extends Feature {
         return this.getDescription("'s Popularity", $("#content").find("strong:contains('Popularity Report for')").text().replace("Popularity Report for ", ""));
       default: return breadcrumb;
     }
+  }
+
+  rgb2hex(rgb) {
+    rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    return "#" + this.hex(rgb[1]) + this.hex(rgb[2]) + this.hex(rgb[3]);
+  }
+
+  hex(x) {
+    var hexDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
+    return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
   }
 
   isMatch(address, match) {

@@ -22,18 +22,19 @@ class EasyCite extends Feature {
     // TODO: Logic for Profile colors, username colors
     let address = location.href;
     let citationText = this.getAppropriateCitation(address);
-    console.log(citationText);
+
     $("#citeButton").click(function(event) {
       var target = $(event.target);
-      if (target.is("a") || target.is("span")) {
-        var textarea = $("<textarea/>");
-        textarea.text(`[url=${address}][b]${citationText}[/b][/url]`);
-        $("body").append(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        textarea.remove();
+      if (confirm("Do you want to copy the citation to your clipboard?")) {
+        if (target.is("a") || target.is("span")) {
+          var textarea = $("<textarea/>");
+          textarea.text(`[url=${address}][b]${citationText}[/b][/url]`);
+          $("body").append(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          textarea.remove();
+        }
       }
-      // TODO: Alert of some kind that citation was 'Copied'
     });
   }
 

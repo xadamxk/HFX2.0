@@ -69,7 +69,7 @@ class EasyCite extends Feature {
   }
 
   hex(x) {
-    var hexDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
+    var hexDigits = "0123456789abcdef";
     return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
   }
 

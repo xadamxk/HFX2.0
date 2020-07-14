@@ -42,7 +42,7 @@ describe("ConfigurableArray", () => {
 
   it("gets correct Configurable by ID", () => {
     for (const configurable of configurableArray.configurables) {
-      expect(configurableArray.get(configurable.id)).toBe(configurable);
+      expect(configurableArray.get(configurable.id)).toStrictEqual(configurable);
     }
   });
 });

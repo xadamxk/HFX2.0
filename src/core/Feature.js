@@ -3,6 +3,7 @@ const Settings = require("./Settings");
 const Util = require("./Util");
 const Section = require("./Section");
 const ConfigurableArray = require("./ConfigurableArray");
+const SectionArray = require("./SectionArray");
 
 module.exports = class Feature {
   constructor(opts) {
@@ -21,7 +22,8 @@ module.exports = class Feature {
         "name": "string",
         "profile": "string"
       },
-      "configurables": ConfigurableArray
+      "configurables": ConfigurableArray,
+      "additionalSections": SectionArray
     }, opts);
 
     if (required.unset.length > 0 || required.invalid.length > 0 || optional.invalid.length > 0) {
@@ -39,9 +41,10 @@ module.exports = class Feature {
     this.default = opts.default;
     this.description = opts.description;
 
-    this.subsection = opts.subsection ? opts.subsection : "general";
+    this.subsection = opts.subsection;
     this.author = opts.author;
     this.configurables = opts.configurables;
+    this.additionalSections = opts.additionalSections;
   }
 
   initialize() {
@@ -63,14 +66,22 @@ module.exports = class Feature {
       Util.trackLoadedFeature(this);
       Logger.debug(`${this.class} loaded.`);
 
-      if (settings.enabled && this.section.runnable()) {
-        this.run(settings);
+      if (settings.enabled && this.runnable()) {
+        this.run(settings, this.runnableSection());
         Logger.debug(`${this.class} running.`);
         return true;
       }
 
       return false;
     });
+  }
+
+  runnableSection() {
+    return this.section.runnable() ? this.section : (this.additionalSections && this.additionalSections.runnableSection());
+  }
+
+  runnable() {
+    return this.section.runnable() || (this.additionalSections && this.additionalSections.runnable());
   }
 
   run() {
@@ -132,6 +143,14 @@ module.exports = class Feature {
 
   set configurables(_configurables) {
     this._configurables = _configurables;
+  }
+
+  get additionalSections() {
+    return this._additionalSections;
+  }
+
+  set additionalSections(_additionalSections) {
+    this._additionalSections = _additionalSections;
   }
   // #endregion
 };

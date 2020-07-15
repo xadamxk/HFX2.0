@@ -82,10 +82,15 @@ class CharacterCounter extends Feature {
         label: "Good",
         color: "#00B500"
       };
-    } else if (charCount >= 100 && charCount < 12000) { // Between closver limit and L33t limit
+    } else if (charCount >= 100 && charCount < 8000) { // Between closver limit and normal limit
       return {
         label: "Clover",
         color: "#AA00FF"
+      };
+    } else if (charCount >= 8000 && charCount < 12000) { // Between normal and L33t limit
+      return {
+        label: "Too High (Normal)",
+        color: "#EFEFEF"
       };
     } else if (charCount >= 12000 && charCount < 30000) { // Between L33t and Ub3r limit
       return {

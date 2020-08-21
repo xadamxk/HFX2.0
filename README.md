@@ -11,11 +11,16 @@
 - Watch code for changes: ```gulp watch```
 
 ### Development Tools & Features
+- **ESLint**: Linter to catch warnings and format code
+- **Gulp**: Task runner to build project and watch for changes
+- **Hot-Reload**: Automatically reload applicable tabs on code change
+- **Husky**: Commit hook to lint code changes and run unit tests
+- **Mustache**: Add new modules via templating system
+- **Jest**: Framework for unit testing
+- **Sinon-Chrome**: Mock chrome extensions API (unit testing)
 
-
------
-## Adding modules using Mustache
-### Adding Features
+## Adding Modules
+### Features
 - Create feature using template: ```yarn template```
 - Choose a template type: ```Feature```
 - Provide feature meta data:
@@ -26,7 +31,7 @@
 - Code your feature in the run function: ```src/features/{section}/{your_feature_name}.js```
 - Test by side loading HFX and load a page that matches the feature's section path
 
-### Adding Sections
+### Sections
 - Create section using template: ```yarn template```
 - Choose a template type: ```Section```
 - Provide section meta data:

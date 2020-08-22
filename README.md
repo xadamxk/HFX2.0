@@ -52,7 +52,7 @@ const Color = require("../../configurables/Color");
 // Util helper to get configurable values
 const Util = require("../../core/Util");
 
-class ChangeBodyColor extends Feature {
+class MyFeature extends Feature {
     constructor() {
         super({
             section: MySection,

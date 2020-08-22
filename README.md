@@ -1,6 +1,8 @@
 # HFX2.0
 > Enhance your HackForums experience - rewritten from the ground up with the community in mind
 
+ ![HFX Logo](https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/banner-small.png)
+
 ## Getting Started (Development)
 - Install Node.js >=v11.0
 - Install Yarn >=v1.13.0

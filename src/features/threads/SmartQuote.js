@@ -41,6 +41,7 @@ class SmartQuote extends Feature {
         "border": "1px solid black",
         "background": isMentioned ? mentionColor : quoteColor
       });
+      // TODO: Remove ::after css for border bottom (https://stackoverflow.com/questions/17788990/access-the-css-after-selector-with-jquery)
     });
   }
 };

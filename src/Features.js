@@ -18,5 +18,6 @@ module.exports = {
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),
   ShortcutLeaderboard: require("./features/game/ShortcutLeaderboard"),
   ShortcutLogs: require("./features/game/ShortcutLogs"),
+  ShowPostNumbers: require("./features/threads/ShowPostNumbers"),
   TrackingLinks: require("./features/pms/TrackingLinks")
 };

@@ -22,10 +22,11 @@ class SearchYourThreads extends Feature {
   }
 
   run(settings) {
+    const fid = window.location.href.split("fid=")[1];
     $("td.thead").find("div.float_right").find("strong").append(`&nbsp;&nbsp;|&nbsp;&nbsp;<form method="post" action="search.php" style="display:inline">
         <input type="hidden" name="action" value="do_search">
         <input type="hidden" name="matchusername" value="1">
-        <input type="hidden" name="forums" value="${parseInt($("div.breadcrumb").find("a").last().attr("href").split("fid=")[1])}">
+        <input type="hidden" name="forums" value="${fid}">
         <input type="hidden" name="threadprefix" value="any">
         <input type="hidden" name="showresults" value="threads">
         <input type="hidden" name="author" value="${$("span.welcome").find("a").text()}">

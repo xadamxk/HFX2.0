@@ -6,8 +6,9 @@ const Util = require("../../core/Util");
 
 class SmartQuote extends Feature {
   constructor() {
-    const defaultMentionColor = "#FF3B30";
+    const defaultMentionColor = "#CD5C5C"; // #FF3B30
     const defaultQuoteColor = "#B1D8BF";
+    const defaultHeaderColor = "#000000";
     super({
       section: Threads,
       name: "Smart Quote",
@@ -15,7 +16,8 @@ class SmartQuote extends Feature {
       description: "Adds styling and highlights mentioned quotes.",
       configurables: new ConfigurableArray(
         new Color({id: "SQMentionColor", label: "Mention Color", default: defaultMentionColor}),
-        new Color({id: "SQColor", label: "Quote Color", default: defaultQuoteColor})
+        new Color({id: "SQColor", label: "Quote Color", default: defaultQuoteColor}),
+        new Color({id: "SQTextColor", label: "Header Color", default: defaultHeaderColor})
       )
     });
   }
@@ -24,24 +26,29 @@ class SmartQuote extends Feature {
     const username = $(".welcome > strong > a").text();
     const mentionColor = Util.getConfigurableValue("SQMentionColor", this, settings) ? Util.getConfigurableValue("SQMentionColor", this, settings) : this.defaultMentionColor;
     const quoteColor = Util.getConfigurableValue("SQColor", this, settings) ? Util.getConfigurableValue("SQColor", this, settings) : this.defaultQuoteColor;
+    const headerColor = Util.getConfigurableValue("SQTextColor", this, settings) ? Util.getConfigurableValue("SQTextColor", this, settings) : this.defaultHeaderColor;
     // Loop quotes
     $("blockquote").each(function() {
       // blockquote
       $(this).css({
         "border-radius": "5px",
         "border": "1px solid black",
-        "padding": "1px 4px",
+        "padding": "2px 6px",
         "margin-top": "10px"
       });
 
-      // blackquote header
+      // blockquote header
       const isMentioned = $(this).find("cite").text().includes(username);
       $(this).find("cite").css({
         "border-radius": "5px",
         "border": "1px solid black",
-        "background": isMentioned ? mentionColor : quoteColor
-      });
-      // TODO: Remove ::after css for border bottom (https://stackoverflow.com/questions/17788990/access-the-css-after-selector-with-jquery)
+        "color": headerColor,
+        "background": isMentioned ? mentionColor : quoteColor,
+        "font-weight": "bold"
+      }).addClass("without-after-element") // Add class to remove after element (underline)
+        .find("span").css({
+          "color": headerColor
+        });
     });
   }
 };

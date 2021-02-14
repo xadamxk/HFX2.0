@@ -30,7 +30,10 @@ class MedalOfHonorTracker extends Feature {
       const totalXP = parseInt(this.determineLevelXP(currentlevel)) + parseInt(currentlevelXP);
 
       // Tooltip percentage
-      const wholePercent = this.getWholePercent(totalXP, goal);
+      var wholePercent = this.getWholePercent(totalXP, goal);
+      if (wholePercent >= 100) {
+        wholePercent = 100;
+      }
 
       // Clone existing progress bar (and children) but change the IDs to be unique
       $("#progress-bar").parent().clone().appendTo(".game-profile-player")
@@ -50,7 +53,7 @@ class MedalOfHonorTracker extends Feature {
           "title": "Medal of Honor Progress: " + wholePercent + "%"
         })
         .css({
-          "width": ((totalXP / goal) * 100).toFixed(5) + "%",
+          "width": wholePercent + "%",
           "transition": "0.1s",
           "background-color": "#e2ba2f",
           "box-shadow": "inset 0px 0px 3px 1px #ffffff12",

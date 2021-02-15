@@ -53,7 +53,8 @@
   ],
   "permissions": [
     "storage",
-    "*://hackforums.net/*"
+    "*://hackforums.net/*",
+    "*://raw.githubusercontent.com/xadamxk/HFX2.0/develop/alert.json?nc=*"
   ],
   "omnibox": {
     "keyword": "HF"

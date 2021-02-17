@@ -60,6 +60,7 @@
     "keyword": "HF"
   },
   "web_accessible_resources": [
-    "/assets/images/icon128.png"
+    "/assets/images/icon128.png",
+    "/assets/images/dismiss_notice.png"
   ]
 }

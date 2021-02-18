@@ -2,6 +2,7 @@ const Feature = require("../../core/Feature");
 const Convo = require("../../sections/Convo");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Text = require("../../configurables/Text");
+const Checkbox = require("../../configurables/Checkbox");
 const Util = require("../../core/Util");
 
 class FilterByKeyword extends Feature {
@@ -10,17 +11,19 @@ class FilterByKeyword extends Feature {
       section: Convo,
       name: "Filter Convo Messages",
       default: true,
-      description: "Automatically hide messages containing keywords (ie 'ebook,tiktok,anime').",
+      description: "Filter convos by keyword, user, group, and more.",
       configurables: new ConfigurableArray(
-        new Text({ id: "ConvoFilterKeywords", label: "Blacklisted Terms (ie. 'ebook,anime')", default: "trump" })
-        // new Text({ id: "ConvoFilterReplace", label: "Blacklisted Replacement", default: "BLACKLISTED" })
+        new Text({ id: "ConvoFilterKeywords", label: "Blacklisted Terms (ie. ebook,anime)", default: "" }),
+        new Checkbox({ id: "ConvoFilterFlips", label: "Hide Flips", default: false }),
+        new Checkbox({ id: "ConvoFilterJackpot", label: "Hide Jackpot", default: false })
       )
     });
   }
 
   run(settings) {
     const blacklisted = Util.getConfigurableValue("ConvoFilterKeywords", this, settings);
-    // const blacklistReplace = Util.getConfigurableValue("ConvoFilterReplace", this, settings);
+    const hideFlips = Util.getConfigurableValue("ConvoFilterFlips", this, settings);
+    const hideJackpots = Util.getConfigurableValue("ConvoFilterJackpot", this, settings);
     const mutationHandler = function(mutationRecords) {
       // Loop mutations
       mutationRecords.forEach(function(mutation) {
@@ -28,15 +31,26 @@ class FilterByKeyword extends Feature {
         mutation.addedNodes.forEach((node) => {
           // Received message
           if ($(node).hasClass("message-convo-left")) {
-            // Loop blacklisted keywords
-            blacklisted.split(",").forEach(blacklistedTerm => {
-              const message = $(node).find(".message-bubble-message")[0];
+            const message = $(node).find(".message-bubble-message")[0];
+            // Blacklisted terms - loop keywords
+            blacklisted && blacklisted.split(",").forEach(blacklistedTerm => {
               if ($(message).text().includes(blacklistedTerm)) {
-                // $(node).after(blacklistReplace);
                 $(node).hide();
               }
             });
-            // Delete matches
+            // Flips
+            if (hideFlips) {
+              if ($(message).text().includes("/flip")) {
+                $(node).hide();
+              }
+            }
+            // Jackpots
+            if (hideJackpots) {
+              if ($(message).text().includes("/jackpot play")) {
+                $(node).hide();
+              }
+            }
+            // TODO: Filter group
           }
         });
       });

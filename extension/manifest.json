@@ -44,6 +44,7 @@
         "assets/lib/jquery/jquery.min.js",
         "assets/lib/moment/moment.min.js",
         "assets/lib/chart.js/Chart.bundle.min.js",
+        "assets/lib/@yaireo/jQuery.tagify.min.js",
         "release/js/HFX.js"
       ],
       "css": [

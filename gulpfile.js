@@ -52,6 +52,7 @@ gulp.task("libs", asyncComplete => {
   copyNodeAssets("font-awesome", ["css/font-awesome.min.css", "fonts/*"], {pattern: /url\((?:'|")\.\.\/fonts\/([^'"]+)(?:'|")\)/g, replacement: "url(\"./$1\")"});
   copyNodeAssets("moment", ["min/moment.min.js"]);
   copyNodeAssets("chart.js", ["dist/Chart.bundle.min.js"]);
+  copyNodeAssets("@yaireo", ["tagify/dist/jQuery.tagify.min.js", "tagify/dist/tagify.css"]);
   asyncComplete();
 });
 

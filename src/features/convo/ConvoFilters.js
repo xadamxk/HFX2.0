@@ -21,10 +21,11 @@ class ConvoFilters extends Feature {
     });
   }
 
-  run(settings) {
-    // let blacklistedUsers = Util.getLocalSetting(this, "blacklistedUsers");
-    // Util.saveLocalSetting(this, "testkey", "testvalue");
-    // console.log(Util.getLocalStorageKeys());
+  async run(settings) {
+    // TODO: Fetch list of blocked users
+    const self = this;
+    let blacklistedUsers = await Util.getLocalSetting(this, "blacklistedUsers");
+    console.log(blacklistedUsers);
 
     // Retrieve convo filter settings
     const blacklisted = Util.getConfigurableValue("ConvoFilterKeywords", this, settings);
@@ -65,6 +66,22 @@ class ConvoFilters extends Feature {
     const toggleUser = function() {
       const uid = $(this).attr("uid");
       console.log(uid);
+      // TODO: Just remove and replace child element - too tired atm
+      if ($(this).attr("blacklisted") === "true") {
+        $(this).attr("blacklisted", "false");
+        $(this).prop("title", "Block User");
+        $(this).find("i").removeClass("fa-user-minus");
+        $(this).find("i").addClass("fa-user-plus");
+        delete blacklistedUsers[uid];
+      } else {
+        $(this).attr("blacklisted", "true");
+        $(this).prop("title", "Unblock User");
+        $(this).find("i").removeClass("fa-user-plus");
+        $(this).find("i").addClass("fa-user-minus");
+        blacklistedUsers[uid] = true;
+      }
+      Util.saveLocalSetting(self, "blacklistedUsers", JSON.stringify(blacklistedUsers));
+      Util.printLocalSetting(self, "blacklistedUsers");
     };
 
     const usemessageMutationHandler = function(mutationRecords) {
@@ -76,13 +93,13 @@ class ConvoFilters extends Feature {
           if ($(node).hasClass("us-group")) {
             //
           } else if ($(node).hasClass("us-user")) {
-            console.log($(node));
             const uid = $(node).attr("data-uid");
-            // Append blacklist button to user
+            const isCurrentlyBlocked = blacklistedUsers.hasOwnProperty(uid);
+            // Append blacklist button to user (fa-user-plus/fa-user-minus)
             $(node).find(".us-user-right").css({"width": "100%", "display": "block"})
-              .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid})
+              .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "Unblock User" : "Block User")})
                 .on("click", toggleUser)
-                .append($("<i>").addClass("fas fa-user-plus")));
+                .append($("<i>").addClass((isCurrentlyBlocked ? "fas fa-user-minus" : "fas fa-user-plus"))));
           }
         });
       });

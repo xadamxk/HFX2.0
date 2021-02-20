@@ -77,5 +77,13 @@ module.exports = {
     }
 
     return result;
+  },
+
+  addScriptToPage(scriptContent) {
+    var script = document.createElement("script");
+    script.textContent = scriptContent;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
+  },
   }
 };

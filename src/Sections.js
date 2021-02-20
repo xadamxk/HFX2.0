@@ -1,4 +1,5 @@
 module.exports = {
+  Convo: require("./sections/Convo"),
   ForumDisplay: require("./sections/ForumDisplay"),
   Game: require("./sections/Game"),
   Global: require("./sections/Global"),

@@ -4,6 +4,7 @@ module.exports = {
   BatteryAbsoluteTime: require("./features/game/BatteryAbsoluteTime"),
   BatteryPercent: require("./features/game/BatteryPercent"),
   CharacterCounter: require("./features/threads/CharacterCounter"),
+  DisplayTempUb3rStatus: require("./features/threads/DisplayTempUb3rStatus"),
   EasyCite: require("./features/global/EasyCite"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
   FilterByKeyword: require("./features/convo/FilterByKeyword"),

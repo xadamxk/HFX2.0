@@ -7,7 +7,11 @@ class DisplayTempUb3rStatus extends Feature {
       section: Threads,
       name: "Display Temp Ub3r Status",
       default: true,
-      description: "Displays the temp Ub3r status in the postbit for users who do not have permanent Ub3r."
+      description: "Displays the temp Ub3r status in the postbit for users who do not have permanent Ub3r.",
+      author: {
+        name: "James",
+        profile: "https://hackforums.net/member.php?action=profile&uid=2774521"
+      }
     });
   }
 

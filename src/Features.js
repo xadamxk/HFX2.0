@@ -6,6 +6,7 @@ module.exports = {
   CharacterCounter: require("./features/threads/CharacterCounter"),
   EasyCite: require("./features/global/EasyCite"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
+  FilterByKeyword: require("./features/convo/FilterByKeyword"),
   HFToolBar: require("./features/global/HFToolBar"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),

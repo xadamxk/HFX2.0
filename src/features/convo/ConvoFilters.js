@@ -4,12 +4,13 @@ const ConfigurableArray = require("../../core/ConfigurableArray");
 const Text = require("../../configurables/Text");
 const Checkbox = require("../../configurables/Checkbox");
 const Util = require("../../core/Util");
+const Storage = require("../../core/Storage");
 
-class FilterByKeyword extends Feature {
+class ConvoFilters extends Feature {
   constructor() {
     super({
       section: Convo,
-      name: "Filter Convo Messages",
+      name: "Convo Filters",
       default: true,
       description: "Filter convos by keyword, user, group, and more.",
       configurables: new ConfigurableArray(
@@ -21,10 +22,16 @@ class FilterByKeyword extends Feature {
   }
 
   run(settings) {
+    // let blacklistedUsers = Util.getLocalSetting(this, "blacklistedUsers");
+    // Util.saveLocalSetting(this, "testkey", "testvalue");
+    // console.log(Util.getLocalStorageKeys());
+
+    // Retrieve convo filter settings
     const blacklisted = Util.getConfigurableValue("ConvoFilterKeywords", this, settings);
     const hideFlips = Util.getConfigurableValue("ConvoFilterFlips", this, settings);
     const hideJackpots = Util.getConfigurableValue("ConvoFilterJackpot", this, settings);
-    const mutationHandler = function(mutationRecords) {
+    // Callback for observer
+    const messageMutationHandler = function(mutationRecords) {
       // Loop mutations
       mutationRecords.forEach(function(mutation) {
         // Loop element nodes
@@ -50,22 +57,53 @@ class FilterByKeyword extends Feature {
                 $(node).hide();
               }
             }
-            // TODO: Filter group
           }
         });
       });
     };
 
-    const targetNodes = $("#message-convo");
+    const toggleUser = function() {
+      const uid = $(this).attr("uid");
+      console.log(uid);
+    };
+
+    const usemessageMutationHandler = function(mutationRecords) {
+      // Loop mutations
+      mutationRecords.forEach(function(mutation) {
+        // Loop element nodes
+        mutation.addedNodes.forEach((node) => {
+          // Groups
+          if ($(node).hasClass("us-group")) {
+            //
+          } else if ($(node).hasClass("us-user")) {
+            console.log($(node));
+            const uid = $(node).attr("data-uid");
+            // Append blacklist button to user
+            $(node).find(".us-user-right").css({"width": "100%", "display": "block"})
+              .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid})
+                .on("click", toggleUser)
+                .append($("<i>").addClass("fas fa-user-plus")));
+          }
+        });
+      });
+    };
+
+    const convoMessagesContainer = $("#message-convo");
+    const convoUsersContainer = $(".us-content");
     const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-    const myObserver = new MutationObserver(mutationHandler);
+    const messageObserver = new MutationObserver(messageMutationHandler);
+    const userObserver = new MutationObserver(usemessageMutationHandler);
     const obsConfig = { childList: true, characterData: false, attributes: false, subtree: true };
 
-    // --- Add a target node to the observer. Can only add one node at a time.
-    targetNodes.each(function() {
-      myObserver.observe(this, obsConfig);
+    // Messages
+    convoMessagesContainer.each(function() {
+      messageObserver.observe(this, obsConfig);
+    });
+    // Users
+    convoUsersContainer.each(function() {
+      userObserver.observe(this, obsConfig);
     });
   }
 };
 
-module.exports = new FilterByKeyword();
+module.exports = new ConvoFilters();

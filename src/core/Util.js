@@ -85,5 +85,26 @@ module.exports = {
     (document.head || document.documentElement).appendChild(script);
     script.remove();
   },
+
+  getLocalStorageKeys() {
+    chrome.storage.local.get(null, function(items) {
+      return Object.keys(items);
+    });
+  },
+
+  saveLocalSetting(feature, key, value) {
+    const storageKeyString = [feature.class, key].join(".");
+    const storageKey = {[storageKeyString]: value};
+    chrome.storage.local.set(storageKey);
+  },
+
+  getLocalSetting(feature, key) {
+    const storageKeyString = [feature.class, key].join(".");
+    return chrome.storage.local.get(storageKeyString);
+  },
+
+  clearLocalSetting(feature, key) {
+    const storageKeyString = [feature.class, key].join(".");
+    chrome.storage.local.remove(storageKeyString);
   }
 };

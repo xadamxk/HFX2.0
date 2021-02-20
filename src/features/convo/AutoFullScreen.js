@@ -16,13 +16,13 @@ class AutoFullScreen extends Feature {
   }
 
   run() {
-    this.addScriptToPage(`Convo.processFullscreenToggle();`);
+    this.addScriptToPage("Convo.processFullscreenToggle();");
   }
 
   addScriptToPage(scriptContent) {
     var script = document.createElement("script");
     script.textContent = scriptContent;
-    (document.head||document.documentElement).appendChild(script);
+    (document.head || document.documentElement).appendChild(script);
     script.remove();
   }
 };

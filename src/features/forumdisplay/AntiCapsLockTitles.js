@@ -24,14 +24,13 @@ class AntiCapsLockTitles extends Feature {
     document.querySelectorAll("tr.inline_row").forEach((row) => {
       try {
         if (window.location.href.includes("search.php")) {
-          let threadName = row.querySelector('.subject_new').innerText;
-          row.querySelector('.subject_new').innerText = this.convertToTitleCase(threadName);
+          let threadName = row.querySelector(".subject_new").innerText;
+          row.querySelector(".subject_new").innerText = this.convertToTitleCase(threadName);
         } else {
-          let threadName = row.querySelector('.mobile-link > div > span > span > a').innerText;
-          row.querySelector('.mobile-link > div > span > span > a').innerText = this.convertToTitleCase(threadName);
+          let threadName = row.querySelector(".mobile-link > div > span > span > a").innerText;
+          row.querySelector(".mobile-link > div > span > span > a").innerText = this.convertToTitleCase(threadName);
         }
-      }
-      catch (err) { }
+      } catch (err) { }
     });
   }
 

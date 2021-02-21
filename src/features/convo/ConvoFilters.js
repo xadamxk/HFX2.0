@@ -4,7 +4,6 @@ const ConfigurableArray = require("../../core/ConfigurableArray");
 const Text = require("../../configurables/Text");
 const Checkbox = require("../../configurables/Checkbox");
 const Util = require("../../core/Util");
-const Storage = require("../../core/Storage");
 const Logger = require("../../core/Logger");
 
 class ConvoFilters extends Feature {
@@ -41,6 +40,19 @@ class ConvoFilters extends Feature {
         mutation.addedNodes.forEach((node) => {
           // Received message
           if ($(node).hasClass("message-convo-left")) {
+            // Blacklist button creation
+            if ($(node).find(".mirum-click-menu")) {
+              var uid = $(node).attr("data-uid");
+              const isCurrentlyBlocked = blacklistedUsers && blacklistedUsers.hasOwnProperty(uid);
+              var innerDiv = `<div><i class="${(isCurrentlyBlocked ? "fal fa-user-minus fa-lg" : "fal fa-user-plus fa-lg")}"></i></div>
+                          <div>Blacklist User</div>`;
+              // Append blacklist option under menu in user modal card
+              $(node).find(".mirum-click-menu")
+                .append($("<div>").addClass("mirum-click-menu-row").attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
+                  .on("click", toggleUser)
+                  .append(innerDiv));
+            }
+
             const message = $(node).find(".message-bubble-message")[0];
             // Blacklisted terms - loop keywords
             blacklisted && blacklisted.split(",").forEach(blacklistedTerm => {
@@ -98,18 +110,19 @@ class ConvoFilters extends Feature {
       mutationRecords.forEach(function(mutation) {
         // Loop element nodes
         mutation.addedNodes.forEach((node) => {
-          // Groups
-          if ($(node).hasClass("us-group")) {
-            //
-          } else if ($(node).hasClass("us-user")) {
-            if (enableUserBlacklist) {
-              const uid = $(node).attr("data-uid");
+          // Check if node is a modal card
+          if ($(node).hasClass("us-mir-pcard")) {
+            var profileUrl = $(node).find("div.mirum-card-profile-info-username > div:nth-child(1) > a");
+            if (profileUrl) {
+              var uid = $(profileUrl).attr("href").split("uid=")[1];
               const isCurrentlyBlocked = blacklistedUsers && blacklistedUsers.hasOwnProperty(uid);
-              // Append blacklist button to user (fa-user-plus/fa-user-minus)
-              $(node).find(".us-user-right").css({"width": "100%", "display": "block"})
-                .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
+              var innerDiv = `<div><i class="${(isCurrentlyBlocked ? "fal fa-user-minus fa-lg" : "fal fa-user-plus fa-lg")}"></i></div>
+                          <div>Blacklist User</div>`;
+              // Append blacklist option under menu in user modal card
+              $(node).find(".mirum-click-menu")
+                .append($("<div>").addClass("mirum-click-menu-row").attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
                   .on("click", toggleUser)
-                  .append($("<i>").addClass((isCurrentlyBlocked ? "fas fa-user-minus" : "fas fa-user-plus"))));
+                  .append(innerDiv));
             }
           }
         });
@@ -117,7 +130,7 @@ class ConvoFilters extends Feature {
     };
 
     const convoMessagesContainer = $("#message-convo");
-    const convoUsersContainer = $(".us-content");
+    const convoUsersContainer = $(".userlist-sidebar");
     // TODO: #message-inbox-list-messages - Add block/unblock buttons to individual conversations
     const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     const messageObserver = new MutationObserver(messageMutationHandler);

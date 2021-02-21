@@ -5,7 +5,7 @@ class GivePopularityPostbitButton extends Feature {
   constructor() {
     super({
       section: Threads,
-      name: "Give Popularity Postbit Button",
+      name: "Give Popularity Button",
       default: true,
       description: "Adds a button to quickly rate a user next to the popularity number.",
       author: {

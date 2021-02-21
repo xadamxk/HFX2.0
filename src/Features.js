@@ -8,7 +8,7 @@ module.exports = {
   EasyCite: require("./features/global/EasyCite"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
   FilterByKeyword: require("./features/convo/FilterByKeyword"),
-  GivePopularityPostbitButton: require("./features/threads/GivePopularityPostbitButton"),
+  GivePopularityButton: require("./features/threads/GivePopularityButton"),
   HFToolBar: require("./features/global/HFToolBar"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),

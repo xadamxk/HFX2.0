@@ -90,7 +90,7 @@ class ConvoFilters extends Feature {
       }
       Logger.debug("New Blacklisted Users: " + JSON.stringify(blacklistedUsers));
       Util.saveLocalSetting(self, "blacklistedUsers", blacklistedUsers);
-      // TODO: Trigger mutation handler on messages somehow
+      // TODO: Trigger mutation handler on messages to remove or show messages from updated blacklist
     };
 
     const usemessageMutationHandler = function(mutationRecords) {
@@ -118,6 +118,7 @@ class ConvoFilters extends Feature {
 
     const convoMessagesContainer = $("#message-convo");
     const convoUsersContainer = $(".us-content");
+    // TODO: #message-inbox-list-messages - Add block/unblock buttons to individual conversations
     const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     const messageObserver = new MutationObserver(messageMutationHandler);
     const userObserver = new MutationObserver(usemessageMutationHandler);

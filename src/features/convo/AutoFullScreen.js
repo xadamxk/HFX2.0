@@ -18,6 +18,7 @@ class AutoFullScreen extends Feature {
 
   run() {
     Util.addScriptToPage("Convo.processFullscreenToggle();");
+    document.getElementById("message-container").style.zIndex = 9990;
   }
 };
 

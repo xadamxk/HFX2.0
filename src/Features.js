@@ -1,5 +1,6 @@
 module.exports = {
   Alerts: require("./features/global/Alerts"),
+  AntiCapsLockTitles: require("./features/forumdisplay/AntiCapsLockTitles"),
   AutoFullScreen: require("./features/convo/AutoFullScreen"),
   BatteryAbsoluteTime: require("./features/game/BatteryAbsoluteTime"),
   BatteryPercent: require("./features/game/BatteryPercent"),

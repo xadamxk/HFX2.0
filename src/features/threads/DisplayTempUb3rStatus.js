@@ -6,8 +6,8 @@ class DisplayTempUb3rStatus extends Feature {
     super({
       section: Threads,
       name: "Display Temp Ub3r Status",
-      default: true,
-      description: "Displays the temp Ub3r status in the postbit for users who do not have permanent Ub3r.",
+      default: false,
+      description: "Displays the Ub3r expiration date below the awards for users who do not have permanent Ub3r.",
       author: {
         name: "James",
         profile: "https://hackforums.net/member.php?action=profile&uid=2774521"
@@ -19,6 +19,8 @@ class DisplayTempUb3rStatus extends Feature {
     document.querySelectorAll("div.post_myawards > span > i[title*='Ub3r until']").forEach((award) => {
       let uberStatus = document.createElement("span");
       uberStatus.textContent = award.title;
+      uberStatus.style.fontSize = "13px";
+      uberStatus.style.display = "inline-block";
       award.parentElement.parentElement.parentElement.append(uberStatus);
     });
   }

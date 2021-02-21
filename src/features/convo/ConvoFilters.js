@@ -5,6 +5,7 @@ const Text = require("../../configurables/Text");
 const Checkbox = require("../../configurables/Checkbox");
 const Util = require("../../core/Util");
 const Storage = require("../../core/Storage");
+const Logger = require("../../core/Logger");
 
 class ConvoFilters extends Feature {
   constructor() {
@@ -16,21 +17,22 @@ class ConvoFilters extends Feature {
       configurables: new ConfigurableArray(
         new Text({ id: "ConvoFilterKeywords", label: "Blacklisted Terms (ie. ebook,anime)", default: "" }),
         new Checkbox({ id: "ConvoFilterFlips", label: "Hide Flips", default: false }),
-        new Checkbox({ id: "ConvoFilterJackpot", label: "Hide Jackpot", default: false })
+        new Checkbox({ id: "ConvoFilterJackpot", label: "Hide Jackpot", default: false }),
+        new Checkbox({ id: "ConvoFilterUsers", label: "Enable User Blacklist", default: true })
       )
     });
   }
 
   async run(settings) {
-    // TODO: Fetch list of blocked users
-    const self = this;
+    const self = this; // TODO: Remove
     let blacklistedUsers = await Util.getLocalSetting(this, "blacklistedUsers");
-    console.log(blacklistedUsers);
+    Logger.debug("Current Blacklisted Users: " + JSON.stringify(blacklistedUsers));
 
     // Retrieve convo filter settings
     const blacklisted = Util.getConfigurableValue("ConvoFilterKeywords", this, settings);
     const hideFlips = Util.getConfigurableValue("ConvoFilterFlips", this, settings);
     const hideJackpots = Util.getConfigurableValue("ConvoFilterJackpot", this, settings);
+    const enableUserBlacklist = Util.getConfigurableValue("ConvoFilterUsers", this, settings);
     // Callback for observer
     const messageMutationHandler = function(mutationRecords) {
       // Loop mutations
@@ -58,6 +60,13 @@ class ConvoFilters extends Feature {
                 $(node).hide();
               }
             }
+            // User blacklist
+            if (enableUserBlacklist && Object.keys(blacklistedUsers).length > 0) {
+              const uid = $(node).attr("data-uid");
+              if (blacklistedUsers.hasOwnProperty(uid)) {
+                $(node).hide();
+              }
+            }
           }
         });
       });
@@ -65,23 +74,23 @@ class ConvoFilters extends Feature {
 
     const toggleUser = function() {
       const uid = $(this).attr("uid");
-      console.log(uid);
-      // TODO: Just remove and replace child element - too tired atm
+      // Toggle button properties based on blacklisted status
       if ($(this).attr("blacklisted") === "true") {
         $(this).attr("blacklisted", "false");
-        $(this).prop("title", "Block User");
+        $(this).prop("title", "HFX: Block User");
         $(this).find("i").removeClass("fa-user-minus");
         $(this).find("i").addClass("fa-user-plus");
         delete blacklistedUsers[uid];
       } else {
         $(this).attr("blacklisted", "true");
-        $(this).prop("title", "Unblock User");
+        $(this).prop("title", "HFX: Unblock User");
         $(this).find("i").removeClass("fa-user-plus");
         $(this).find("i").addClass("fa-user-minus");
         blacklistedUsers[uid] = true;
       }
-      Util.saveLocalSetting(self, "blacklistedUsers", JSON.stringify(blacklistedUsers));
-      Util.printLocalSetting(self, "blacklistedUsers");
+      Logger.debug("New Blacklisted Users: " + JSON.stringify(blacklistedUsers));
+      Util.saveLocalSetting(self, "blacklistedUsers", blacklistedUsers);
+      // TODO: Trigger mutation handler on messages somehow
     };
 
     const usemessageMutationHandler = function(mutationRecords) {
@@ -97,7 +106,7 @@ class ConvoFilters extends Feature {
             const isCurrentlyBlocked = blacklistedUsers.hasOwnProperty(uid);
             // Append blacklist button to user (fa-user-plus/fa-user-minus)
             $(node).find(".us-user-right").css({"width": "100%", "display": "block"})
-              .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "Unblock User" : "Block User")})
+              .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
                 .on("click", toggleUser)
                 .append($("<i>").addClass((isCurrentlyBlocked ? "fas fa-user-minus" : "fas fa-user-plus"))));
           }

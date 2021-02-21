@@ -25,7 +25,7 @@ class ConvoFilters extends Feature {
 
   async run(settings) {
     const self = this; // TODO: Remove
-    let blacklistedUsers = await Util.getLocalSetting(this, "blacklistedUsers");
+    let blacklistedUsers = await Util.getLocalSetting(this, "blacklistedUsers") || {};
     Logger.debug("Current Blacklisted Users: " + JSON.stringify(blacklistedUsers));
 
     // Retrieve convo filter settings
@@ -61,7 +61,7 @@ class ConvoFilters extends Feature {
               }
             }
             // User blacklist
-            if (enableUserBlacklist && Object.keys(blacklistedUsers).length > 0) {
+            if (enableUserBlacklist && blacklistedUsers && Object.keys(blacklistedUsers).length > 0) {
               const uid = $(node).attr("data-uid");
               if (blacklistedUsers.hasOwnProperty(uid)) {
                 $(node).hide();
@@ -104,7 +104,7 @@ class ConvoFilters extends Feature {
           } else if ($(node).hasClass("us-user")) {
             if (enableUserBlacklist) {
               const uid = $(node).attr("data-uid");
-              const isCurrentlyBlocked = blacklistedUsers.hasOwnProperty(uid);
+              const isCurrentlyBlocked = blacklistedUsers && blacklistedUsers.hasOwnProperty(uid);
               // Append blacklist button to user (fa-user-plus/fa-user-minus)
               $(node).find(".us-user-right").css({"width": "100%", "display": "block"})
                 .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})

@@ -102,13 +102,15 @@ class ConvoFilters extends Feature {
           if ($(node).hasClass("us-group")) {
             //
           } else if ($(node).hasClass("us-user")) {
-            const uid = $(node).attr("data-uid");
-            const isCurrentlyBlocked = blacklistedUsers.hasOwnProperty(uid);
-            // Append blacklist button to user (fa-user-plus/fa-user-minus)
-            $(node).find(".us-user-right").css({"width": "100%", "display": "block"})
-              .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
-                .on("click", toggleUser)
-                .append($("<i>").addClass((isCurrentlyBlocked ? "fas fa-user-minus" : "fas fa-user-plus"))));
+            if (enableUserBlacklist) {
+              const uid = $(node).attr("data-uid");
+              const isCurrentlyBlocked = blacklistedUsers.hasOwnProperty(uid);
+              // Append blacklist button to user (fa-user-plus/fa-user-minus)
+              $(node).find(".us-user-right").css({"width": "100%", "display": "block"})
+                .append($("<button>").css({"float": "right", "padding": "8px 8px"}).attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
+                  .on("click", toggleUser)
+                  .append($("<i>").addClass((isCurrentlyBlocked ? "fas fa-user-minus" : "fas fa-user-plus"))));
+            }
           }
         });
       });

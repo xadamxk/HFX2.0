@@ -94,24 +94,19 @@ module.exports = {
 
   saveLocalSetting(feature, key, value) {
     const storageKeyString = [feature.class, key].join(".");
-    const storageKey = {[storageKeyString]: value};
-    chrome.storage.local.set({[storageKey]: value});
+    chrome.storage.local.set({[storageKeyString]: value});
   },
 
-  getLocalSetting(feature, key) {
+  async getLocalSetting(feature, key) {
     const storageKeyString = [feature.class, key].join(".");
     try {
-      return chrome.storage.local.get(storageKeyString);
-    } catch (error) {
-      return {};
-    }
-  },
-
-  printLocalSetting(feature, key) {
-    const storageKeyString = [feature.class, key].join(".");
-    try {
-      console.log("test");
-      console.log(chrome.storage.local.get(storageKeyString));
+      var promise = new Promise(function(resolve, reject) {
+        chrome.storage.local.get(storageKeyString, function(item) {
+          resolve(item[storageKeyString]);
+        });
+      });
+      const result = await promise;
+      return result;
     } catch (error) {
       return {};
     }

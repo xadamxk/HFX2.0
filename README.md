@@ -8,6 +8,7 @@
 - Install Yarn >=v1.13.0
 - Clone this project and navigate to the project directory
 - Install dependencies: ```yarn```
+- Install gulp globally: ```yarn global add gulp```
 - Build the project: ```gulp build```
 - Copy library assets: ```gulp libs```
 - Watch code for changes: ```gulp watch```

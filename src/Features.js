@@ -1,11 +1,13 @@
 module.exports = {
   Alerts: require("./features/global/Alerts"),
+  AntiCapsLockTitles: require("./features/forumdisplay/AntiCapsLockTitles"),
   AutoFullScreen: require("./features/convo/AutoFullScreen"),
   BatteryAbsoluteTime: require("./features/game/BatteryAbsoluteTime"),
   BatteryPercent: require("./features/game/BatteryPercent"),
   CharacterCounter: require("./features/threads/CharacterCounter"),
   EasyCite: require("./features/global/EasyCite"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
+  FilterByKeyword: require("./features/convo/FilterByKeyword"),
   HFToolBar: require("./features/global/HFToolBar"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),

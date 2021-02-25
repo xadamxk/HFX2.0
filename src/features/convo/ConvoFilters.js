@@ -45,10 +45,10 @@ class ConvoFilters extends Feature {
               var uid = $(node).attr("data-uid");
               const isCurrentlyBlocked = blacklistedUsers && blacklistedUsers.hasOwnProperty(uid);
               var innerDiv = `<div><i class="${(isCurrentlyBlocked ? "fal fa-user-minus fa-lg" : "fal fa-user-plus fa-lg")}"></i></div>
-                          <div>Blacklist User</div>`;
+                          <div>${(isCurrentlyBlocked ? "Unblacklist User" : "Blacklist User")}</div>`;
               // Append blacklist option under menu in user modal card
               $(node).find(".mirum-click-menu")
-                .append($("<div>").addClass("mirum-click-menu-row").attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
+                .append($("<div>").addClass("mirum-click-menu-row").attr({"uid": uid, "blacklisted": isCurrentlyBlocked})
                   .on("click", toggleUser)
                   .append(innerDiv));
             }
@@ -105,36 +105,49 @@ class ConvoFilters extends Feature {
       // TODO: Trigger mutation handler on messages to remove or show messages from updated blacklist
     };
 
-    const usemessageMutationHandler = function(mutationRecords) {
+    const userMutationHandler = function(mutationRecords) {
       // Loop mutations
+      let blacklistedMembers = [];
       mutationRecords.forEach(function(mutation) {
+        console.log(mutation);
         // Loop element nodes
         mutation.addedNodes.forEach((node) => {
-          // Check if node is a modal card
           if ($(node).hasClass("us-mir-pcard")) {
             var profileUrl = $(node).find("div.mirum-card-profile-info-username > div:nth-child(1) > a");
             if (profileUrl) {
               var uid = $(profileUrl).attr("href").split("uid=")[1];
               const isCurrentlyBlocked = blacklistedUsers && blacklistedUsers.hasOwnProperty(uid);
               var innerDiv = `<div><i class="${(isCurrentlyBlocked ? "fal fa-user-minus fa-lg" : "fal fa-user-plus fa-lg")}"></i></div>
-                          <div>Blacklist User</div>`;
+                          <div>${(isCurrentlyBlocked ? "Unblacklist User" : "Blacklist User")}</div>`;
               // Append blacklist option under menu in user modal card
               $(node).find(".mirum-click-menu")
-                .append($("<div>").addClass("mirum-click-menu-row").attr({"uid": uid, "blacklisted": isCurrentlyBlocked, "title": (isCurrentlyBlocked ? "HFX: Unblock User" : "HFX: Block User")})
+                .append($("<div>").addClass("mirum-click-menu-row").attr({"uid": uid, "blacklisted": isCurrentlyBlocked})
                   .on("click", toggleUser)
                   .append(innerDiv));
+            }
+          } else if ($(node).hasClass("us-user")) {
+            if (enableUserBlacklist && blacklistedUsers) {
+              const uid = $(node).attr("data-uid");
+              if (blacklistedUsers.hasOwnProperty(uid)) {
+                const blacklistedMemberElement = $(node).clone();
+                blacklistedMembers.push(blacklistedMemberElement);
+                $(node).remove();
+              }
             }
           }
         });
       });
+      // TODO: Figure out how to append blacklisted users without causing a bug by recursively calling the observer (which this causes)
+      // $(".us-content").append($("<div>").addClass("us-group us-blacklisted").attr({"data-uid": "100", "us-blacklisted": "us-blacklisted"})
+      //   .append($("<span>").text("Blacklisted")));
+      console.log(blacklistedMembers);
     };
 
     const convoMessagesContainer = $("#message-convo");
     const convoUsersContainer = $(".userlist-sidebar");
-    // TODO: #message-inbox-list-messages - Add block/unblock buttons to individual conversations
     const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     const messageObserver = new MutationObserver(messageMutationHandler);
-    const userObserver = new MutationObserver(usemessageMutationHandler);
+    const userObserver = new MutationObserver(userMutationHandler);
     const obsConfig = { childList: true, characterData: false, attributes: false, subtree: true };
 
     // Messages

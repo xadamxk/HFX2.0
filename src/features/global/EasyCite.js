@@ -21,7 +21,7 @@ class EasyCite extends Feature {
     let address = location.href;
     let citationText = this.getAppropriateCitation(address, settings);
 
-    $("#citeButton").click(function(event) {
+    $("#citeButton").on("click", function(event) {
       var target = $(event.target);
       if (confirm("Do you want to copy the citation to your clipboard?")) {
         if (target.is("a") || target.is("span")) {

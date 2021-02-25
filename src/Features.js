@@ -8,6 +8,8 @@ module.exports = {
   DisplayTempUb3rStatus: require("./features/threads/DisplayTempUb3rStatus"),
   EasyCite: require("./features/global/EasyCite"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
+  ExpandProfileSections: require("./features/profile/ExpandProfileSections"),
+  ExpandProfileShortcuts: require("./features/profile/ExpandProfileShortcuts"),
   FilterByKeyword: require("./features/convo/FilterByKeyword"),
   GivePopularityButton: require("./features/threads/GivePopularityButton"),
   HFToolBar: require("./features/global/HFToolBar"),

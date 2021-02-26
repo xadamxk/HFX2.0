@@ -114,7 +114,7 @@ $(document).ready(function() {
       });
     });
 
-    $("input[type=color],input[type=text]").change(function() {
+    $("input[type=color],input[type=text],input[type=number]").change(function() {
       const feature = features[$(this).data("feature")];
 
       HFX.Settings.get(feature, settings => {

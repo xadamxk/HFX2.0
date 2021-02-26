@@ -51,6 +51,7 @@ const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");
 const Text = require("../../configurables/Text");
 const Color = require("../../configurables/Color");
+const Stepper = require("../../configurables/Stepper");
 
 // Util helper to get configurable values
 const Util = require("../../core/Util");
@@ -65,7 +66,8 @@ class MyFeature extends Feature {
             configurables: new ConfigurableArray(
                 new Checkbox({ id: "myCheckbox", label: "Enable sub-option", default: true }),
                 new Text({ id: "myTextbox", label: "Sub-option value", default: "Secret Setting" }),
-                new Color({id: "myColor", label: "Sub-option color", default: "#ffffff"})
+                new Color({id: "myColor", label: "Sub-option color", default: "#ffffff"}),
+                new Stepper({id: "myStepper", label: "Sub-option stepper", step: 2, default: 3})
             )
         });
     }

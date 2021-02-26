@@ -24,6 +24,7 @@ module.exports = class Configurable {
     this.type = opts.type;
     this.label = opts.label;
     this.step = opts.step;
+    this.dropdownOptions = opts.dropdownOptions;
     this.default = opts.default;
   }
 
@@ -62,6 +63,14 @@ module.exports = class Configurable {
 
   set step(_step) {
     this._step = _step;
+  }
+
+  get dropdownOptions() {
+    return this._dropdownOptions;
+  }
+
+  set dropdownOptions(_dropdownOptions) {
+    this._dropdownOptions = _dropdownOptions;
   }
 
   get default() {

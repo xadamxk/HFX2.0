@@ -122,5 +122,14 @@ $(document).ready(function() {
         HFX.Settings.set(feature, settings);
       });
     });
+
+    $("select[type=dropdown]").change(function() {
+      const feature = features[$(this).data("feature")];
+
+      HFX.Settings.get(feature, settings => {
+        settings[$(this).data("setting")] = $(this).find("option:selected").val();
+        HFX.Settings.set(feature, settings);
+      });
+    });
   }
 });

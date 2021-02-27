@@ -78,6 +78,8 @@ class MyFeature extends Feature {
         Util.getConfigurableValue("myCheckbox", this, settings) // returns true
         Util.getConfigurableValue("myTextbox", this, settings) // returns "Secret Setting"
         Util.getConfigurableValue("myColor", this, settings) // returns "#ffffff"
+        Util.getConfigurableValue("myStepper", this, settings) // returns "3"
+        Util.getConfigurableValue("myDropdown", this, settings) // returns "0"
     }
 }
 ```

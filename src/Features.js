@@ -20,6 +20,7 @@ module.exports = {
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
   PostsOnThread: require("./features/threads/PostsOnThread"),
+  QuickUnsubscribe: require("./features/threads/QuickUnsubscribe"),
   QuoteStripping: require("./features/pms/QuoteStripping"),
   RepCharts: require("./features/reputation/RepCharts"),
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),

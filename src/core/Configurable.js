@@ -23,6 +23,8 @@ module.exports = class Configurable {
     this.id = opts.id;
     this.type = opts.type;
     this.label = opts.label;
+    this.step = opts.step;
+    this.dropdownOptions = opts.dropdownOptions;
     this.default = opts.default;
   }
 
@@ -53,6 +55,22 @@ module.exports = class Configurable {
 
   set label(_label) {
     this._label = _label;
+  }
+
+  get step() {
+    return this._step;
+  }
+
+  set step(_step) {
+    this._step = _step;
+  }
+
+  get dropdownOptions() {
+    return this._dropdownOptions;
+  }
+
+  set dropdownOptions(_dropdownOptions) {
+    this._dropdownOptions = _dropdownOptions;
   }
 
   get default() {

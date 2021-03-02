@@ -8,8 +8,10 @@ module.exports = class Dropdown extends Configurable {
 
   render(section, feature, settings) {
     const value = Util.getConfigurableValue(this.id, feature, settings);
-
-    const options = this.dropdownOptions.map(optionEntry => {
+    const options = this.dropdownOptions &&
+    this.dropdownOptions !== [] &&
+    this.dropdownOptions.length > 0 &&
+    this.dropdownOptions.map(optionEntry => {
       const option = new Option(optionEntry.value, optionEntry.label);
       const isSavedValue = value === option.value;
       return `<option 
@@ -29,7 +31,8 @@ module.exports = class Dropdown extends Configurable {
         data-section="${section.class}" 
         data-feature="${feature.class}"
         data-setting="${this.id}"
-        id="${this.id}" 
+        id="${this.id}"
+        ${options === null || options === [] || options.length <= 0 ? "disabled" : ""} 
       >
         ${options}
       </select>

@@ -45,7 +45,7 @@
 ### Feature Configuration & Customization
 Some features need more options beyond the default enabled/disabled and that is possible using configurables in the feature's constructor. The snippet below adds each of the available configurables: checkbox, textbox, and color. Each configurable requires a unique id, a label for settings, and a default value appropriate to the configurable type.
 
-```
+```javascript
 // Import Configurables
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");

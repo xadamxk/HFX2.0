@@ -42,7 +42,6 @@ class ThemeCustomizer extends Feature {
     let mosaic = null;
     let logo = null;
     let accentColor = null;
-    // TODO: Find better mosaics
     switch (themeName) {
       case "cyan":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
@@ -89,6 +88,7 @@ class ThemeCustomizer extends Feature {
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_rainbow.png");
         accentColor = "linear-gradient(to right, red,orange,green,blue,purple)";
         break;
+      // TODO: Make yellow less aggressive
       case "yellow":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_yellow.gif");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_yellow.png");

@@ -1,6 +1,6 @@
 const Configurable = require("../core/Configurable");
 const Util = require("../core/Util");
-
+const Option = require("../models/option.js");
 module.exports = class Dropdown extends Configurable {
   constructor(opts) {
     super(Object.assign(opts, {type: "dropdown"}));
@@ -8,9 +8,12 @@ module.exports = class Dropdown extends Configurable {
 
   render(section, feature, settings) {
     const value = Util.getConfigurableValue(this.id, feature, settings);
-
-    const options = this.dropdownOptions.map(option => {
-      const isSavedValue = value == option.value;
+    const options = this.dropdownOptions &&
+    this.dropdownOptions !== [] &&
+    this.dropdownOptions.length > 0 &&
+    this.dropdownOptions.map(optionEntry => {
+      const option = new Option(optionEntry.value, optionEntry.label);
+      const isSavedValue = value === option.value;
       return `<option 
       value=${option.value}
       ${isSavedValue ? "selected" : ""}
@@ -28,7 +31,8 @@ module.exports = class Dropdown extends Configurable {
         data-section="${section.class}" 
         data-feature="${feature.class}"
         data-setting="${this.id}"
-        id="${this.id}" 
+        id="${this.id}"
+        ${options === null || options === [] || options.length <= 0 ? "disabled" : ""} 
       >
         ${options}
       </select>

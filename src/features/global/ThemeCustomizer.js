@@ -4,6 +4,7 @@ const Global = require("../../sections/Global");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Dropdown = require("../../configurables/Dropdown");
 const Checkbox = require("../../configurables/Checkbox");
+const Option = require("../../models/option.js");
 const Util = require("../../core/Util");
 
 class ThemeCustomizer extends Feature {
@@ -19,17 +20,17 @@ class ThemeCustomizer extends Feature {
           label: "Theme",
           default: "default",
           dropdownOptions: [
-            {value: "default", label: "Default"},
-            {value: "cyan", label: "Cyan"},
-            {value: "gray", label: "Gray"},
-            {value: "magenta", label: "Magenta"},
-            {value: "orange", label: "Orange"},
-            {value: "orange2", label: "Orange2"},
-            {value: "pink", label: "Pink"},
-            {value: "pink2", label: "Pink2"},
-            {value: "twitterBlue", label: "Twitter Blue"},
-            {value: "rainbow", label: "Rainbow"},
-            {value: "yellow", label: "Yellow"}
+            new Option("default", "Default"),
+            new Option("cyan", "Cyan"),
+            new Option("gray", "Gray"),
+            new Option("magenta", "Magenta"),
+            new Option("orange", "Orange"),
+            new Option("orange2", "Orange2"),
+            new Option("pink", "Pink"),
+            new Option("pink2", "Pink2"),
+            new Option("twitterBlue", "Twitter Blue"),
+            new Option("rainbow", "Rainbow"),
+            new Option("yellow", "Yellow")
           ]}),
         new Checkbox({ id: "tcChangeLogo", label: "Change Logo", default: true }),
         new Checkbox({ id: "tcChangeMosaic", label: "Change Mosaic", default: true })

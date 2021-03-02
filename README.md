@@ -53,6 +53,7 @@ const Text = require("../../configurables/Text");
 const Color = require("../../configurables/Color");
 const Stepper = require("../../configurables/Stepper");
 const Dropdown = require("../../configurables/Dropdown");
+const Option = require("../../models/option.js");
 
 // Util helper to get configurable values
 const Util = require("../../core/Util");
@@ -69,7 +70,10 @@ class MyFeature extends Feature {
                 new Text({ id: "myTextbox", label: "Sub-option value", default: "Secret Setting" }),
                 new Color({id: "myColor", label: "Sub-option color", default: "#ffffff"}),
                 new Stepper({id: "myStepper", label: "Sub-option stepper", step: 2, default: 3}),
-                new Dropdown({id: "myDropdown", label: "Sub-option dropdown", default: 0, dropdownOptions: [{value:0,label: "Option 0"},{value: 1, label: "Option 1"}]})
+                new Dropdown({id: "myDropdown", label: "Sub-option dropdown", default: 0, dropdownOptions: [
+                    new Option(0, "Option 0"),
+                    new Option(1, "Option 1")
+                ]})
             )
         });
     }

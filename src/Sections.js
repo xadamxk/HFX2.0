@@ -4,6 +4,7 @@ module.exports = {
   Game: require("./sections/Game"),
   Global: require("./sections/Global"),
   PMs: require("./sections/PMs"),
+  Profile: require("./sections/Profile"),
   Reputation: require("./sections/Reputation"),
   Threads: require("./sections/Threads")
 };

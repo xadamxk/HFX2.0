@@ -15,7 +15,7 @@ class ShowPostNumbers extends Feature {
     $(".post").each(function(index) {
       const postId = parseInt($(this).attr("id").replace("post_", "")) || 0;
       const postNumElement = $(`#post_url_${postId}`).clone().attr({"style": ""}).css({"padding-right": "5px"});
-      $(this).find(".post_date").prepend(postNumElement);
+      $(this).find(".post_date:not(.smalltext)").prepend(postNumElement);
     });
   }
 };

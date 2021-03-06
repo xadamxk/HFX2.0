@@ -20,6 +20,7 @@ module.exports = {
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
   PostsOnThread: require("./features/threads/PostsOnThread"),
+  QuickUnsubscribe: require("./features/threads/QuickUnsubscribe"),
   QuoteStripping: require("./features/pms/QuoteStripping"),
   RepCharts: require("./features/reputation/RepCharts"),
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),
@@ -27,5 +28,7 @@ module.exports = {
   ShortcutLogs: require("./features/game/ShortcutLogs"),
   ShowPostNumbers: require("./features/threads/ShowPostNumbers"),
   SmartQuote: require("./features/threads/SmartQuote"),
+  TagNotificationSound: require("./features/convo/TagNotificationSound"),
+  ThemeCustomizer: require("./features/global/ThemeCustomizer"),
   TrackingLinks: require("./features/pms/TrackingLinks")
 };

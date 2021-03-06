@@ -45,7 +45,7 @@
 ### Feature Configuration & Customization
 Some features need more options beyond the default enabled/disabled and that is possible using configurables in the feature's constructor. The snippet below adds each of the available configurables: checkbox, textbox, and color. Each configurable requires a unique id, a label for settings, and a default value appropriate to the configurable type.
 
-```
+```javascript
 // Import Configurables
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");
@@ -53,6 +53,7 @@ const Text = require("../../configurables/Text");
 const Color = require("../../configurables/Color");
 const Stepper = require("../../configurables/Stepper");
 const Dropdown = require("../../configurables/Dropdown");
+const Option = require("../../models/option.js");
 
 // Util helper to get configurable values
 const Util = require("../../core/Util");
@@ -69,7 +70,10 @@ class MyFeature extends Feature {
                 new Text({ id: "myTextbox", label: "Sub-option value", default: "Secret Setting" }),
                 new Color({id: "myColor", label: "Sub-option color", default: "#ffffff"}),
                 new Stepper({id: "myStepper", label: "Sub-option stepper", step: 2, default: 3}),
-                new Dropdown({id: "myDropdown", label: "Sub-option dropdown", default: 0, dropdownOptions: [{value:0,label: "Option 0"},{value: 1, label: "Option 1"}]})
+                new Dropdown({id: "myDropdown", label: "Sub-option dropdown", default: 0, dropdownOptions: [
+                    new Option(0, "Option 0"),
+                    new Option(1, "Option 1")
+                ]})
             )
         });
     }
@@ -78,6 +82,8 @@ class MyFeature extends Feature {
         Util.getConfigurableValue("myCheckbox", this, settings) // returns true
         Util.getConfigurableValue("myTextbox", this, settings) // returns "Secret Setting"
         Util.getConfigurableValue("myColor", this, settings) // returns "#ffffff"
+        Util.getConfigurableValue("myStepper", this, settings) // returns "3"
+        Util.getConfigurableValue("myDropdown", this, settings) // returns "0"
     }
 }
 ```

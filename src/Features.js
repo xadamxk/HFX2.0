@@ -19,6 +19,7 @@ module.exports = {
   HidePostbitAttributes: require("./features/threads/HidePostbitAttributes"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
+  PostActivitySearchButtons: require("./features/profile/PostActivitySearchButtons"),
   PostsOnThread: require("./features/threads/PostsOnThread"),
   QuickUnsubscribe: require("./features/threads/QuickUnsubscribe"),
   QuoteStripping: require("./features/pms/QuoteStripping"),

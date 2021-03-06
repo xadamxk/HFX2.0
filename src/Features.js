@@ -8,6 +8,8 @@ module.exports = {
   DisplayTempUb3rStatus: require("./features/threads/DisplayTempUb3rStatus"),
   EasyCite: require("./features/global/EasyCite"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
+  ExpandProfileSections: require("./features/profile/ExpandProfileSections"),
+  ExpandProfileShortcuts: require("./features/profile/ExpandProfileShortcuts"),
   FilterByKeyword: require("./features/convo/FilterByKeyword"),
   GivePopularityButton: require("./features/threads/GivePopularityButton"),
   HFToolBar: require("./features/global/HFToolBar"),
@@ -18,6 +20,7 @@ module.exports = {
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
   PostsOnThread: require("./features/threads/PostsOnThread"),
+  QuickUnsubscribe: require("./features/threads/QuickUnsubscribe"),
   QuoteStripping: require("./features/pms/QuoteStripping"),
   RepCharts: require("./features/reputation/RepCharts"),
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),
@@ -26,5 +29,6 @@ module.exports = {
   ShowPostNumbers: require("./features/threads/ShowPostNumbers"),
   SmartQuote: require("./features/threads/SmartQuote"),
   TagNotificationSound: require("./features/convo/TagNotificationSound"),
+  ThemeCustomizer: require("./features/global/ThemeCustomizer"),
   TrackingLinks: require("./features/pms/TrackingLinks")
 };

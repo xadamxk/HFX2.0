@@ -62,6 +62,24 @@
   },
   "web_accessible_resources": [
     "/assets/images/icon128.png",
-    "/assets/images/dismiss_notice.png"
+    "/assets/images/dismiss_notice.png",
+    "/assets/images/theme-customizer/logos/logo_cyan.gif",
+    "/assets/images/theme-customizer/logos/logo_gray.png",
+    "/assets/images/theme-customizer/logos/logo_magenta.gif",
+    "/assets/images/theme-customizer/logos/logo_orange.png",
+    "/assets/images/theme-customizer/logos/logo_orange2.png",
+    "/assets/images/theme-customizer/logos/logo_pink.png",
+    "/assets/images/theme-customizer/logos/logo_pink2.gif",
+    "/assets/images/theme-customizer/logos/logo_rainbow.gif",
+    "/assets/images/theme-customizer/logos/logo_yellow.gif",
+    "/assets/images/theme-customizer/mosaics/mosaic_cyan.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_gray.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_magenta.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_orange.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_orange2.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_pink.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_pink2.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_rainbow.png",
+    "/assets/images/theme-customizer/mosaics/mosaic_yellow.png"
   ]
 }

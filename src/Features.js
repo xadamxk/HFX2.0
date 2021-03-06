@@ -25,5 +25,6 @@ module.exports = {
   ShortcutLogs: require("./features/game/ShortcutLogs"),
   ShowPostNumbers: require("./features/threads/ShowPostNumbers"),
   SmartQuote: require("./features/threads/SmartQuote"),
+  TagNotificationSound: require("./features/convo/TagNotificationSound"),
   TrackingLinks: require("./features/pms/TrackingLinks")
 };

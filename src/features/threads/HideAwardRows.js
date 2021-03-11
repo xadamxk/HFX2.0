@@ -27,13 +27,12 @@ class HideAwardRows extends Feature {
 
     document.querySelectorAll("div.post_myawards > span").forEach((awardsPostbit) => {
       awardsPostbit.querySelectorAll("i.award_sprite").forEach((award, i) => {
-        if (award.classList.contains(`award_2`))
-        {
+        if (award.classList.contains("award_2")) {
           whBump += 2;
         }
 
-        if (i+whBump >= awardCount) {
-          award.style.display = `none`;
+        if (i + whBump >= awardCount) {
+          award.style.display = "none";
         }
       });
     });

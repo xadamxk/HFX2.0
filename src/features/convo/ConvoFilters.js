@@ -107,9 +107,7 @@ class ConvoFilters extends Feature {
 
     const userMutationHandler = function(mutationRecords) {
       // Loop mutations
-      let blacklistedMembers = [];
       mutationRecords.forEach(function(mutation) {
-        console.log(mutation);
         // Loop element nodes
         mutation.addedNodes.forEach((node) => {
           if ($(node).hasClass("us-mir-pcard")) {
@@ -129,18 +127,13 @@ class ConvoFilters extends Feature {
             if (enableUserBlacklist && blacklistedUsers) {
               const uid = $(node).attr("data-uid");
               if (blacklistedUsers.hasOwnProperty(uid)) {
-                const blacklistedMemberElement = $(node).clone();
-                blacklistedMembers.push(blacklistedMemberElement);
-                $(node).remove();
+                const avatar = $(node).find(".us-user-avatarContainer");
+                $(avatar).css({"border": "2px solid red", "border-radius": "100%"});
               }
             }
           }
         });
       });
-      // TODO: Figure out how to append blacklisted users without causing a bug by recursively calling the observer (which this causes)
-      // $(".us-content").append($("<div>").addClass("us-group us-blacklisted").attr({"data-uid": "100", "us-blacklisted": "us-blacklisted"})
-      //   .append($("<span>").text("Blacklisted")));
-      console.log(blacklistedMembers);
     };
 
     const convoMessagesContainer = $("#message-convo");

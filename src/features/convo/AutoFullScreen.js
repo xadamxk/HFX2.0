@@ -1,12 +1,13 @@
 const Feature = require("../../core/Feature");
 const Convo = require("../../sections/Convo");
+const Util = require("../../core/Util");
 
 class AutoFullScreen extends Feature {
   constructor() {
     super({
       section: Convo,
       name: "Auto Full Screen",
-      default: true,
+      default: false,
       description: "Automatically full screen the convo room.",
       author: {
         name: "James",
@@ -16,15 +17,8 @@ class AutoFullScreen extends Feature {
   }
 
   run() {
-    this.addScriptToPage("Convo.processFullscreenToggle();");
+    Util.addScriptToPage("Convo.processFullscreenToggle();");
     document.getElementById("message-container").style.zIndex = 9990;
-  }
-
-  addScriptToPage(scriptContent) {
-    var script = document.createElement("script");
-    script.textContent = scriptContent;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
   }
 };
 

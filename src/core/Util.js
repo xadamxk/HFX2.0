@@ -77,5 +77,43 @@ module.exports = {
     }
 
     return result;
+  },
+
+  addScriptToPage(scriptContent) {
+    var script = document.createElement("script");
+    script.textContent = scriptContent;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
+  },
+
+  getLocalStorageKeys() {
+    chrome.storage.local.get(null, function(items) {
+      console.log(Object.keys(items));
+    });
+  },
+
+  saveLocalSetting(feature, key, value) {
+    const storageKeyString = [feature.class, key].join(".");
+    chrome.storage.local.set({[storageKeyString]: value});
+  },
+
+  async getLocalSetting(feature, key) {
+    const storageKeyString = [feature.class, key].join(".");
+    try {
+      var promise = new Promise(function(resolve, reject) {
+        chrome.storage.local.get(storageKeyString, function(item) {
+          resolve(item[storageKeyString]);
+        });
+      });
+      const result = await promise;
+      return result;
+    } catch (error) {
+      return {};
+    }
+  },
+
+  clearLocalSetting(feature, key) {
+    const storageKeyString = [feature.class, key].join(".");
+    chrome.storage.local.remove(storageKeyString);
   }
 };

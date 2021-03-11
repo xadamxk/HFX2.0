@@ -13,8 +13,8 @@ class PostActivitySearchButtons extends Feature {
       default: true,
       description: "Adds buttons to the post activity page to quickly search for a user's threads or posts in a forum.",
       author: {
-        name: "James",
-        profile: "https://hackforums.net/member.php?action=profile&uid=2774521"
+        name: "Exalted",
+        profile: "https://hackforums.net/member.php?action=profile&uid=4541508"
       },
       additionalSections: new SectionArray(postActivitySection)
     });
@@ -22,69 +22,26 @@ class PostActivitySearchButtons extends Feature {
 
   run() {
     if (window.location.href.includes("postactivity.php")) {
-      var table = document.querySelector("#content > div > table > tbody");
-
-      table.querySelector("tr:nth-child(1) > td").setAttribute("colspan", "4");
+      let table = document.querySelector("#content > div > table");
+      
+      document.querySelector("#content > div > table > tbody > tr:nth-child(1) > td").colSpan = 4;
 
       var threadsRowHtml = `<td class="tcat" style="text-align: center;"><span class="smalltext"><strong>Threads</strong></span></td>
                             <td class="tcat" style="text-align: center;"><span class="smalltext"><strong>Posts</strong></span></td>`;
-      table.querySelector("tr:nth-child(2)").insertAdjacentHTML("beforeend", threadsRowHtml);
-
-      table.querySelectorAll("tr:nth-child(n+3)").forEach((row) => {
-        row.querySelector("td:nth-child(2)").setAttribute("style", "text-align: center;");
-
-        var username = document.querySelector("#content > div > div > a:nth-child(10)").innerText;
-        var fid = row.querySelector("td:nth-child(1) > a").href.split("=")[1];
-
-        var columnHtml = `
-        <td class="trow1" style="text-align: center;">
-          <form action="search.php" method="post">
-            <input name="action" value="do_search" style="display: none;">
-            <input name="keywords" value="" style="display: none;">
-            <input name="postthread" value="2" style="display: none;">
-            <input name="forums[]" value="${fid}" style="display: none;">
-            <input name="author" value="${username}" style="display: none;">
-            <input name="matchusername" value="1" style="display: none;">
-            <input name="findthreadst" value="1" style="display: none;">
-            <input name="numreplies" value="" style="display: none;">
-            <input name="postdate" value="0" style="display: none;">
-            <input name="pddir" value="1" style="display: none;">
-            <input name="threadprefix[]" value="any" style="display: none;">
-            <input name="sortby" value="lastpost" style="display: none;">
-            <input name="sortordr" value="desc" style="display: none;">
-            <input name="showresults" value="threads" style="display: none;">
-
-            <button type="submit" name="submit" value="Search">
-              <i class="fa fa-file fa-lg" aria-hidden="true"></i>
-            </button>
-          </form>
-        </td>
-
-        <td class="trow1" style="text-align: center;">
-          <form action="search.php" method="post">
-            <input name="action" value="do_search" style="display: none;">
-            <input name="keywords" value="" style="display: none;">
-            <input name="postthread" value="1" style="display: none;">
-            <input name="forums[]" value="${fid}" style="display: none;">
-            <input name="author" value="${username}" style="display: none;">
-            <input name="matchusername" value="1" style="display: none;">
-            <input name="findthreadst" value="1" style="display: none;">
-            <input name="numreplies" value="" style="display: none;">
-            <input name="postdate" value="0" style="display: none;">
-            <input name="pddir" value="1" style="display: none;">
-            <input name="threadprefix[]" value="any" style="display: none;">
-            <input name="sortby" value="lastpost" style="display: none;">
-            <input name="sortordr" value="desc" style="display: none;">
-            <input name="showresults" value="posts" style="display: none;">
-
-            <button type="submit" name="submit" value="Search">
-              <i class="fa fa-file-signature fa-lg" aria-hidden="true"></i>
-            </button>
-          </form>
-        </td>`;
-
-        row.insertAdjacentHTML("beforeend", columnHtml);
-      });
+      table.rows[1].insertAdjacentHTML("beforeend", threadsRowHtml);
+      
+      let username = document.querySelector("#content > div > div > a:nth-child(10)").innerText;
+      
+      for (var i = 2, row; row = table.rows[i]; i++) {
+        let forumId = row.getElementsByTagName('a')[0].href.split('=')[1];
+        row.insertCell(2).classList.add("trow1");
+        row.insertCell(3).classList.add("trow1");
+        row.cells[1].style.textAlign = `center`;
+        row.cells[2].innerHTML = '<form action="search.php" method="post"><input type="hidden" name="action" value="do_search"> <input type="hidden" name="keywords" value=""> <input type="hidden" name="postthread" value="2"> <input type="hidden" name="author" value="'+username+'"> <input type="hidden" name="matchusername" value="1"> <input type="hidden" name="forums[]" value="'+forumId+'"> <input type="hidden" name="findthreadst" value="1"> <input type="hidden" name="numreplies" value=""> <input type="hidden" name="postdate" value="0"> <input type="hidden" name="pddir" value="1"> <input type="hidden" name="threadprefix" value="any"> <input type="hidden" name="sortby" value="lastpost"> <input type="hidden" name="sortordr" value="desc"> <input type="hidden" name="showresults" value="threads"> <button data-tag="'+username+'\'s threads" data-tooltip="'+username+'\'s threads"type="submit" name="submit" value="Threads"><i class="fa fa-file fa-lg" aria-hidden="true"></i></button></form>';
+        row.cells[2].style.textAlign = `center`;
+        row.cells[3].innerHTML = '<form action="search.php" method="post"><input type="hidden" name="action" value="do_search"> <input type="hidden" name="keywords" value=""> <input type="hidden" name="postthread" value="1"> <input type="hidden" name="author" value="'+username+'"> <input type="hidden" name="matchusername" value="1"> <input type="hidden" name="forums[]" value="'+forumId+'"> <input type="hidden" name="findthreadst" value="1"> <input type="hidden" name="numreplies" value=""> <input type="hidden" name="postdate" value="0"> <input type="hidden" name="pddir" value="1"> <input type="hidden" name="threadprefix" value="any"> <input type="hidden" name="sortby" value="lastpost"> <input type="hidden" name="sortordr" value="desc"> <input type="hidden" name="showresults" value="posts"> <button data-tag="'+username+'\'s posts" data-tooltip="'+username+'\'s posts" type="submit" name="submit" value="Posts"><i class="fa fa-file-signature fa-lg" aria-hidden="true"></i></button</form>';
+        row.cells[3].style.textAlign = `center`;
+      }
     }
   }
 };

@@ -7,7 +7,7 @@ class AutoFullScreen extends Feature {
     super({
       section: Convo,
       name: "Auto Full Screen",
-      default: true,
+      default: false,
       description: "Automatically full screen the convo room.",
       author: {
         name: "James",

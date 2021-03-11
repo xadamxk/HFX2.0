@@ -23,11 +23,17 @@ class HideAwardRows extends Feature {
 
   run(settings) {
     var awardCount = parseInt(Util.getConfigurableValue("hideAwardRowsNumber", this, settings)) * 6;
+    var whBump = 0;
 
     document.querySelectorAll("div.post_myawards > span").forEach((awardsPostbit) => {
       awardsPostbit.querySelectorAll("i.award_sprite").forEach((award, i) => {
-        if (i >= awardCount) {
-          award.remove();
+        if (award.classList.contains(`award_2`))
+        {
+          whBump += 2;
+        }
+
+        if (i+whBump >= awardCount) {
+          award.style.display = `none`;
         }
       });
     });

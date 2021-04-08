@@ -13,6 +13,7 @@ module.exports = {
   ExpandProfileShortcuts: require("./features/profile/ExpandProfileShortcuts"),
   GivePopularityButton: require("./features/threads/GivePopularityButton"),
   HFToolBar: require("./features/global/HFToolBar"),
+  HideAwardRows: require("./features/threads/HideAwardRows"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),
   HideImages: require("./features/global/HideImages"),

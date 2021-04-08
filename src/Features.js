@@ -29,6 +29,7 @@ module.exports = {
   ShortcutLeaderboard: require("./features/game/ShortcutLeaderboard"),
   ShortcutLogs: require("./features/game/ShortcutLogs"),
   ShowPostNumbers: require("./features/threads/ShowPostNumbers"),
+  ShowRecipientCount: require("./features/awards/ShowRecipientCount"),
   SmartQuote: require("./features/threads/SmartQuote"),
   TagNotificationSound: require("./features/convo/TagNotificationSound"),
   ThemeCustomizer: require("./features/global/ThemeCustomizer"),

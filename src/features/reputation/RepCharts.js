@@ -235,6 +235,6 @@ class RepCharts extends Feature {
       }
     });
   }
-};
+}
 
 module.exports = new RepCharts();

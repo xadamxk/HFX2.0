@@ -43,6 +43,6 @@ class AntiCapsLockTitles extends Feature {
       }
     });
   }
-};
+}
 
 module.exports = new AntiCapsLockTitles();

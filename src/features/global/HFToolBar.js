@@ -76,6 +76,6 @@ class HFToolBar extends Feature {
       `);
     }
   }
-};
+}
 
 module.exports = new HFToolBar();

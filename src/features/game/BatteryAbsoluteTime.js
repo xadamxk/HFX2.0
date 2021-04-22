@@ -19,6 +19,6 @@ class BatteryAbsoluteTime extends Feature {
       rechargeTimeElement.after($("<span>").text(`(${extractedRechargeTime})`));
     }
   }
-};
+}
 
 module.exports = new BatteryAbsoluteTime();

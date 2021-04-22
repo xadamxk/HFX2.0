@@ -67,6 +67,6 @@ class Alerts extends Feature {
       });
     });
   }
-};
+}
 
 module.exports = new Alerts();

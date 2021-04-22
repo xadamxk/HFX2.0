@@ -1,5 +1,5 @@
 const Feature = require("../../core/Feature");
-const awards = require("../../sections/awards");
+const awards = require("../../sections/Awards");
 
 class ShowRecipientCount extends Feature {
   constructor() {
@@ -15,6 +15,6 @@ class ShowRecipientCount extends Feature {
     const isIndividualAward = window.location.href.includes("myawards.php?awid=") ? "recipients" : "awards";
     $("strong:contains(\"My Awards\")").after($("<span>").addClass("float_right").text([$(".award_sprite").length, isIndividualAward].join(" ")));
   }
-};
+}
 
 module.exports = new ShowRecipientCount();

@@ -116,6 +116,6 @@ class ThemeCustomizer extends Feature {
       $(".logo-hide-button").css("color", accentColor);
     }
   }
-};
+}
 
 module.exports = new ThemeCustomizer();

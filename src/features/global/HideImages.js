@@ -14,6 +14,6 @@ class HideImages extends Feature {
   run() {
     $("img").hide();
   }
-};
+}
 
 module.exports = new HideImages();

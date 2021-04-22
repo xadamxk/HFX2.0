@@ -84,6 +84,6 @@ class EasyCite extends Feature {
     let seperator = suffix.includes("'s") ? "" : " ";
     return [$("#citeButton").text(), suffix].join(seperator);
   }
-};
+}
 
 module.exports = new EasyCite();

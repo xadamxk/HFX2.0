@@ -78,6 +78,6 @@ class MedalOfHonorTracker extends Feature {
   getWholePercent(percentFor, percentOf) {
     return Math.floor(percentFor / percentOf * 100);
   }
-};
+}
 
 module.exports = new MedalOfHonorTracker();

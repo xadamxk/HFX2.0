@@ -1,7 +1,7 @@
 const Feature = require("../../core/Feature");
 const Convo = require("../../sections/Convo");
 
-class Reply extends Feature {
+class ConvoReply extends Feature {
   constructor() {
     super({
       section: Convo,
@@ -137,6 +137,8 @@ class Reply extends Feature {
           }
         }
       }
+
+      focusConvoInput();
     };
 
     const handleReplyEvents = message => {
@@ -153,7 +155,7 @@ class Reply extends Feature {
           cancelReply();
         }
 
-        if (e.code === "Enter") {
+        if (e.code === "Enter" || e.code === "NumpadEnter") {
           cancelReply();
         }
       });
@@ -180,7 +182,7 @@ class Reply extends Feature {
     };
 
     const setReplyBtn = (block, message) => {
-      block.dataset.hfxReply = true;
+      block.dataset.hfxReply = "true";
 
       const hr = document.createElement("hr");
 
@@ -293,4 +295,4 @@ class Reply extends Feature {
   }
 }
 
-module.exports = new Reply();
+module.exports = new ConvoReply();

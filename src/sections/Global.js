@@ -4,6 +4,6 @@ class Global extends Section {
   constructor() {
     super("/");
   }
-};
+}
 
 module.exports = new Global();

@@ -31,6 +31,6 @@ class ShortcutLeaderboard extends Feature {
         );
     }
   }
-};
+}
 
 module.exports = new ShortcutLeaderboard();

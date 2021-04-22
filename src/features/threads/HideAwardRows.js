@@ -37,6 +37,6 @@ class HideAwardRows extends Feature {
       });
     });
   }
-};
+}
 
 module.exports = new HideAwardRows();

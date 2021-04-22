@@ -51,6 +51,6 @@ class SmartQuote extends Feature {
         });
     });
   }
-};
+}
 
 module.exports = new SmartQuote();

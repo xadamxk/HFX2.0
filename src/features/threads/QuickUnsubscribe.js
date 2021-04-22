@@ -18,7 +18,13 @@ class QuickUnsubscribe extends Feature {
       const postKey = $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop();
       const threadId = $(unsubscribeElement).find("a").attr("onclick").replace(/\D/g, "");
       $(unsubscribeElement).after($("<li>")
-        .append($("<i>").addClass("fa fa-sign-out-alt").css({"font-family": "Font Awesome 5 Pro", "font-size": "11px", "right": "5px", "position": "relative", "font-weight": "900"}))
+        .append($("<i>").addClass("fa fa-sign-out-alt").css({
+          "font-family": "Font Awesome 5 Pro",
+          "font-size": "11px",
+          "right": "5px",
+          "position": "relative",
+          "font-weight": "900"
+        }))
         .append($("<a>").attr({
           "href": "javascript:void(0)",
           "title": "HFX: Quick Unsubscribe",
@@ -39,6 +45,6 @@ class QuickUnsubscribe extends Feature {
       });
     }
   }
-};
+}
 
 module.exports = new QuickUnsubscribe();

@@ -4,7 +4,7 @@
   "description": "Enhance your HF experience, a native browser extension.",
   "main": "src/HFX.js",
   "scripts": {
-    "lint": "eslint ./templates/ --fix",
+    "lint": "eslint ./src/ ./templates/ ./extension/assets/js/ --fix",
     "test": "jest",
     "config": "gulp libs && gulp build",
     "template": "node ./templates/index.js"

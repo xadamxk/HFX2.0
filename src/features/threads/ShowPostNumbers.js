@@ -18,6 +18,6 @@ class ShowPostNumbers extends Feature {
       $(this).find(".post_date:not(.smalltext)").prepend(postNumElement);
     });
   }
-};
+}
 
 module.exports = new ShowPostNumbers();

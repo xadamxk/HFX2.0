@@ -104,6 +104,6 @@ class PMFromPost extends Feature {
       $(this).closest(".pm-from-post-container").hide();
     });
   }
-};
+}
 
 module.exports = new PMFromPost();

@@ -19,6 +19,6 @@ class HideBlockedPosts extends Feature {
       });
     }
   }
-};
+}
 
 module.exports = new HideBlockedPosts();

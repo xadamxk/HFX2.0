@@ -30,6 +30,6 @@ class ExpandBlockedPosts extends Feature {
       });
     }
   }
-};
+}
 
 module.exports = new ExpandBlockedPosts();

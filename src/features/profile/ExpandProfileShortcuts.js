@@ -27,6 +27,6 @@ class ExpandProfileShortcuts extends Feature {
       );
     });
   }
-};
+}
 
 module.exports = new ExpandProfileShortcuts();

@@ -37,6 +37,6 @@ class QuoteStripping extends Feature {
       });
     });
   }
-};
+}
 
 module.exports = new QuoteStripping();

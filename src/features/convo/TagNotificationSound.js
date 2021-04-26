@@ -17,7 +17,7 @@ class TagNotificationSound extends Feature {
   }
 
   run() {
-    var js = `Convo.socket.on('convo_receivemessage', function(data) {
+    const js = `Convo.socket.on('convo_receivemessage', function(data) {
       var userURL = "https://hackforums.net/member.php?action=profile&uid=" + socket_uid;
       if (data.message.includes(userURL)) {
           new Convo.initSound(convo_sound_src).play();
@@ -34,11 +34,11 @@ class TagNotificationSound extends Feature {
   }
 
   addScriptToPage(scriptContent) {
-    var script = document.createElement("script");
+    const script = document.createElement("script");
     script.textContent = scriptContent;
     (document.head || document.documentElement).appendChild(script);
     script.remove();
   }
-};
+}
 
 module.exports = new TagNotificationSound();

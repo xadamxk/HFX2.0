@@ -28,6 +28,6 @@ class GivePopularityPostbitButton extends Feature {
       postbit.parentElement.prepend(rate);
     });
   }
-};
+}
 
 module.exports = new GivePopularityPostbitButton();

@@ -87,6 +87,6 @@ class HidePostbitAttributes extends Feature {
   getSetting(key, settings) {
     return Util.getConfigurableValue(key, this, settings);
   }
-};
+}
 
 module.exports = new HidePostbitAttributes();

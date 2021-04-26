@@ -7,5 +7,5 @@ module.exports = {
   Profile: require("./sections/Profile"),
   Reputation: require("./sections/Reputation"),
   Threads: require("./sections/Threads"),
-  awards: require("./sections/awards")
+  Awards: require("./sections/Awards")
 };

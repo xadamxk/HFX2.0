@@ -3,7 +3,7 @@ const Dropdown = require("../../src/configurables/Dropdown");
 const Section = require("../../src/core/Section");
 const Feature = require("../../src/core/Feature");
 const ConfigurableArray = require("../../src/core/ConfigurableArray");
-const Option = require("../../src/models/option")
+const Option = require("../../src/models/option");
 
 const opts = {
   id: "id",
@@ -84,7 +84,7 @@ describe("Dropdown", () => {
   });
 
   it("renders without settings", () => {
-    let partialOpts = {...opts}
+    let partialOpts = {...opts};
     partialOpts.dropdownOptions = null;
     let partialConfigurable = new Dropdown(partialOpts);
     const rendered = new DOMParser().parseFromString(partialConfigurable.render(section, feature), "text/html").body;
@@ -102,7 +102,7 @@ describe("Dropdown", () => {
   });
 
   it("renders with empty settings", () => {
-    let partialOpts = {...opts}
+    let partialOpts = {...opts};
     partialOpts.dropdownOptions = null;
     let partialConfigurable = new Dropdown(partialOpts);
     const rendered = new DOMParser().parseFromString(partialConfigurable.render(section, feature, {}), "text/html").body;

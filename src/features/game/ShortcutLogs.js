@@ -29,6 +29,6 @@ class ShortcutLogs extends Feature {
               })));
     }
   }
-};
+}
 
 module.exports = new ShortcutLogs();

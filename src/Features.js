@@ -25,6 +25,7 @@ module.exports = {
   QuickUnsubscribe: require("./features/threads/QuickUnsubscribe"),
   QuoteStripping: require("./features/pms/QuoteStripping"),
   RepCharts: require("./features/reputation/RepCharts"),
+  ConvoReply: require("./features/convo/ConvoReply"),
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),
   ShortcutLeaderboard: require("./features/game/ShortcutLeaderboard"),
   ShortcutLogs: require("./features/game/ShortcutLogs"),

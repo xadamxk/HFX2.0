@@ -85,6 +85,6 @@ class ExpandProfileSections extends Feature {
       );
     });
   }
-};
+}
 
 module.exports = new ExpandProfileSections();

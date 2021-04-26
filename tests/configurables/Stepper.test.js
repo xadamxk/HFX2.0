@@ -81,7 +81,7 @@ describe("Stepper", () => {
     expect(configurable.type).toBe("number");
     expect(configurable.label).toBe(opts.label);
     expect(configurable.default).toBe(opts.default);
-    expect(configurable.step).toBe(opts.step)
+    expect(configurable.step).toBe(opts.step);
   });
 
   it("renders without settings", () => {

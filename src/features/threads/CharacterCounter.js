@@ -99,6 +99,6 @@ class CharacterCounter extends Feature {
       color: "#0066FF"
     };
   }
-};
+}
 
 module.exports = new CharacterCounter();

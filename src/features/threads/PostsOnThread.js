@@ -33,6 +33,6 @@ class PostsOnThread extends Feature {
       `);
     });
   }
-};
+}
 
 module.exports = new PostsOnThread();

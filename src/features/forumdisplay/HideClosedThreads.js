@@ -12,12 +12,12 @@ class HideClosedThreads extends Feature {
   }
 
   run() {
-    $(".thread_status").each(function(index) {
+    $(".thread_status").each(function() {
       if ($(this).attr("title").includes("Locked thread.")) {
         $(this).parent().parent().hide();
       }
     });
   }
-};
+}
 
 module.exports = new HideClosedThreads();

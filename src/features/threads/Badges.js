@@ -44,6 +44,8 @@ class Badges extends Feature {
   }
 
   appendBadges(badges) {
+    // Copy badge object to prevent issues with settings above
+    // Remove hidden property since it isn't needed here
     const badgeList = Object.assign({}, badges);
     delete badgeList["hidden"];
 

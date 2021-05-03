@@ -1,4 +1,5 @@
 module.exports = {
+  Awards: require("./sections/Awards"),
   Convo: require("./sections/Convo"),
   ForumDisplay: require("./sections/ForumDisplay"),
   Game: require("./sections/Game"),
@@ -6,6 +7,5 @@ module.exports = {
   PMs: require("./sections/PMs"),
   Profile: require("./sections/Profile"),
   Reputation: require("./sections/Reputation"),
-  Threads: require("./sections/Threads"),
-  Awards: require("./sections/Awards")
+  Threads: require("./sections/Threads")
 };

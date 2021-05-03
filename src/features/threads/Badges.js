@@ -12,7 +12,7 @@ class Badges extends Feature {
       disableToggle: true,
       description: "HFX User Badges earned in various ways. Learn more"
     });
-    this.fetchDelay = 5; // Delay (minutes) between new alert fetches
+    this.fetchDelay = 15; // Delay (minutes) between new alert fetches
     this.now = Date.now();
     this.fetchLocation = "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/badges.json?nc=" + this.now;
   }

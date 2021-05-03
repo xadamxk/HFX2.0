@@ -2,6 +2,7 @@ const Feature = require("../../core/Feature");
 const Threads = require("../../sections/Threads");
 const Settings = require("../../core/Settings");
 const Logger = require("../../core/Logger");
+const Util = require("../../core/Util");
 
 class Badges extends Feature {
   constructor() {
@@ -12,7 +13,7 @@ class Badges extends Feature {
       disableToggle: true,
       description: "HFX User Badges earned in various ways. Learn more on the release thread."
     });
-    this.fetchDelay = 15; // Delay (minutes) between new alert fetches
+    this.fetchDelay = Util.isDevelopment ? 0 : 15; // Delay (minutes) between new alert fetches
     this.now = Date.now();
     this.fetchLocation = "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/badges.json?nc=" + this.now;
   }
@@ -85,25 +86,25 @@ class Badges extends Feature {
           switch (badgeName) {
             case "contributors":
               $(`#${containerName}`).append($("<img>").attr({
-                "src": chrome.extension.getURL("/assets/images/trophy_contributer.png"),
+                "src": Util.getURL("/assets/images/trophy_contributer.png"),
                 "title": badgeDescription
               }));
               break;
             case "donators":
               $(`#${containerName}`).append($("<img>").attr({
-                "src": chrome.extension.getURL("/assets/images/trophy_donator.png"),
+                "src": Util.getURL("/assets/images/trophy_donator.png"),
                 "title": badgeDescription
               }));
               break;
             case "supporters":
               $(`#${containerName}`).append($("<img>").attr({
-                "src": chrome.extension.getURL("/assets/images/trophy_supporter.png"),
+                "src": Util.getURL("/assets/images/trophy_supporter.png"),
                 "title": badgeDescription
               }));
               break;
             case "testers":
               $(`#${containerName}`).append($("<img>").attr({
-                "src": chrome.extension.getURL("/assets/images/trophy_tester.png"),
+                "src": Util.getURL("/assets/images/trophy_tester.png"),
                 "title": badgeDescription
               }));
               break;

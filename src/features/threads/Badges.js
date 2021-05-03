@@ -76,7 +76,6 @@ class Badges extends Feature {
       Object.entries(badgeList).map((key, badgeIndex) => {
         const badgeName = key[0];
         const badgeProperties = key[1];
-        console.log(badgeProperties);
         const badgeDescription = badgeProperties["description"];
         const badgeRecipients = badgeProperties["users"];
 

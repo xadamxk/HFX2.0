@@ -187,14 +187,14 @@
     ]
   },
   "codeMonkeys": {
-    "description": "HFX Code Monkeys: Star the official HFX2.0 GitHub project.",
+    "description": "HFX Code Monkey: Star the official HFX2.0 GitHub project.",
     "users": [
       1306528,
       2774521,
       75662
     ]
   },
-  "openSourceContributor": {
+  "openSourceContributors": {
     "description": "HFX Open Source Contributor: Contribute to the official HFX2.0 GitHub project.",
     "users": [
       1306528,

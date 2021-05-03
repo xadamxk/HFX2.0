@@ -7,7 +7,11 @@ module.exports = class Generic extends Configurable {
 
     return `
       <label class="mb-0">${this.label}</label>
-      <input type="${this.type}" data-section="${section.class}" data-feature="${feature.class}" data-setting="${this.id}" value="${value}">
+      <input type="${this.type}" 
+      data-section="${section.class}" 
+      data-feature="${feature.class}" 
+      data-setting="${this.id}"
+      value="${value}">
     `;
   }
 };

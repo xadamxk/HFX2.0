@@ -11,7 +11,12 @@ module.exports = class Checkbox extends Configurable {
 
     return `
       <div class="form-check form-check-inline mr-0">
-        <input type="${this.type}" class="form-check-input" data-section="${section.class}" data-feature="${feature.class}" data-setting="${this.id}" ${value ? "checked" : ""}>
+        <input type="${this.type}" 
+        class="form-check-input" 
+        data-section="${section.class}" 
+        data-feature="${feature.class}" 
+        data-setting="${this.id}" 
+        ${value ? "checked" : ""}>
         <label class="form-check-label">${this.label}</label>
       </div>
     `;

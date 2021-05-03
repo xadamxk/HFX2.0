@@ -75,27 +75,38 @@ class Badges extends Feature {
       // Loop badge entries
       Object.entries(badgeList).map((key, badgeIndex) => {
         const badgeName = key[0];
-        const badgeRecipients = key[1];
+        const badgeProperties = key[1];
+        console.log(badgeProperties);
+        const badgeDescription = badgeProperties["description"];
+        const badgeRecipients = badgeProperties["users"];
 
         // If user id is in badge recipients list
         if (badgeRecipients.includes(uid)) {
           // Append badge image
           switch (badgeName) {
             case "contributors":
-              $(`#${containerName}`).append($("<img>").attr("src",
-                chrome.extension.getURL("/assets/images/trophy_contributer.png")));
+              $(`#${containerName}`).append($("<img>").attr({
+                "src": chrome.extension.getURL("/assets/images/trophy_contributer.png"),
+                "title": badgeDescription
+              }));
               break;
             case "donators":
-              $(`#${containerName}`).append($("<img>").attr("src",
-                chrome.extension.getURL("/assets/images/trophy_donator.png")));
+              $(`#${containerName}`).append($("<img>").attr({
+                "src": chrome.extension.getURL("/assets/images/trophy_donator.png"),
+                "title": badgeDescription
+              }));
               break;
             case "supporters":
-              $(`#${containerName}`).append($("<img>").attr("src",
-                chrome.extension.getURL("/assets/images/trophy_supporter.png")));
+              $(`#${containerName}`).append($("<img>").attr({
+                "src": chrome.extension.getURL("/assets/images/trophy_supporter.png"),
+                "title": badgeDescription
+              }));
               break;
             case "testers":
-              $(`#${containerName}`).append($("<img>").attr("src",
-                chrome.extension.getURL("/assets/images/trophy_tester.png")));
+              $(`#${containerName}`).append($("<img>").attr({
+                "src": chrome.extension.getURL("/assets/images/trophy_tester.png"),
+                "title": badgeDescription
+              }));
               break;
             default:
           }

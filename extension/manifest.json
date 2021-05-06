@@ -45,10 +45,12 @@
         "assets/lib/moment/moment.min.js",
         "assets/lib/chart.js/Chart.bundle.min.js",
         "assets/lib/@yaireo/jQuery.tagify.min.js",
+        "assets/lib/intro.js/intro.min.js",
         "release/js/HFX.js"
       ],
       "css": [
-        "assets/css/HFX.css"
+        "assets/css/HFX.css",
+        "assets/lib/intro.js/introjs.min.css"
       ]
     }
   ],

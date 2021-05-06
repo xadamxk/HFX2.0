@@ -14,9 +14,13 @@ class BatteryAbsoluteTime extends Feature {
   run() {
     const gameContentElement = $("#game_content_currentpage");
     const rechargeTimeElement = $(gameContentElement).find(".smart-time");
-    if ($(gameContentElement).length > 0 && rechargeTimeElement.length > 0) {
+    if ($(gameContentElement).length > 0 &&
+    rechargeTimeElement.length > 0 &&
+    $(gameContentElement).text().includes("Full Charge:")) {
       const extractedRechargeTime = $(rechargeTimeElement).attr("title");
-      rechargeTimeElement.after($("<span>").text(`(${extractedRechargeTime})`));
+      rechargeTimeElement.after($("<span>")
+        .text(`(${extractedRechargeTime})`)
+        .attr("id", "HFXFullChargeTime"));
     }
   }
 }

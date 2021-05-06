@@ -12,8 +12,8 @@
       1138866,
       502172,
       3357844,
-      93414
-    ]
+      93414,
+      42221
   },
   "supporters": {
     "description": "HFX Supporter: Leave a review for HFX in the Chrome Web Store including your UID.",
@@ -128,11 +128,12 @@
       3967915,
       976310,
       3462590,
-      3740051
+      3740051,
+      42221
     ]
   },
   "donators": {
-    "description": "Donate $10 or more to the development of HFX.",
+    "description": "HFX Donator: Donate $10 or more to the development of HFX.",
     "users": [
       1306528,
       3346053,
@@ -151,7 +152,8 @@
       1844751,
       2682887,
       3838198,
-      3740051
+      3740051,
+      42221
     ]
   },
   "contributors": {
@@ -183,24 +185,27 @@
       2947999,
       3427514,
       649674,
-      1872506
+      1872506,
+      42221
     ]
   },
   "codeMonkeys": {
-    "description": "HFX Code Monkeys: Star the official HFX2.0 GitHub project.",
+    "description": "HFX Code Monkey: Star the official HFX2.0 GitHub project.",
     "users": [
       1306528,
       2774521,
-      75662
+      75662,
+      42221
     ]
   },
-  "openSourceContributor": {
+  "openSourceContributors": {
     "description": "HFX Open Source Contributor: Contribute to the official HFX2.0 GitHub project.",
     "users": [
       1306528,
       2525478,
       2774521,
-      3193396
+      3193396,
+      42221
     ]
   }
 }

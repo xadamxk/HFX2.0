@@ -63,6 +63,10 @@
   "web_accessible_resources": [
     "/assets/images/icon128.png",
     "/assets/images/dismiss_notice.png",
+    "/assets/images/trophy_contributer.png",
+    "/assets/images/trophy_donator.png",
+    "/assets/images/trophy_supporter.png",
+    "/assets/images/trophy_tester.png",
     "/assets/images/theme-customizer/logos/logo_cyan.gif",
     "/assets/images/theme-customizer/logos/logo_gray.png",
     "/assets/images/theme-customizer/logos/logo_magenta.gif",

@@ -18,6 +18,9 @@
     "node": ">=11.0",
     "yarn": ">=1.13.0"
   },
+  "volta": {
+    "node": "12.22.1"
+  },
   "author": "xadamxk",
   "license": "ISC",
   "dependencies": {

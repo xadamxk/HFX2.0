@@ -33,7 +33,10 @@ class IntroJs extends Feature {
       "EXPANDBLOCKEDPOSTS": "EXPANDBLOCKEDPOSTS",
       "SMARTQUOTE": "SMARTQUOTE",
       "EASYCITE": "EASYCITE",
-      "SEARCHYOURTHREADS": "SEARCHYOURTHREADS"
+      "SEARCHYOURTHREADS": "SEARCHYOURTHREADS",
+      "BATTERYPERCENT": "BATTERYPERCENT",
+      "MEDALOFHONORTRACKER": "MEDALOFHONORTRACKER",
+      "FULLCHARGETIME": "FULLCHARGETIME"
     };
     this.storageKey = "introJsVisitedTours";
     this.delay = 1500;
@@ -63,9 +66,10 @@ class IntroJs extends Feature {
       currentPage = this.pages.THREADS;
     } else if (currentPageUrl.includes("/forumdisplay.php?fid=")) {
       currentPage = this.pages.FORUMDISPLAY;
+    } else if (currentPageUrl.includes("/gamecp.php")) {
+      currentPage = this.pages.GAME;
     }
 
-    // If current page hasn't been visited
     const steps = [];
     const features = [];
     let currentFeature = null;
@@ -80,7 +84,7 @@ class IntroJs extends Feature {
       features.push(currentFeature);
     }
 
-    // Global features
+    // TODO: Global features
 
     // Features by page
     switch (currentPage) {
@@ -174,6 +178,43 @@ class IntroJs extends Feature {
             title: "Search Your Threads",
             element: document.querySelector("#HFXSearchYourThreads"),
             intro: "Filter threads in the current forum by author. Defaults to your username.",
+            position: "bottom"
+          });
+
+          features.push(currentFeature);
+        }
+        break;
+      case this.pages.GAME:
+        currentFeature = this.features.BATTERYPERCENT;
+        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXBatteryPercent")) {
+          steps.push({
+            title: "Battery Percent",
+            element: document.querySelector("#HFXBatteryPercent"),
+            intro: "Show your exact battery remaining.",
+            position: "bottom"
+          });
+
+          features.push(currentFeature);
+        }
+
+        currentFeature = this.features.MEDALOFHONORTRACKER;
+        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXProgressBar")) {
+          steps.push({
+            title: "Medal of Honor Tracker",
+            element: document.querySelector("#HFXProgressBar"),
+            intro: "Track your total experience in the HF Game to obtain the Medal of Honor award.",
+            position: "bottom"
+          });
+
+          features.push(currentFeature);
+        }
+
+        currentFeature = this.features.FULLCHARGETIME;
+        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXFullChargeTime")) {
+          steps.push({
+            title: "Absolute Battery Recharge Time",
+            element: document.querySelector("#HFXFullChargeTime"),
+            intro: "Know exactly when your battery will be recharged.",
             position: "bottom"
           });
 

@@ -12,6 +12,14 @@ class IntroJs extends Feature {
     });
     // Determine which filters to check for
     this.pages = {
+      "AWARDS": "AWARDS",
+      "CONVO": "CONVO",
+      "FORUMDISPLAY": "FORUMDISPLAY",
+      "GAME": "GAME",
+      "GLOBAL": "GLOBAL",
+      "PRIVATEMESSAGES": "PRIVATEMESSAGES",
+      "PROFILE": "PROFILE",
+      "REPUTATION": "REPUTATION",
       "THREADS": "THREADS"
     };
     // Lookup of features in storage
@@ -23,7 +31,9 @@ class IntroJs extends Feature {
       "QUICKUNSUBSCRIBE": "QUICKUNSUBSCRIBE",
       "GIVEPOPULARITYBUTTON": "GIVEPOPULARITYBUTTON",
       "EXPANDBLOCKEDPOSTS": "EXPANDBLOCKEDPOSTS",
-      "SMARTQUOTE": "SMARTQUOTE"
+      "SMARTQUOTE": "SMARTQUOTE",
+      "EASYCITE": "EASYCITE",
+      "SEARCHYOURTHREADS": "SEARCHYOURTHREADS"
     };
     this.storageKey = "introJsVisitedTours";
     this.delay = 1500;
@@ -51,6 +61,8 @@ class IntroJs extends Feature {
     let currentPage = null;
     if (currentPageUrl.includes("/showthread.php?tid=")) {
       currentPage = this.pages.THREADS;
+    } else if (currentPageUrl.includes("/forumdisplay.php?fid=")) {
+      currentPage = this.pages.FORUMDISPLAY;
     }
 
     // If current page hasn't been visited
@@ -67,6 +79,8 @@ class IntroJs extends Feature {
       });
       features.push(currentFeature);
     }
+
+    // Global features
 
     // Features by page
     switch (currentPage) {
@@ -152,10 +166,24 @@ class IntroJs extends Feature {
 
           features.push(currentFeature);
         }
+        break;
+      case this.pages.FORUMDISPLAY:
+        currentFeature = this.features.SEARCHYOURTHREADS;
+        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXSearchYourThreads")) {
+          steps.push({
+            title: "Search Your Threads",
+            element: document.querySelector("#HFXSearchYourThreads"),
+            intro: "Filter threads in the current forum by author. Defaults to your username.",
+            position: "bottom"
+          });
 
-        this.showIntroJs(steps, features, vistedFeatures);
+          features.push(currentFeature);
+        }
         break;
       default:
+    }
+    if (features) {
+      this.showIntroJs(steps, features, vistedFeatures);
     }
   }
 

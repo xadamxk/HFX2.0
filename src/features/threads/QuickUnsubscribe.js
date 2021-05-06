@@ -28,9 +28,9 @@ class QuickUnsubscribe extends Feature {
         .append($("<a>").attr({
           "href": "javascript:void(0)",
           "title": "HFX: Quick Unsubscribe",
-          "id": "hfxQuickUnsubscribe"
+          "id": "HFXQuickUnsubscribe"
         }).text("Quick Unsubscribe")));
-      $("#hfxQuickUnsubscribe").on("click", () => {
+      $("#HFXQuickUnsubscribe").on("click", () => {
         $.ajax({
           type: "POST",
           url: "/usercp2.php?ajax=1",

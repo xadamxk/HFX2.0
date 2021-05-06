@@ -53,7 +53,7 @@ class CharacterCounter extends Feature {
           "background": backgroundColor,
           "border": `1px solid ${borderColor}`,
           "border-radius": "2px"
-        }).attr({"id": "CharCounterContainer"})
+        }).attr({"id": "HFXCharCounterContainer"})
           .append($("<div>").attr("id", "CharCounterLabel").text(threshold.label).css({"float": "left", "padding-left": "4px", "color": threshold.color}))
           .append($("<div>").attr("id", "CharCounterValue").text(this.numberFormatter.format(charCount)).css({"float": "right", "padding-right": "4px"}))
         ));

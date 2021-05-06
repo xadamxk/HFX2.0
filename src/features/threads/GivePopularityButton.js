@@ -21,6 +21,7 @@ class GivePopularityPostbitButton extends Feature {
 
       rate.href = `javascript:MyBB.reputation(${postbit.getAttribute("href").split("=")[1]})`;
       rate.textContent = "+";
+      rate.id = "HFXGivePopularityButton";
       rate.onclick = "";
       rate.style.color = "#4CAF50";
       rate.innerHTML = "<i class=\"fa fa-plus-circle\" style=\"color: #4CAF50;\" aria-hidden=\"true\"></i>";

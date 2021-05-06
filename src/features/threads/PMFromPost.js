@@ -31,7 +31,7 @@ class PMFromPost extends Feature {
       postQuote = `[size=x-small]Sent from [url=${postLink}]your post[/url].[/size]\n${postQuote}\n`;
 
       $(this).find(".author_buttons").prepend(`
-        <a class="pm-from-post-toggle postbit_quote" href="#" data-tooltip="PM From Post">
+        <a class="pm-from-post-toggle postbit_quote" href="#" id="HFXPMFromPost${index}" data-tooltip="PM From Post">
           <span>
             <i class="fa fa-comment fa-lg" aria-hidden="true"></i>
           </span>

@@ -32,11 +32,13 @@ class IntroJs extends Feature {
       "GIVEPOPULARITYBUTTON": "GIVEPOPULARITYBUTTON",
       "EXPANDBLOCKEDPOSTS": "EXPANDBLOCKEDPOSTS",
       "SMARTQUOTE": "SMARTQUOTE",
+      "HFTOOLBAR": "HFTOOLBAR",
       "EASYCITE": "EASYCITE",
       "SEARCHYOURTHREADS": "SEARCHYOURTHREADS",
       "BATTERYPERCENT": "BATTERYPERCENT",
       "MEDALOFHONORTRACKER": "MEDALOFHONORTRACKER",
-      "FULLCHARGETIME": "FULLCHARGETIME"
+      "FULLCHARGETIME": "FULLCHARGETIME",
+      "EXPANDPROFILESECTIONS": "EXPANDPROFILESECTIONS"
     };
     this.storageKey = "introJsVisitedTours";
     this.delay = 1500;
@@ -68,6 +70,8 @@ class IntroJs extends Feature {
       currentPage = this.pages.FORUMDISPLAY;
     } else if (currentPageUrl.includes("/gamecp.php")) {
       currentPage = this.pages.GAME;
+    } else if (currentPageUrl.includes("/member.php?action=profile&uid=")) {
+      currentPage = this.pages.PROFILE;
     }
 
     const steps = [];
@@ -84,7 +88,30 @@ class IntroJs extends Feature {
       features.push(currentFeature);
     }
 
-    // TODO: Global features
+    // Global features
+    currentFeature = this.features.EASYCITE;
+    if (!vistedFeatures.includes(currentFeature) && document.querySelector(".panel_links")) {
+      steps.push({
+        title: "HF Tool Bar",
+        element: document.querySelector(".panel_links"),
+        intro: "Add shortcuts to your favorite sections directly to the toolbar. Enable sticky mode to keep the toolbar always on screen for faster navigation.",
+        position: "bottom"
+      });
+
+      features.push(currentFeature);
+    }
+
+    currentFeature = this.features.EASYCITE;
+    if (!vistedFeatures.includes(currentFeature) && document.querySelector("#citeButton")) {
+      steps.push({
+        title: "Easy Cite",
+        element: document.querySelector("#citeButton"),
+        intro: "Cite any page on Hack Forums by clicking the last item in the breadcrumb. Automatically copied to your clipboard if you accept the prompt.",
+        position: "bottom"
+      });
+
+      features.push(currentFeature);
+    }
 
     // Features by page
     switch (currentPage) {
@@ -216,6 +243,20 @@ class IntroJs extends Feature {
             element: document.querySelector("#HFXFullChargeTime"),
             intro: "Know exactly when your battery will be recharged.",
             position: "bottom"
+          });
+
+          features.push(currentFeature);
+        }
+        break;
+      case this.pages.PROFILE:
+        currentFeature = this.features.EXPANDPROFILESECTIONS;
+        if (!vistedFeatures.includes(currentFeature) &&
+        $(".pro-adv-content-info").find(".pro-adv-card").length > 3) {
+          steps.push({
+            title: "Expand Profile Sections",
+            element: document.querySelector(".pro-adv-card"),
+            intro: "Expands collapsed profile cards like visitors, groups, awards, and comrades. Enable expand awards to see awards in a traditional format.",
+            position: "top"
           });
 
           features.push(currentFeature);

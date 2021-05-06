@@ -8,7 +8,7 @@ class IntroJs extends Feature {
       section: Global,
       name: "HFX Tour",
       default: true,
-      description: "Walks users through new HFX features."
+      description: "Guides user through HFX features on the current page."
     });
     // Determine which filters to check for
     this.pages = {

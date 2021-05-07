@@ -33,6 +33,7 @@ class IntroJs extends Feature {
       "EXPANDBLOCKEDPOSTS": "EXPANDBLOCKEDPOSTS",
       "SMARTQUOTE": "SMARTQUOTE",
       "HFTOOLBAR": "HFTOOLBAR",
+      "HFXALERTS": "HFXALERTS",
       "EASYCITE": "EASYCITE",
       "SEARCHYOURTHREADS": "SEARCHYOURTHREADS",
       "BATTERYPERCENT": "BATTERYPERCENT",
@@ -59,8 +60,6 @@ class IntroJs extends Feature {
   async determineTours() {
     const currentPageUrl = location.href;
     const vistedFeatures = await Util.getLocalSetting(this, this.storageKey) || [];
-
-    // TODO: Store visited by features rather than page
 
     // Determine page
     let currentPage = null;
@@ -101,6 +100,18 @@ class IntroJs extends Feature {
       features.push(currentFeature);
     }
 
+    currentFeature = this.features.HFXALERTS;
+    if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXAlert")) {
+      steps.push({
+        title: "HF Alerts",
+        element: document.querySelector("#HFXAlert"),
+        intro: "Recieve alerts for HFX related updates such as new features, upcoming changes, and community messages. Will ONLY be used for HFX related content.",
+        position: "bottom"
+      });
+
+      features.push(currentFeature);
+    }
+
     currentFeature = this.features.EASYCITE;
     if (!vistedFeatures.includes(currentFeature) && document.querySelector("#citeButton")) {
       steps.push({
@@ -114,6 +125,7 @@ class IntroJs extends Feature {
     }
 
     // Features by page
+    // TODO: Clean up repetitive logic below
     switch (currentPage) {
       case this.pages.THREADS:
         currentFeature = this.features.GIVEPOPULARITYBUTTON;
@@ -179,7 +191,7 @@ class IntroJs extends Feature {
           steps.push({
             title: "Character Counter",
             element: document.querySelector("#HFXCharCounterContainer"),
-            intro: "Know exactly how many characters you have in your current post draft. Ensures that meet the requirements and don't go over the character limit for your usergroup.",
+            intro: "Know exactly how many characters you have in your current post draft. Ensures that you meet the requirements and don't go over the character limit for your usergroup.",
             position: "bottom"
           });
 
@@ -271,6 +283,7 @@ class IntroJs extends Feature {
 
   showIntroJs(steps, features, visitedFeatures) {
     const self = this;
+    const yScrollIndex = window.scrollY;
 
     // eslint-disable-next-line no-undef
     introJs().setOptions({
@@ -279,15 +292,15 @@ class IntroJs extends Feature {
     })
       .start()
       .onexit(function() {
-        self.savePageVisit(features, visitedFeatures);
+        self.savePageVisit(features, visitedFeatures, yScrollIndex);
       });
   }
 
-  savePageVisit(features, visitedFeatures) {
-    console.log("SAVING FEATURES AS VISITED");
-    console.log(features);
-    // TODO: Store page
-    // TODO: Scroll back to where the user was
+  savePageVisit(features, visitedFeatures, yScrollIndex) {
+    const newVisitedFeatures = visitedFeatures.concat(features);
+    Util.saveLocalSetting(this, this.storageKey, newVisitedFeatures);
+    // Scroll back to where the user was before tour
+    window.scroll(0, yScrollIndex);
   }
 };
 

@@ -103,7 +103,7 @@ class IntroJs extends Feature {
     currentFeature = this.features.HFXALERTS;
     if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXAlert")) {
       steps.push({
-        title: "HF Alerts",
+        title: "HFX Alerts",
         element: document.querySelector("#HFXAlert"),
         intro: "Recieve alerts for HFX related updates such as new features, upcoming changes, and community messages. Will ONLY be used for HFX related content.",
         position: "bottom"

@@ -24,9 +24,9 @@ class CharacterCounter extends Feature {
       case this.isMatch(address, "/showthread.php"):
         return this.generateTag(".thread-quickchat", $("#message"));
       case this.isMatch(address, "/newreply.php"):
-        return this.generateTag("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", $("#message").next().find("textarea"));
+        return this.generateTag("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", $("#new_reply_form").find("textarea:eq(0)"));
       case this.isMatch(address, "/editpost.php"):
-        return this.generateTag("#editpost > table > tbody > tr:eq(3) > td:eq(0)", $("#message").next().find("textarea"));
+        return this.generateTag("#editpost > table > tbody > tr:eq(4) > td:eq(0)", $("#editpost").find("textarea:eq(0)"));
       default:
         console.log("HFX: New CharacterCounter page found, please report this error to a developer.");
     }

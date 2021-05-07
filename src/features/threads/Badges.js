@@ -97,6 +97,12 @@ class Badges extends Feature {
             case "testers":
               badgeSrc = Util.getURL("/assets/images/trophy_tester.png");
               break;
+            case "codeMonkeys":
+              badgeSrc = Util.getURL("/assets/images/trophy_codemonkey.png");
+              break;
+            case "openSourceContributors":
+              badgeSrc = Util.getURL("/assets/images/trophy_hfxtail_white.png");
+              break;
             default:
               return;
           }

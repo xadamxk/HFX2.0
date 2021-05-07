@@ -24,12 +24,15 @@ class BatteryPercent extends Feature {
           "title": $(batteryElement).attr("title"),
           "data-tooltip": $(batteryElement).attr("data-tooltip")
         }))
-        .append($("<span>").css({
-          "color": batteryElement.css("color"),
-          "padding-left": "10px",
-          "font-size": "14px",
-          "font-weight": "bold"
-        }).text(`${batteryPercent}%`))
+        .append($("<span>")
+          .css({
+            "color": batteryElement.css("color"),
+            "padding-left": "10px",
+            "font-size": "14px",
+            "font-weight": "bold"
+          })
+          .text(`${batteryPercent}%`)
+          .attr("id", "HFXBatteryPercent"))
       );
     }
   }

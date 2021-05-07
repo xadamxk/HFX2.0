@@ -26,7 +26,10 @@ class ExpandBlockedPosts extends Feature {
         const ignoredpost = $(posts).find(`#post_${postID}`);
 
         // 'Ignored User' Alert
-        ignoredpost.find(".post_date").append("(IGNORED USER)").css("background-color", "#c40d23");
+        ignoredpost.find(".post_date")
+          .append("(IGNORED USER)")
+          .css("background-color", "#c40d23")
+          .attr("id", `HFXExpandBlockedPosts${index}`);
       });
     }
   }

@@ -28,7 +28,7 @@ class SmartQuote extends Feature {
     const quoteColor = Util.getConfigurableValue("SQColor", this, settings) ? Util.getConfigurableValue("SQColor", this, settings) : this.defaultQuoteColor;
     const headerColor = Util.getConfigurableValue("SQTextColor", this, settings) ? Util.getConfigurableValue("SQTextColor", this, settings) : this.defaultHeaderColor;
     // Loop quotes
-    $("blockquote").each(function() {
+    $("blockquote").each(function(index) {
       // blockquote
       $(this).css({
         "border-radius": "5px",
@@ -39,13 +39,16 @@ class SmartQuote extends Feature {
 
       // blockquote header
       const isMentioned = $(this).find("cite").text().includes(username);
-      $(this).find("cite").css({
-        "border-radius": "5px",
-        "border": "1px solid black",
-        "color": headerColor,
-        "background": isMentioned ? mentionColor : quoteColor,
-        "font-weight": "bold"
-      }).addClass("without-after-element") // Add class to remove after element (underline)
+      $(this).find("cite")
+        .css({
+          "border-radius": "5px",
+          "border": "1px solid black",
+          "color": headerColor,
+          "background": isMentioned ? mentionColor : quoteColor,
+          "font-weight": "bold"
+        })
+        .attr("id", `HFXSmartQuote${index}`)
+        .addClass("without-after-element") // Add class to remove after element (underline)
         .find("span").css({
           "color": headerColor
         });

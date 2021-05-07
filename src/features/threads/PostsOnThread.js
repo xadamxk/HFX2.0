@@ -25,7 +25,7 @@ class PostsOnThread extends Feature {
       } catch (e) { }
 
       $(this).find(".author_buttons").append(`
-        <a class="postbit_quote" href="/showthread.php?tid=${threadId}&mode=single&uid=${userId}" data-tooltip="Posts on Thread">
+        <a id="HFXPostsOnThread${index}" class="postbit_quote" href="/showthread.php?tid=${threadId}&mode=single&uid=${userId}" data-tooltip="Posts on Thread">
           <span>
             <i class="fa fa-file-signature fa-lg" aria-hidden="true"></i>
           </span>

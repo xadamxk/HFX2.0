@@ -16,9 +16,10 @@ class DisplayTempUb3rStatus extends Feature {
   }
 
   run() {
-    document.querySelectorAll("div.post_myawards > span > i[title*='Ub3r until']").forEach((award) => {
+    document.querySelectorAll("div.post_myawards > span > i[title*='Ub3r until']").forEach((award, index) => {
       let uberStatus = document.createElement("span");
       uberStatus.textContent = award.title;
+      uberStatus.id = "HFXDisplayTempUb3rStatus";
       uberStatus.style.fontSize = "13px";
       uberStatus.style.display = "inline-block";
       award.parentElement.parentElement.parentElement.append(uberStatus);

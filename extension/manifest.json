@@ -45,10 +45,12 @@
         "assets/lib/moment/moment.min.js",
         "assets/lib/chart.js/Chart.bundle.min.js",
         "assets/lib/@yaireo/jQuery.tagify.min.js",
+        "assets/lib/intro.js/intro.min.js",
         "release/js/HFX.js"
       ],
       "css": [
-        "assets/css/HFX.css"
+        "assets/css/HFX.css",
+        "assets/lib/intro.js/introjs.min.css"
       ]
     }
   ],
@@ -67,6 +69,11 @@
     "/assets/images/trophy_donator.png",
     "/assets/images/trophy_supporter.png",
     "/assets/images/trophy_tester.png",
+    "/assets/images/trophy_codemonkey.png",
+    "/assets/images/trophy_hfx.png",
+    "/assets/images/trophy_hfxtail.png",
+    "/assets/images/trophy_hfxtail_white.png",
+    "/assets/images/trophy_hfx_white.png",
     "/assets/images/theme-customizer/logos/logo_cyan.gif",
     "/assets/images/theme-customizer/logos/logo_gray.png",
     "/assets/images/theme-customizer/logos/logo_magenta.gif",

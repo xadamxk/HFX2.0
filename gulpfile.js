@@ -53,6 +53,7 @@ gulp.task("libs", asyncComplete => {
   copyNodeAssets("moment", ["min/moment.min.js"]);
   copyNodeAssets("chart.js", ["dist/Chart.bundle.min.js"]);
   copyNodeAssets("@yaireo", ["tagify/dist/jQuery.tagify.min.js", "tagify/dist/tagify.css"]);
+  copyNodeAssets("intro.js", ["minified/intro.min.js", "minified/introjs.min.css"]);
   asyncComplete();
 });
 

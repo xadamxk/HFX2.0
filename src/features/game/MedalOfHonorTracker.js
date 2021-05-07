@@ -37,18 +37,18 @@ class MedalOfHonorTracker extends Feature {
 
       // Clone existing progress bar (and children) but change the IDs to be unique
       $("#progress-bar").parent().clone().appendTo(".game-profile-player")
-        .children().first().attr("id", "myProgressBar")
-        .children().first().attr("id", "myProgressBarPercentage");
+        .children().first().attr("id", "HFXProgressBar")
+        .children().first().attr("id", "HFXProgressBarPercentage");
 
       // Change style properties of the clone (and child)
-      $("#myProgressBar")
+      $("#HFXProgressBar")
         .attr({
           "title": "Medal of Honor Progress: " + wholePercent + "%"
         })
         .css({
           "border-radius": "6px"
         });
-      $("#myProgressBarPercentage")
+      $("#HFXProgressBarPercentage")
         .attr({
           "title": "Medal of Honor Progress: " + wholePercent + "%"
         })
@@ -63,7 +63,7 @@ class MedalOfHonorTracker extends Feature {
         });
 
       // Update progress text
-      $("#myProgressBar").parent().find(".tinytext").text(this.numberWithCommas(totalXP) + " / " + this.numberWithCommas(goal) + " xp");
+      $("#HFXProgressBar").parent().find(".tinytext").text(this.numberWithCommas(totalXP) + " / " + this.numberWithCommas(goal) + " xp");
     }
   }
 

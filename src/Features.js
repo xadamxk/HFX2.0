@@ -20,6 +20,7 @@ module.exports = {
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),
   HideImages: require("./features/global/HideImages"),
   HidePostbitAttributes: require("./features/threads/HidePostbitAttributes"),
+  IntroJs: require("./features/global/IntroJs"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
   PostActivitySearchButtons: require("./features/profile/PostActivitySearchButtons"),

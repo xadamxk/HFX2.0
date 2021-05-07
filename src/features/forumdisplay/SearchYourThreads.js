@@ -35,7 +35,7 @@ class SearchYourThreads extends Feature {
 
     const author = $("input[name='author']");
     if (Util.getConfigurableValue("SYTCustomInput", this, settings) && author.length > 0) {
-      author.clone().attr({"id": "author", "type": "text"})
+      author.clone().attr({"id": "HFXSearchYourThreads", "type": "text"})
         .css({
           "background": "#2a2a2a",
           "padding": "8px",

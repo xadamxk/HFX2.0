@@ -86,6 +86,12 @@ module.exports = {
     script.remove();
   },
 
+  addCssToPage(cssContent) {
+    var css = document.createElement("style");
+    css.textContent = cssContent;
+    (document.head || document.documentElement).appendChild(css);
+  },
+
   getLocalStorageKeys() {
     chrome.storage.local.get(null, function(items) {
       console.log(Object.keys(items));

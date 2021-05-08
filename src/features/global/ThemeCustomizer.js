@@ -33,7 +33,8 @@ class ThemeCustomizer extends Feature {
             new Option("yellow", "Yellow")
           ]}),
         new Checkbox({ id: "tcChangeLogo", label: "Change Logo", default: true }),
-        new Checkbox({ id: "tcChangeMosaic", label: "Change Mosaic", default: true })
+        new Checkbox({ id: "tcChangeMosaic", label: "Change Mosaic", default: true }),
+        new Checkbox({ id: "tcBackgroundShadow", label: "Enable Background Shadow", default: false })
       )
     });
   }
@@ -43,6 +44,7 @@ class ThemeCustomizer extends Feature {
     let mosaic = null;
     let logo = null;
     let accentColor = null;
+    let css = ``;
     switch (themeName) {
       case "cyan":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
@@ -88,6 +90,7 @@ class ThemeCustomizer extends Feature {
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_rainbow.gif");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_rainbow.png");
         accentColor = "linear-gradient(to right, red,orange,green,blue,purple)";
+        css += `.contract_statusbar span.nav_con_active:after { background: purple !important; }`;
         break;
       // TODO: Make yellow less aggressive
       case "yellow":
@@ -107,13 +110,16 @@ class ThemeCustomizer extends Feature {
       if (Util.getConfigurableValue("tcChangeMosaic", this, settings)) {
         $("body").css("background", `#0e0e0e url(${mosaic}) fixed`);
       }
+      // background shadow
+      if (Util.getConfigurableValue("tcBackgroundShadow", this, settings)) {
+        css += `#container { background: rgb(11 5 11 / 70%) !important; }`;
+      }
       // accent color
-      $(".thead, .shadetabs li a.selected, .pagination .pagination_current, .quickthread_button").css("background", accentColor);
-      // $(".postbit_buttons > a, .postbit_buttons > .button").on("hover", function() {
-      //   console.log($(this));
-      //   $(this).css({"background-color": accentColor + " !important", "border-color": accentColor + " !important"});
-      // });
-      $(".logo-hide-button").css("color", accentColor);
+      css += `.thead, .shadetabs li a.selected, .pagination .pagination_current, .quickthread_button, .nav_con_active { background: ${accentColor} !important }
+        .nav_con_active span { background: none !important; }
+        .logo-hide-button { color: ${accentColor} !important; }`;
+
+      Util.addCssToPage(css);
     }
   }
 }

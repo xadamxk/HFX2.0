@@ -39,7 +39,9 @@ class IntroJs extends Feature {
       "BATTERYPERCENT": "BATTERYPERCENT",
       "MEDALOFHONORTRACKER": "MEDALOFHONORTRACKER",
       "FULLCHARGETIME": "FULLCHARGETIME",
-      "EXPANDPROFILESECTIONS": "EXPANDPROFILESECTIONS"
+      "EXPANDPROFILESECTIONS": "EXPANDPROFILESECTIONS",
+      "CONVOBLACKLIST": "CONVOBLACKLIST",
+      "CONVOREPLY": "CONVOREPLY"
     };
     this.storageKey = "introJsVisitedTours";
     this.delay = 1500;
@@ -71,6 +73,8 @@ class IntroJs extends Feature {
       currentPage = this.pages.GAME;
     } else if (currentPageUrl.includes("/member.php?action=profile&uid=")) {
       currentPage = this.pages.PROFILE;
+    } else if (currentPageUrl.includes("/convo.php")) {
+      currentPage = this.pages.CONVO;
     }
 
     const steps = [];
@@ -269,6 +273,27 @@ class IntroJs extends Feature {
             element: document.querySelector(".pro-adv-card"),
             intro: "Expands collapsed profile cards like visitors, groups, awards, and comrades. Enable expand awards to see awards in a traditional format.",
             position: "top"
+          });
+
+          features.push(currentFeature);
+        }
+        break;
+      case this.pages.CONVO:
+        currentFeature = this.features.CONVOBLACKLIST;
+        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#message-convo")) {
+          steps.push({
+            title: "Convo Filters",
+            intro: "Adds granular control to conversations. Filter messages by keyword(s), blacklist users, hide bot commands, and more. To blacklist a user, mouseover their avatar, select the ellipsis (3 dots), and blacklist user."
+          });
+
+          features.push(currentFeature);
+        }
+        currentFeature = this.features.CONVOREPLY;
+        if (!vistedFeatures.includes(currentFeature) && document.querySelectorAll(".hfx-reply-to-message")) {
+          steps.push({
+            title: "Convo Reply",
+            intro: "Quote a user directly by clicking 'reply' directly under their message.",
+            position: "bottom"
           });
 
           features.push(currentFeature);

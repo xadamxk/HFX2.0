@@ -108,7 +108,11 @@ class ThemeCustomizer extends Feature {
         $("body").css("background", `#0e0e0e url(${mosaic}) fixed`);
       }
       // accent color
-      $(".thead, .shadetabs li a.selected, .pagination .pagination_current, .quickthread_button").css("background", accentColor);
+      var css = `.thead, .shadetabs li a.selected, .pagination .pagination_current, .quickthread_button, .nav_con_active { background: ${accentColor} !important }
+        .nav_con_active span { background: none !important; }`;
+      if (themeName == "rainbow") { css += `.contract_statusbar span.nav_con_active:after { background: purple !important; }` }
+      Util.addCssToPage(css);
+
       // $(".postbit_buttons > a, .postbit_buttons > .button").on("hover", function() {
       //   console.log($(this));
       //   $(this).css({"background-color": accentColor + " !important", "border-color": accentColor + " !important"});

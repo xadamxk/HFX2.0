@@ -110,10 +110,8 @@ class ThemeCustomizer extends Feature {
       if (Util.getConfigurableValue("tcChangeMosaic", this, settings)) {
         $("body").css("background", `#0e0e0e url(${mosaic}) fixed`);
       }
-      console.log("1");
       // background shadow
       if (Util.getConfigurableValue("tcBackgroundShadow", this, settings)) {
-        console.log("2");
         css += `#container { background: rgb(11 5 11 / 70%) !important; }`;
       }
       // accent color

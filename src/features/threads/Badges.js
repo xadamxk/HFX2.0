@@ -69,7 +69,7 @@ class Badges extends Feature {
 
       // Append badge container
       const containerName = ["userBadgeContainer", uid, postIndex].join("-");
-      $(post).find(".post_myawards").prepend("<br>").prepend($("<div>")
+      $(post).find(".post_myawards").prepend($("<div>")
         .css({"width": "144px", "text-align": "center"})
         .attr("id", containerName));
 
@@ -113,6 +113,10 @@ class Badges extends Feature {
           }));
         }
       });
+
+      if (document.getElementById(containerName).hasChildNodes()) {
+        $("<br>").insertAfter(`#${containerName}`);
+      }
     });
   }
 };

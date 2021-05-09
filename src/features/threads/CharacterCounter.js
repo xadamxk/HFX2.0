@@ -5,6 +5,7 @@ const Threads = require("../../sections/Threads");
 
 const newReplySection = new Section("/newreply.php");
 const editPostSection = new Section("/editpost.php");
+const newThreadSection = new Section("/newthread.php");
 
 class CharacterCounter extends Feature {
   constructor() {
@@ -13,7 +14,7 @@ class CharacterCounter extends Feature {
       name: "Character Counter",
       default: true,
       description: "Adds intelligent character counter to replies.",
-      additionalSections: new SectionArray(newReplySection, editPostSection)
+      additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection)
     });
     this.numberFormatter = new Intl.NumberFormat("en-US");
   }
@@ -27,6 +28,8 @@ class CharacterCounter extends Feature {
         return this.generateTag("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", $("#new_reply_form").find("textarea:eq(0)"));
       case this.isMatch(address, "/editpost.php"):
         return this.generateTag("#editpost > table > tbody > tr:eq(4) > td:eq(0)", $("#editpost").find("textarea:eq(0)"));
+      case this.isMatch(address, "/newthread.php"):
+        return this.generateTag("form[name=input] > table > tbody > tr:eq(4) > td:eq(0)", $("form[name=input]").find("textarea:eq(0)"));
       default:
         console.log("HFX: New CharacterCounter page found, please report this error to a developer.");
     }

@@ -49,7 +49,7 @@ class EasyCite extends Feature {
         return this.getDescription("Section").replace("  ", " "); // RANF Section has two spaces between Rules, Announcements
       case this.isMatch(address, "/member.php?action=profile"):
         if (Util.getConfigurableValue("ECProfileColors", this, settings)) {
-          return this.getDescription(" Profile", `[color=${this.rgb2hex($(".largetext:eq(0) span").css("color"))}]` + $("#citeButton").text().replace("Profile of ", "") + "[/color]");
+          return this.getDescription("", `[color=${this.rgb2hex($(".largetext:eq(0) span").css("color"))}]` + $("#citeButton").text().replace("Profile of ", "") + "[/color]");
         }
         return this.getDescription(" Profile").replace("Profile of ", "");
       case this.isMatch(address, "/misc.php?action=help"):

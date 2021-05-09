@@ -44,7 +44,7 @@ class ThemeCustomizer extends Feature {
     let mosaic = null;
     let logo = null;
     let accentColor = null;
-    let css = ``;
+    let css = "";
     switch (themeName) {
       case "cyan":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
@@ -90,7 +90,7 @@ class ThemeCustomizer extends Feature {
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_rainbow.gif");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_rainbow.png");
         accentColor = "linear-gradient(to right, red,orange,green,blue,purple)";
-        css += `.contract_statusbar span.nav_con_active:after { background: purple !important; }`;
+        css += ".contract_statusbar span.nav_con_active:after { background: purple !important; }";
         break;
       // TODO: Make yellow less aggressive
       case "yellow":
@@ -112,7 +112,7 @@ class ThemeCustomizer extends Feature {
       }
       // background shadow
       if (Util.getConfigurableValue("tcBackgroundShadow", this, settings)) {
-        css += `#container { background: rgb(11 5 11 / 70%) !important; }`;
+        css += "#container { background: rgb(11 5 11 / 70%) !important; }";
       }
       // accent color
       css += `.thead, .shadetabs li a.selected, .pagination .pagination_current, .quickthread_button, .nav_con_active { background: ${accentColor} !important }

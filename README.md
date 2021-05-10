@@ -3,7 +3,26 @@
 
  ![HFX Logo](https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/banner-large.png)
 
+
 ## Getting Started (Development)
+### Docker
+- Build and tag the container:
+```bash
+docker build -t hfx:develop
+```
+- Interacting with the container
+```
+docker run hfx:0001 gulp libs
+[22:26:04] Using gulpfile /app/gulpfile.js
+[22:26:04] Starting 'libs'...
+[22:26:04] Finished 'libs' after 17 ms
+```
+- `/app` Is the working directory
+```bash
+docker run hfx:develop ls -lsa
+```
+
+### Manual
 - Install Node.js >=v11.0
 - Install Yarn >=v1.13.0
 - Clone this project and navigate to the project directory

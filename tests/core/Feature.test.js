@@ -2,11 +2,15 @@ global.chrome = require("sinon-chrome");
 const Feature = require("../../src/core/Feature");
 const Section = require("../../src/core/Section");
 const ConfigurableArray = require("../../src/core/ConfigurableArray");
+const SectionArray = require("../../src/core/SectionArray");
+const Util = require("../../src/core/Util");
 
-const section = new Section("/");
+const firstSection = new Section("/first-page");
+const secondSection = new Section("/second-page");
+const thirdSection = new Section("/third-page");
 
 const opts = {
-  section: section,
+  section: firstSection,
   name: "name",
   default: false,
   description: "description",
@@ -15,13 +19,15 @@ const opts = {
     name: "author.name",
     profile: "author.profile"
   },
-  configurables: new ConfigurableArray()
+  configurables: new ConfigurableArray(),
+  additionalSections: new SectionArray(secondSection, thirdSection)
 };
 
 const feature = new Feature(opts);
 
 describe("Feature", () => {
   beforeEach(() => {
+    window.history.pushState({}, "Index", "/");
     chrome.storage.local.get.reset();
     chrome.storage.local.set.reset();
     jest.restoreAllMocks();
@@ -137,14 +143,30 @@ describe("Feature", () => {
     }).toThrow("(configurables is invalid)");
   });
 
+  it("requires additional sections to be a SectionArray", () => {
+    const invalidOpts = Object.assign({}, opts);
+    invalidOpts.additionalSections = null;
+
+    expect(() => {
+      new Feature(invalidOpts); // eslint-disable-line no-new
+    }).toThrow("(additionalSections is invalid)");
+  });
+
   it("sets properties", () => {
-    expect(feature.section).toBe(opts.section);
+    expect(feature.section).toStrictEqual(opts.section);
     expect(feature.name).toBe(opts.name);
     expect(feature.default).toBe(opts.default);
     expect(feature.description).toBe(opts.description);
     expect(feature.subsection).toBe(opts.subsection);
     expect(feature.author).toBe(opts.author);
-    expect(feature.configurables).toBe(opts.configurables);
+    expect(feature.configurables).toStrictEqual(opts.configurables);
+    expect(feature.additionalSections).toStrictEqual(opts.additionalSections);
+  });
+
+  it("requires runner", () => {
+    expect(() => {
+      feature.run();
+    }).toThrow(`Running has not been implemented for ${feature.name} feature.`);
   });
 
   it("initializes with empty storage", async() => {
@@ -153,8 +175,7 @@ describe("Feature", () => {
 
     expect.assertions(1);
 
-    const settings = await feature.initialize();
-    expect(settings).toStrictEqual({
+    expect(await feature.initialize()).toStrictEqual({
       enabled: feature.default
     });
   });
@@ -170,8 +191,7 @@ describe("Feature", () => {
 
     expect.assertions(1);
 
-    const settings = await feature.initialize();
-    expect(settings).toStrictEqual(storage[feature.class]);
+    expect(await feature.initialize()).toStrictEqual(storage[feature.class]);
   });
 
   it("starts without storage and enabled by default", async() => {
@@ -231,10 +251,54 @@ describe("Feature", () => {
 
     expect(await feature.start()).toBe(false);
   });
+  
+  it("starts on section", async() => {
+    chrome.storage.local.get.callsArgWith(1, {});
+    chrome.storage.local.set.callsArg(1);
+    jest.spyOn(Util, "isContentScript").mockReturnValue(true);
+    jest.spyOn(feature, "run").mockImplementation();
+    jest.spyOn(feature, "default", "get").mockReturnValue(true);
 
-  it("requires runner", () => {
-    expect(() => {
-      feature.run();
-    }).toThrow(`Running has not been implemented for ${feature.name} feature.`);
+    expect.assertions(2);
+
+    window.history.pushState({}, "First Page", "/first-page");
+    expect(await feature.start()).toBe(true);
+    expect(feature.runnableSection()).toStrictEqual(firstSection);
+  });
+
+  it("starts on additional sections", async() => {
+    chrome.storage.local.get.callsArgWith(1, {});
+    chrome.storage.local.set.callsArg(1);
+    jest.spyOn(Util, "isContentScript").mockReturnValue(true);
+    jest.spyOn(feature, "run").mockImplementation();
+    jest.spyOn(feature, "default", "get").mockReturnValue(true);
+
+    expect.assertions(4);
+
+    window.history.pushState({}, "Second Page", "/second-page");
+    expect(await feature.start()).toBe(true);
+    expect(feature.runnableSection()).toStrictEqual(secondSection);
+
+    window.history.pushState({}, "Third Page", "/third-page");
+    expect(await feature.start()).toBe(true);
+    expect(feature.runnableSection()).toStrictEqual(thirdSection);
+  });
+
+  it("does not start outside of section or additional sections", async() => {
+    chrome.storage.local.get.callsArgWith(1, {});
+    chrome.storage.local.set.callsArg(1);
+    jest.spyOn(Util, "isContentScript").mockReturnValue(true);
+    jest.spyOn(feature, "run").mockImplementation();
+    jest.spyOn(feature, "default", "get").mockReturnValue(true);
+
+    expect.assertions(4);
+
+    window.history.pushState({}, "Index", "/");
+    expect(await feature.start()).toBe(false);
+    expect(feature.runnableSection()).toBe(undefined);
+
+    window.history.pushState({}, "Fourth Page", "/fourth-page");
+    expect(await feature.start()).toBe(false);
+    expect(feature.runnableSection()).toBe(undefined);
   });
 });

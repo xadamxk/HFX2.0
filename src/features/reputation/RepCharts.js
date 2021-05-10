@@ -5,9 +5,9 @@ class RepCharts extends Feature {
   constructor() {
     super({
       section: Reputation,
-      name: "Rep Charts",
+      name: "Popularity Charts",
       default: true,
-      description: "Reputation details in a nice chart."
+      description: "Popularity details in a nice chart."
     });
   }
 
@@ -77,7 +77,7 @@ class RepCharts extends Feature {
     const canvasBarChart = $("<canvas>").addClass("rep-chart").css("vertical-align", "middle");
 
     // Set width to adjust relative chart sizes
-    canvasPieChart.attr("width", "120");
+    canvasPieChart.attr("width", "200");
     canvasBarChart.attr("width", "300");
 
     // Clone reputation section
@@ -87,7 +87,7 @@ class RepCharts extends Feature {
     const newHeader = header.clone();
 
     // Reconfigure cloned section
-    newHeader.find("strong").html("HFX Reputation Chart");
+    newHeader.find("strong").html("HFX Popularity Chart");
     newSection.find("table tr").html("<td></td><td></td>");
 
     // Add canvases
@@ -129,7 +129,7 @@ class RepCharts extends Feature {
         title: {
           display: true,
           fontColor: "#cccccc",
-          text: `${username}'s ${isRepsGiven ? "Reputation Given" : "Reputation"} Summary`,
+          text: `${username}'s ${isRepsGiven ? "Popularity Given" : "Popularity"} Summary`,
           fontSize: 18
         },
         legend: {
@@ -235,6 +235,6 @@ class RepCharts extends Feature {
       }
     });
   }
-};
+}
 
 module.exports = new RepCharts();

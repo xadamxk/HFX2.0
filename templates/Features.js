@@ -1,6 +1,6 @@
-const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
+const writer = require("./CRLFWriter");
 
 const template = `module.exports = {
   {{ #features }}
@@ -13,10 +13,10 @@ mustache.parse(template);
 
 function generate() {
   const features = globby.sync("./src/features/**/*.js").map(feature => {
-    feature = feature.split("/")
+    feature = feature.split("/");
     const name = feature.pop().split(".js").shift();
     const section = feature.pop();
-  
+
     return {
       name: name,
       section: section,
@@ -37,7 +37,7 @@ function generate() {
   });
   features[features.length - 1].next = false;
 
-  fs.writeFileSync(`./src/Features.js`, mustache.render(template, {features: features}));
+  writer("./src/Features.js", mustache.render(template, {features: features}));
 }
 
 if (require.main === module) {

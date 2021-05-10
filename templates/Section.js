@@ -1,6 +1,6 @@
-const fs = require("fs");
 const globby = require("globby");
 const mustache = require("mustache");
+const writer = require("./CRLFWriter");
 
 const template = `const Section = require("../core/Section");
 
@@ -37,7 +37,7 @@ const questions = [
 
 function generate() {
   const prompt = require("./prompt");
-  const generateSections = require("../templates/Sections");
+  const generateSections = require("./Sections");
 
   prompt(questions, answers => {
     const name = answers[0];
@@ -48,7 +48,7 @@ function generate() {
       paths: paths
     });
 
-    fs.writeFileSync(`./src/sections/${name}.js`, section);
+    writer(`./src/sections/${name}.js`, section);
     generateSections();
   });
 }

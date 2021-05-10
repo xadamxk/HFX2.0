@@ -22,6 +22,11 @@
   vertical-align: middle;
 }
 
+.without-after-element:after {
+  content: none !important;
+  display: none !important;
+}
+
 /* Extracted from Bootstrap 4 */
 
 .text-monospace {

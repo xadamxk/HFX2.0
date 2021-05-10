@@ -40,6 +40,6 @@ class TrackingLinks extends Feature {
       }
     });
   }
-};
+}
 
 module.exports = new TrackingLinks();

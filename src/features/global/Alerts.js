@@ -12,13 +12,14 @@ class Alerts extends Feature {
       default: true,
       description: "Alert system for new features and changes"
     });
-    this.fetchDelay = 5; // Delay (minutes) between new alert fetches
-    this.fetchLocation = "https://gist.githubusercontent.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/490c353fd5c4b6b30ff486f052551e9c998b48f5/Alert.json";
+    this.fetchDelay = Util.isDevelopment ? 0 : 5; // Delay (minutes) between new alert fetches
+    this.now = Date.now();
+    this.fetchLocation = "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/alert.json?nc=" + this.now;
   }
 
   run() {
     Settings.get(this, item => {
-      const timePassed = item.lastChecked !== undefined ? Math.floor((new Date().getTime() - item.lastChecked) / 60000) : this.fetchDelay;
+      const timePassed = item.alertsLastChecked !== undefined ? Math.floor((new Date().getTime() - item.alertsLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 
       if (Math.floor(timePassed < this.fetchDelay)) {
         Logger.debug(`Alerts: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
@@ -28,7 +29,7 @@ class Alerts extends Feature {
         }
       } else {
         $.getJSON(this.fetchLocation, fetchedAlert => {
-          item.lastChecked = new Date().getTime();
+          item.alertsLastChecked = new Date().getTime();
 
           if (item.currentAlert === undefined || item.currentAlert.hidden === false || item.currentAlert.AlertKey !== fetchedAlert.AlertKey) {
             fetchedAlert.hidden = false;
@@ -66,6 +67,6 @@ class Alerts extends Feature {
       });
     });
   }
-};
+}
 
 module.exports = new Alerts();

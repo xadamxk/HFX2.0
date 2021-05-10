@@ -114,11 +114,19 @@ $(document).ready(function() {
       });
     });
 
-    $("input[type=color],input[type=text]").change(function() {
+    $("input[type=color],input[type=text],input[type=number]").change(function() {
       const feature = features[$(this).data("feature")];
 
       HFX.Settings.get(feature, settings => {
         settings[$(this).data("setting")] = $(this).val();
+        HFX.Settings.set(feature, settings);
+      });
+    });
+    $("select[type=dropdown]").change(function() {
+      const feature = features[$(this).data("feature")];
+
+      HFX.Settings.get(feature, settings => {
+        settings[$(this).data("setting")] = $(this).find("option:selected").val();
         HFX.Settings.set(feature, settings);
       });
     });

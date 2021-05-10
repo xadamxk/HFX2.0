@@ -1,42 +1,46 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>HFX Settings</title>
-    <link rel="stylesheet" href="../lib/font-awesome/font-awesome.min.css">
-    <link rel="stylesheet" href="../lib/bootstrap/bootstrap.min.css">
-    <script src="../lib/jquery/jquery.min.js"></script>
-    <script src="../lib/bootstrap/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="../css/options.css">
-    <script src="../js/options.js"></script>
-  </head>
-  <body>
-    <div id="spinner">
-      <div class="d-flex justify-content-center">
-        <div class="spinner-border" role="status"></div>
+
+<head>
+  <title>HFX Settings</title>
+  <link rel="stylesheet" href="../lib/font-awesome/font-awesome.min.css">
+  <link rel="stylesheet" href="../lib/bootstrap/bootstrap.min.css">
+  <script src="../lib/jquery/jquery.min.js"></script>
+  <script src="../lib/bootstrap/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="../css/options.css">
+  <script src="../js/options.js"></script>
+</head>
+
+<body>
+  <div id="spinner">
+    <div class="d-flex justify-content-center">
+      <div class="spinner-border" role="status"></div>
+    </div>
+  </div>
+  <div id="main">
+    <div class="d-flex flex-row p-3">
+      <nav class="nav nav-pills flex-column col-auto" role="tablist">
+        <a href="#aboutHFX" class="nav-link active" role="tab" data-toggle="tab">About</a>
+      </nav>
+      <div class="tab-content col">
+        <!-- Start About -->
+        <section class="tab-pane fade show active" id="aboutHFX" role="tabpanel">
+          <h3>About HFX</h3>
+          <div class="d-flex flex-column align-items-center" id="aboutPanel">
+            <img src="../images/banner-small.png" class="img-fluid" alt="HFX Header">
+            <h3>Enhance your HF Experience!</h3>
+            <h4>Written By: <a href="https://hackforums.net/member.php?action=profile&uid=1306528"
+                target="_blank">xadamxk</a></h4>
+            <h4>Version: <span id="HFXVersion"></span></h4>
+            <a href="https://github.com/xadamxk/HFX2.0" target="_blank">
+              <img src="../images/GitHub_Logo.png" class="github-logo" alt="Github Logo">
+            </a>
+          </div>
+        </section>
+        <!-- End About -->
       </div>
     </div>
-    <div id="main">
-      <div class="d-flex flex-row p-3">
-        <nav class="nav nav-pills flex-column col-auto" role="tablist">
-          <a href="#aboutHFX" class="nav-link active" role="tab" data-toggle="tab">About</a>
-        </nav>
-        <div class="tab-content col">
-          <!-- Start About -->
-          <section class="tab-pane fade show active" id="aboutHFX" role="tabpanel">
-            <h3>About HFX</h3>
-            <div class="d-flex flex-column align-items-center" id="aboutPanel">
-              <img src="../images/banner-small.png" class="img-fluid" alt="HFX Header">
-              <h3>Enhance your HF Experience!</h3>
-              <h4>Written By: <a href="https://hackforums.net/member.php?action=profile&uid=1306528">xadamxk</a></h4>
-              <h4>Version: <span id="HFXVersion"></span></h4>
-              <a href="https://github.com/xadamxk/HFX" target="_blank">
-                <img src="../images/GitHub_Logo.png" class="github-logo" alt="Github Logo">
-              </a>
-            </div>
-          </section>
-          <!-- End About -->
-        </div>
-      </div>
-    </div>
-  </body>
+  </div>
+</body>
+
 </html>

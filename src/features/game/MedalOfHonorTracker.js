@@ -30,27 +30,30 @@ class MedalOfHonorTracker extends Feature {
       const totalXP = parseInt(this.determineLevelXP(currentlevel)) + parseInt(currentlevelXP);
 
       // Tooltip percentage
-      const wholePercent = this.getWholePercent(totalXP, goal);
+      var wholePercent = this.getWholePercent(totalXP, goal);
+      if (wholePercent >= 100) {
+        wholePercent = 100;
+      }
 
       // Clone existing progress bar (and children) but change the IDs to be unique
       $("#progress-bar").parent().clone().appendTo(".game-profile-player")
-        .children().first().attr("id", "myProgressBar")
-        .children().first().attr("id", "myProgressBarPercentage");
+        .children().first().attr("id", "HFXProgressBar")
+        .children().first().attr("id", "HFXProgressBarPercentage");
 
       // Change style properties of the clone (and child)
-      $("#myProgressBar")
+      $("#HFXProgressBar")
         .attr({
           "title": "Medal of Honor Progress: " + wholePercent + "%"
         })
         .css({
           "border-radius": "6px"
         });
-      $("#myProgressBarPercentage")
+      $("#HFXProgressBarPercentage")
         .attr({
           "title": "Medal of Honor Progress: " + wholePercent + "%"
         })
         .css({
-          "width": ((totalXP / goal) * 100).toFixed(5) + "%",
+          "width": wholePercent + "%",
           "transition": "0.1s",
           "background-color": "#e2ba2f",
           "box-shadow": "inset 0px 0px 3px 1px #ffffff12",
@@ -60,7 +63,7 @@ class MedalOfHonorTracker extends Feature {
         });
 
       // Update progress text
-      $("#myProgressBar").parent().find(".tinytext").text(this.numberWithCommas(totalXP) + " / " + this.numberWithCommas(goal) + " xp");
+      $("#HFXProgressBar").parent().find(".tinytext").text(this.numberWithCommas(totalXP) + " / " + this.numberWithCommas(goal) + " xp");
     }
   }
 
@@ -75,6 +78,6 @@ class MedalOfHonorTracker extends Feature {
   getWholePercent(percentFor, percentOf) {
     return Math.floor(percentFor / percentOf * 100);
   }
-};
+}
 
 module.exports = new MedalOfHonorTracker();

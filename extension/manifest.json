@@ -9,7 +9,7 @@
     "48": "assets/images/icon48.png",
     "128": "assets/images/icon128.png"
   },
-  "version_name": "2.0.0.0",
+  "version_name": "alpha 2.0.0.0",
   "description": "Enhance your HF Experience!",
   "options_ui": {
     "chrome_style": true,
@@ -30,7 +30,7 @@
   },
   "background": {
     "scripts": [
-      "assets/js/hot-reload.js",
+      "assets/lib/crx-hotreload/hot-reload.js",
       "release/js/HFX.js"
     ]
   },
@@ -44,53 +44,31 @@
         "assets/lib/jquery/jquery.min.js",
         "assets/lib/moment/moment.min.js",
         "assets/lib/chart.js/Chart.bundle.min.js",
-        "assets/lib/@yaireo/jQuery.tagify.min.js",
-        "assets/lib/intro.js/intro.min.js",
         "release/js/HFX.js"
       ],
       "css": [
-        "assets/css/HFX.css",
-        "assets/lib/intro.js/introjs.min.css"
+        "assets/css/HFX.css"
       ]
     }
   ],
   "permissions": [
     "storage",
-    "*://hackforums.net/*",
-    "*://raw.githubusercontent.com/xadamxk/HFX2.0/develop/alert.json?nc=*"
+    "https://raw.githubusercontent.com/xadamxk/HFX/master/Badges.json?nc=*",
+    "https://raw.githubusercontent.com/xadamxk/HFX/master/Alert.json?nc=*",
+    "https://gist.github.com/Anxuein/c5195ea26a67beb670e5bbc338f3349c/raw/*"
   ],
   "omnibox": {
     "keyword": "HF"
   },
   "web_accessible_resources": [
+    "/assets/images/collapse.gif",
+    "/assets/images/collapse_collapsed.gif",
+    "/assets/css/xbbcode.css",
     "/assets/images/icon128.png",
-    "/assets/images/dismiss_notice.png",
+    "/assets/images/trophy_testers3.png",
+    "/assets/images/trophy_supporters2.png",
+    "/assets/images/trophy_donators.png",
     "/assets/images/trophy_contributer.png",
-    "/assets/images/trophy_donator.png",
-    "/assets/images/trophy_supporter.png",
-    "/assets/images/trophy_tester.png",
-    "/assets/images/trophy_codemonkey.png",
-    "/assets/images/trophy_hfx.png",
-    "/assets/images/trophy_hfxtail.png",
-    "/assets/images/trophy_hfxtail_white.png",
-    "/assets/images/trophy_hfx_white.png",
-    "/assets/images/theme-customizer/logos/logo_cyan.gif",
-    "/assets/images/theme-customizer/logos/logo_gray.png",
-    "/assets/images/theme-customizer/logos/logo_magenta.gif",
-    "/assets/images/theme-customizer/logos/logo_orange.png",
-    "/assets/images/theme-customizer/logos/logo_orange2.png",
-    "/assets/images/theme-customizer/logos/logo_pink.png",
-    "/assets/images/theme-customizer/logos/logo_pink2.gif",
-    "/assets/images/theme-customizer/logos/logo_rainbow.gif",
-    "/assets/images/theme-customizer/logos/logo_yellow.gif",
-    "/assets/images/theme-customizer/mosaics/mosaic_cyan.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_gray.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_magenta.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_orange.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_orange2.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_pink.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_pink2.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_rainbow.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_yellow.png"
+    "/assets/images/dismiss_notice.png"
   ]
 }

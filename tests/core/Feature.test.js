@@ -251,7 +251,7 @@ describe("Feature", () => {
 
     expect(await feature.start()).toBe(false);
   });
-
+  
   it("starts on section", async() => {
     chrome.storage.local.get.callsArgWith(1, {});
     chrome.storage.local.set.callsArg(1);

@@ -122,7 +122,6 @@ $(document).ready(function() {
         HFX.Settings.set(feature, settings);
       });
     });
-
     $("select[type=dropdown]").change(function() {
       const feature = features[$(this).data("feature")];
 

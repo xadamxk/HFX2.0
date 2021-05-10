@@ -17,9 +17,7 @@ class QuoteStripping extends Feature {
     // Strip all but the outter quote and add 2 new lines
     const replace = textarea.val().replace(/^(\[quote=(?:(?!\[quote=)[\s\S]*?))\[quote=[\s\S]+\[\/quote\]\s*([\s\S]+?\[\/quote\]\s*)$/g, "$1$2\n\n");
     // Replace message value with stripped quote
-    $("textarea").each(function() {
-      $(this).val(replace);
-    });
+    $(".sceditor-container > textarea").val(replace);
 
     // Append quote strip checkbox to pm options
     $(".tborder tr:last td:last span")
@@ -31,10 +29,8 @@ class QuoteStripping extends Feature {
 
     // Toggle between original and stripped text
     $("#quoteStrip").on("click", function() {
-      let text = $(this).is(":checked") ? replace : origMessage;
-      $("textarea").each(function() {
-        $(this).val(text);
-      });
+      const text = $(this).is(":checked") ? replace : origMessage;
+      $(".sceditor-container > textarea").val(text);
     });
   }
 }

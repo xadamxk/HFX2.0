@@ -63,7 +63,7 @@ class PMFromPost extends Feature {
                   <input type="text" class="textbox" name="subject" size="40" maxlength="85" value="Regarding Your Post: ${threadTitle}" />
                 </span>
               </div>
-              <textarea name="message" rows="7" cols="90">${postQuote}</textarea>
+              <textarea class="hfxPMFromPostInput" name="message" rows="7" cols="90">${postQuote}</textarea>
             </div>
             <div class="text-center my-3">
               <span>

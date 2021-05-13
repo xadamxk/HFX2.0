@@ -22,16 +22,12 @@ class KeyboardNavigationShortcuts extends Feature {
       switch (e.key) {
         case "ArrowLeft":
           if (!this.isEventOnExcludedElements()) {
-            if ($(".pagination_previous")[0]) {
-              $(".pagination_previous")[0].click();
-            }
+            return $(".pagination_previous:eq(0)")[0] ? $(".pagination_previous:eq(0)")[0].click() : null;
           }
           break;
         case "ArrowRight":
           if (!this.isEventOnExcludedElements()) {
-            if ($(".pagination_next:eq(0)")[0]) {
-              $(".pagination_next:eq(0)")[0].click();
-            }
+            return $(".pagination_next:eq(0)")[0] ? $(".pagination_next:eq(0)")[0].click() : null;
           }
       }
     };
@@ -43,9 +39,16 @@ class KeyboardNavigationShortcuts extends Feature {
       $("#message")[0],
       $("[id^=quickedit_]")[0]
     ];
+    // Basic inputs active
     return excludedElements.some(element => {
       return element === document.activeElement;
-    }) || $("#convoGlobalContainer").hasClass("gc-opened");
+    }) ||
+    // Global convo quick reply is open
+    $("#convoGlobalContainer").hasClass("gc-opened") ||
+    // PM From Post is active
+    $(".hfxPMFromPostInput").toArray().some(element => {
+      return element === document.activeElement;
+    });
   }
 }
 

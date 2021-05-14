@@ -12,7 +12,7 @@ const threadsSection = require("../../sections/Threads");
 const searchSection = new Section("/search.php");
 //const usercpSection = new Section("/usercp.php");
 
-class tBlockRevived extends Feature {
+class TBlockRevived extends Feature {
   constructor() {
     super({
       section: ForumDisplay,
@@ -23,7 +23,7 @@ class tBlockRevived extends Feature {
         name: "James",
         profile: "https://hackforums.net/member.php?action=profile&uid=2774521"
       },
-      additionalSections: new SectionArray(searchSection, profileSection, threadsSection, usercpSection),
+      additionalSections: new SectionArray(searchSection, profileSection, threadsSection),
       configurables: new ConfigurableArray(
         new Checkbox({ id: "tBlockConfirmPopup", label: "Confirm Blacklist Popup", default: true }),
         new Checkbox({ id: "tBlockBtnForumView", label: "Thread Blacklist Button in Sub-Forum View", default: false })//,
@@ -220,4 +220,4 @@ class tBlockRevived extends Feature {
 
 };
 
-module.exports = new tBlockRevived();
+module.exports = new TBlockRevived();

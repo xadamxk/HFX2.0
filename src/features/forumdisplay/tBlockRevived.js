@@ -37,6 +37,10 @@ class TBlockRevived extends Feature {
       "THREAD": "thread",
       "FORUM": "forum"
     };
+    this.blacklistStatus = {
+      "BLACKLIST": "Blacklist",
+      "UNBLACKLIST": "Unblacklist"
+    };
     // this.tBlockForums = null;
   }
 
@@ -64,7 +68,7 @@ class TBlockRevived extends Feature {
   }
 
   getBlacklistTerm(type, value) {
-    return (this.getBlacklistStatus(type, value)) ? "Unblacklist" : "Blacklist";
+    return (this.getBlacklistStatus(type, value)) ? this.blacklistStatus.UNBLACKLIST : this.blacklistStatus.BLACKLIST;
   }
 
   getBlacklistStatus(type, value) {
@@ -144,29 +148,29 @@ class TBlockRevived extends Feature {
     }
 
     if (type === this.blacklistTypes.USER) {
-      if (action === "Blacklist") {
+      if (action === this.blacklistStatus.BLACKLIST) {
         this.tBlockUsers[value] = name;
-      } else if (action === "Unblacklist") {
+      } else if (action === this.blacklistStatus.UNBLACKLIST) {
         delete this.tBlockUsers[value];
       }
       Util.saveLocalSetting(this, "tBlockUsers", this.tBlockUsers);
     } else if (type === this.blacklistTypes.THREAD) {
-      if (action === "Blacklist") {
+      if (action === this.blacklistStatus.BLACKLIST) {
         this.tBlockThreads[value] = name;
-      } else if (action === "Unblacklist") {
+      } else if (action === this.blacklistStatus.UNBLACKLIST) {
         delete this.tBlockThreads[value];
       }
       Util.saveLocalSetting(this, "tBlockThreads", this.tBlockThreads);
     } else if (type === this.blacklistTypes.FORUM) {
-      /* if (action === "Blacklist") {
+      /* if (action === this.blacklistStatus.BLACKLIST) {
         this.tBlockForums[value] = name;
-      } else if (action === "Unblacklist") {
+      } else if (action === this.blacklistStatus.UNBLACKLIST) {
         delete this.tBlockForums[value];
       }
       Util.saveLocalSetting(this, "tBlockForums", this.tBlockForums); */
     }
 
-    const blacklistStatus = ((action === "Blacklist") ? "Unblacklist" : "Blacklist");
+    const blacklistStatus = ((action === this.blacklistStatus.BLACKLIST) ? this.blacklistStatus.UNBLACKLIST : this.blacklistStatus.BLACKLIST);
 
     if (window.location.href.includes("forumdisplay.php") && type === this.blacklistTypes.THREAD) {
       document.getElementById(`hfxtBlockBlacklistBtn-${value}`).setAttribute("tBlockAction", blacklistStatus);

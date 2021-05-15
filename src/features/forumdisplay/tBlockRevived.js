@@ -49,7 +49,7 @@ class TBlockRevived extends Feature {
     } else if (window.location.href.includes("member.php?action=profile")) {
       this.addBlacklistBtn(settings, "user");
     } else if (window.location.href.includes("forumdisplay.php")) {
-      this.addBlacklistBtn(settings, "forum");
+      /*this.addBlacklistBtn(settings, "forum");*/
       if (Util.getConfigurableValue("tBlockBtnForumView", this, settings)) {
         this.addBlacklistInForumBtn(settings);
       }
@@ -100,13 +100,13 @@ class TBlockRevived extends Feature {
 
       document.querySelector("table.tborder.clear > tbody > tr > td.thead > div.float_right > span.smalltext > strong").insertAdjacentHTML('afterbegin', btnHtml);
     } else if (type === "forum") {
-      let value = document.querySelector(`a.button.new_thread_button`).getAttribute("href").split("fid=")[1];
+      /*let value = document.querySelector(`a.button.new_thread_button`).getAttribute("href").split("fid=")[1];
       let name = document.querySelector(`tbody > tr > td.thead > div:nth-child(2) > h1`).innerHTML;
       let blacklistTerm = this.getBlacklistTerm(type, value);
 
       let btnHtml = `<a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="tBlockBlacklistBtn" title="${blacklistTerm} forum" rel="nofollow" ><i class="fa fa-ban oc-hf-icon fa-lg" style="margin-right: 3px;"></i></a>&nbsp;&nbsp;|&nbsp;&nbsp;`;
 
-      document.querySelector(`table.tborder.clear > tbody > tr > td.thead > div.float_right > span.smalltext > strong`).insertAdjacentHTML('afterbegin', btnHtml);
+      document.querySelector(`table.tborder.clear > tbody > tr > td.thead > div.float_right > span.smalltext > strong`).insertAdjacentHTML('afterbegin', btnHtml);*/
     }
 
     var self = this;
@@ -160,12 +160,12 @@ class TBlockRevived extends Feature {
       }
       Util.saveLocalSetting(this, "tBlockThreads", this.tBlockThreads);
     } else if (type === "forum") {
-      if (action === "Blacklist") {
+      /*if (action === "Blacklist") {
         this.tBlockForums[value] = name;
       } else if (action === "Unblacklist") {
         delete this.tBlockForums[value];
       }
-      Util.saveLocalSetting(this, "tBlockForums", this.tBlockForums);
+      Util.saveLocalSetting(this, "tBlockForums", this.tBlockForums);*/
     }
 
     if (window.location.href.includes("forumdisplay.php") && type === "thread") {

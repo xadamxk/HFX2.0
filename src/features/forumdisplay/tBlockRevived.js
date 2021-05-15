@@ -122,7 +122,7 @@ class TBlockRevived extends Feature {
     threadElements.forEach(function(thread) {
       // let threadParent = thread.closest("tr");
 
-      const type = this.blacklistTypes.THREAD;
+      const type = self.blacklistTypes.THREAD;
       const value = thread.querySelector("a").getAttribute("href").split("tid=")[1];
       const name = thread.querySelector("a").innerHTML;
       const blacklistTerm = self.getBlacklistTerm(type, value);
@@ -192,7 +192,7 @@ class TBlockRevived extends Feature {
         const userId = threadParent.querySelector("div.author > a").getAttribute("href").split("uid=")[1];
         const threadId = thread.getAttribute("href").split("tid=")[1];
 
-        if (self.getBlacklistStatus(this.blacklistTypes.THREAD, threadId) || self.getBlacklistStatus(this.blacklistTypes.USER, userId)) {
+        if (self.getBlacklistStatus(self.blacklistTypes.THREAD, threadId) || self.getBlacklistStatus(self.blacklistTypes.USER, userId)) {
           threadParent.style.display = "none";
         }
       });
@@ -205,7 +205,7 @@ class TBlockRevived extends Feature {
         const userId = threadParent.querySelector("div.author > a").getAttribute("href").split("uid=")[1];
         const threadId = thread.querySelector("a").getAttribute("href").split("tid=")[1];
 
-        if (self.getBlacklistStatus(this.blacklistTypes.THREAD, threadId) || self.getBlacklistStatus(this.blacklistTypes.USER, userId)) {
+        if (self.getBlacklistStatus(self.blacklistTypes.THREAD, threadId) || self.getBlacklistStatus(self.blacklistTypes.USER, userId)) {
           threadParent.style.display = "none";
         }
       });

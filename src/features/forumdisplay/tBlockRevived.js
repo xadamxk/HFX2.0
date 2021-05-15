@@ -10,7 +10,7 @@ const ForumDisplay = require("../../sections/ForumDisplay");
 const profileSection = require("../../sections/Profile");
 const threadsSection = require("../../sections/Threads");
 const searchSection = new Section("/search.php");
-//const usercpSection = new Section("/usercp.php");
+// const usercpSection = new Section("/usercp.php");
 
 class TBlockRevived extends Feature {
   constructor() {
@@ -27,197 +27,186 @@ class TBlockRevived extends Feature {
       configurables: new ConfigurableArray(
         new Checkbox({ id: "tBlockConfirmPopup", label: "Confirm Blacklist Popup", default: true }),
         new Checkbox({ id: "tBlockBtnForumView", label: "Thread Blacklist Button in Sub-Forum View", default: false })//,
-        //new Checkbox({ id: "tBlockTopDashLink", label: "Shortcut to Dashboard in Navbar", default: false })
+        // new Checkbox({ id: "tBlockTopDashLink", label: "Shortcut to Dashboard in Navbar", default: false })
       )
     });
+    this.tBlockUsers = null;
+    this.tBlockThreads = null;
+    this.blacklistTypes = {
+      "USER": "user",
+      "THREAD": "thread",
+      "FORUM": "forum"
+    };
+    // this.tBlockForums = null;
   }
-
-  tBlockUsers = null;
-  tBlockThreads = null;
-  //tBlockForums = null;
 
   async run(settings) {
     this.tBlockUsers = await Util.getLocalSetting(this, "tBlockUsers") || {};
     this.tBlockThreads = await Util.getLocalSetting(this, "tBlockThreads") || {};
-    //this.tBlockForums = await Util.getLocalSetting(this, "tBlockForums") || {};
-    Logger.debug("Blacklisted Users: " + JSON.stringify(this.tBlockUsers));
-    Logger.debug("Blacklisted Threads: " + JSON.stringify(this.tBlockThreads));
-    //Logger.debug("Blacklisted Forums: " + JSON.stringify(this.tBlockForums));
+    // this.tBlockForums = await Util.getLocalSetting(this, "tBlockForums") || {};
+    Logger.debug("TBlockRevived Blacklisted Users: " + JSON.stringify(this.tBlockUsers));
+    Logger.debug("TBlockRevived Blacklisted Threads: " + JSON.stringify(this.tBlockThreads));
+    // Logger.debug("TBlockRevived Blacklisted Forums: " + JSON.stringify(this.tBlockForums));
 
     if (window.location.href.includes("search.php")) {
       this.hideThreads();
     } else if (window.location.href.includes("member.php?action=profile")) {
-      this.addBlacklistBtn(settings, "user");
+      this.addBlacklistBtn(settings, this.blacklistTypes.USER);
     } else if (window.location.href.includes("forumdisplay.php")) {
-      /*this.addBlacklistBtn(settings, "forum");*/
+      /* this.addBlacklistBtn(settings, this.blacklistTypes.FORUM); */
       if (Util.getConfigurableValue("tBlockBtnForumView", this, settings)) {
         this.addBlacklistInForumBtn(settings);
       }
       this.hideThreads();
     } else if (window.location.href.includes("showthread.php")) {
-      this.addBlacklistBtn(settings, "thread");
-    }/* else if (window.location.href.includes("usercp.php?action=tblock")) {
-      this.addDashboardPage();
-    } else if (window.location.href.includes("usercp.php")) {
-      this.addMenuOption();
-    }*/
+      this.addBlacklistBtn(settings, this.blacklistTypes.THREAD);
+    }
   }
 
   getBlacklistTerm(type, value) {
-    return (this.getBlacklistBool(type, value)) ? 'Unblacklist' : 'Blacklist';
+    return (this.getBlacklistStatus(type, value)) ? "Unblacklist" : "Blacklist";
   }
 
-  getBlacklistBool(type, value) {
-    let boolVal =  false;
-
-    if (type === "user") {
-      boolVal = (this.tBlockUsers && this.tBlockUsers.hasOwnProperty(value));
-    } else if (type === "thread") {
-      boolVal = (this.tBlockThreads && this.tBlockThreads.hasOwnProperty(value));
-    } else if (type === "forum") {
-      boolVal = (this.tBlockForums && this.tBlockForums.hasOwnProperty(value));
+  getBlacklistStatus(type, value) {
+    if (type === this.blacklistTypes.USER) {
+      return (this.tBlockUsers && this.tBlockUsers.hasOwnProperty(value));
+    } else if (type === this.blacklistTypes.THREAD) {
+      return (this.tBlockThreads && this.tBlockThreads.hasOwnProperty(value));
+    } else if (type === this.blacklistTypes.FORUM) {
+      return (this.tBlockForums && this.tBlockForums.hasOwnProperty(value));
+    } else {
+      return false;
     }
-
-    return boolVal;
   }
 
   addBlacklistBtn(settings, type) {
-    if (type === "user") {
-      let value = document.querySelector(`div.pro-adv-card > div > a[data-tooltip='Popularity']`).getAttribute("href").split("uid=")[1];
-      let name = document.querySelector(`div.pro-adv-card > div:nth-child(2) > span > strong > span`).innerHTML;
-      let blacklistTerm = this.getBlacklistTerm(type, value);
+    if (type === this.blacklistTypes.USER) {
+      const value = document.querySelector("div.pro-adv-card > div > a[data-tooltip='Popularity']").getAttribute("href").split("uid=")[1];
+      const name = document.querySelector("div.pro-adv-card > div:nth-child(2) > span > strong > span").innerHTML;
+      const blacklistTerm = this.getBlacklistTerm(type, value);
 
-      let btnHtml = `<div><a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="tBlockBlacklistBtn" title="${blacklistTerm} user"><i class="fa fa-ban" aria-hidden="true" style="margin-right: 10px; color: #797979;"></i>${blacklistTerm} User</a></div>`;
+      const btnHtml = `<div><a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="hfxtBlockBlacklistBtn" title="HFX ${blacklistTerm} user"><i class="fa fa-ban" aria-hidden="true" style="margin-right: 10px; color: #797979;"></i>${blacklistTerm} User</a></div>`;
 
-      document.querySelector(`div.pro-adv-card-dotoptions`).insertAdjacentHTML('beforeend', btnHtml);
-    } else if (type === "thread") {
-      let tidElement = document.querySelectorAll(`div#thread_modes_popup.popup_menu > div.popup_item_container > a.popup_item`);
-      let value = tidElement[tidElement.length - 1].getAttribute("href").split("tid=")[1];
-      let name = document.querySelector(`tbody > tr > td.thead > div:nth-child(2) > h1`).innerHTML;
-      let blacklistTerm = this.getBlacklistTerm(type, value);
+      document.querySelector("div.pro-adv-card-dotoptions").insertAdjacentHTML("beforeend", btnHtml);
+    } else if (type === this.blacklistTypes.THREAD) {
+      const tidElement = document.querySelectorAll("div#thread_modes_popup.popup_menu > div.popup_item_container > a.popup_item");
+      const value = tidElement[tidElement.length - 1].getAttribute("href").split("tid=")[1];
+      const name = document.querySelector("tbody > tr > td.thead > div:nth-child(2) > h1").innerHTML;
+      const blacklistTerm = this.getBlacklistTerm(type, value);
 
-      let btnHtml = `<a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="tBlockBlacklistBtn" title="${blacklistTerm} thread" rel="nofollow" ><i class="fa fa-ban oc-hf-icon fa-lg" style="margin-right: 3px;"></i></a>&nbsp;&nbsp;|&nbsp;&nbsp;`;
+      const btnHtml = `<a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="hfxtBlockBlacklistBtn" title="HFX: ${blacklistTerm} thread" rel="nofollow" ><i class="fa fa-ban oc-hf-icon fa-lg" style="margin-right: 3px;"></i></a>&nbsp;&nbsp;|&nbsp;&nbsp;`;
 
-      document.querySelector("table.tborder.clear > tbody > tr > td.thead > div.float_right > span.smalltext > strong").insertAdjacentHTML('afterbegin', btnHtml);
-    } else if (type === "forum") {
-      /*let value = document.querySelector(`a.button.new_thread_button`).getAttribute("href").split("fid=")[1];
-      let name = document.querySelector(`tbody > tr > td.thead > div:nth-child(2) > h1`).innerHTML;
-      let blacklistTerm = this.getBlacklistTerm(type, value);
+      document.querySelector("table.tborder.clear > tbody > tr > td.thead > div.float_right > span.smalltext > strong").insertAdjacentHTML("afterbegin", btnHtml);
+    } else if (type === this.blacklistTypes.FORUM) {
+      /* const value = document.querySelector(`a.button.new_thread_button`).getAttribute("href").split("fid=")[1];
+      const name = document.querySelector(`tbody > tr > td.thead > div:nth-child(2) > h1`).innerHTML;
+      const blacklistTerm = this.getBlacklistTerm(type, value);
 
-      let btnHtml = `<a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="tBlockBlacklistBtn" title="${blacklistTerm} forum" rel="nofollow" ><i class="fa fa-ban oc-hf-icon fa-lg" style="margin-right: 3px;"></i></a>&nbsp;&nbsp;|&nbsp;&nbsp;`;
+      const btnHtml = `<a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="hfxtBlockBlacklistBtn" title="${blacklistTerm} forum" rel="nofollow" ><i class="fa fa-ban oc-hf-icon fa-lg" style="margin-right: 3px;"></i></a>&nbsp;&nbsp;|&nbsp;&nbsp;`;
 
-      document.querySelector(`table.tborder.clear > tbody > tr > td.thead > div.float_right > span.smalltext > strong`).insertAdjacentHTML('afterbegin', btnHtml);*/
+      document.querySelector(`table.tborder.clear > tbody > tr > td.thead > div.float_right > span.smalltext > strong`).insertAdjacentHTML('afterbegin', btnHtml); */
     }
 
-    var self = this;
-    document.getElementById(`tBlockBlacklistBtn`).addEventListener('click', function () { self.blacklistBtnCallback(settings, this); });
+    const self = this;
+    document.getElementById("hfxtBlockBlacklistBtn").addEventListener("click", function() { self.blacklistBtnCallback(settings, this); });
   }
 
   addBlacklistInForumBtn(settings) {
-    let threadElements = document.querySelectorAll(`tr.inline_row span[id^="tid_"]`);
-    let self = this;
+    const threadElements = document.querySelectorAll("tr.inline_row span[id^=\"tid_\"]");
+    const self = this;
 
-    threadElements.forEach(function (thread) {
-      let threadParent = thread.closest(`tr`);
+    threadElements.forEach(function(thread) {
+      // let threadParent = thread.closest("tr");
 
-      let type = "thread";
-      let value = thread.querySelector(`a`).getAttribute("href").split("tid=")[1];
-      let name = thread.querySelector(`a`).innerHTML;
-      let blacklistTerm = self.getBlacklistTerm(type, value);
+      const type = this.blacklistTypes.THREAD;
+      const value = thread.querySelector("a").getAttribute("href").split("tid=")[1];
+      const name = thread.querySelector("a").innerHTML;
+      const blacklistTerm = self.getBlacklistTerm(type, value);
 
-      let btnHtml = `<a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="tBlockBlacklistBtn-${value}" title="${blacklistTerm} thread" rel="nofollow"><small style="font-weight:400; color: #8b8b8b;"> [${blacklistTerm}]</small></a>`;
+      const btnHtml = `<a tBlockType="${type}" tBlockValue="${value}" tBlockName="${name}" tBlockAction="${blacklistTerm}" href="javascript:void(0);" id="hfxtBlockBlacklistBtn-${value}" title="HFX: ${blacklistTerm} thread" rel="nofollow"><small style="font-weight:400; color: #8b8b8b;"> [${blacklistTerm}]</small></a>`;
 
-      thread.parentElement.insertAdjacentHTML('beforeend', btnHtml);
+      thread.parentElement.insertAdjacentHTML("beforeend", btnHtml);
 
-      document.getElementById(`tBlockBlacklistBtn-${value}`).addEventListener('click', function () { self.blacklistBtnCallback(settings, this); });
+      document.getElementById(`hfxtBlockBlacklistBtn-${value}`).addEventListener("click", function() { self.blacklistBtnCallback(settings, this); });
     });
   }
 
   blacklistBtnCallback(settings, element) {
-    let type = element.getAttribute("tBlockType");
-    let value = element.getAttribute("tBlockValue");
-    let name = element.getAttribute("tBlockName");
-    let action = element.getAttribute("tBlockAction");
+    const type = element.getAttribute("tBlockType");
+    const value = element.getAttribute("tBlockValue");
+    const name = element.getAttribute("tBlockName");
+    const action = element.getAttribute("tBlockAction");
 
     if (Util.getConfigurableValue("tBlockConfirmPopup", this, settings)) {
       if (!confirm(`Are you sure you want to ${action} this ${type}?`)) {
-          return;
+        return;
       }
     }
 
-    if (type === "user") {
+    if (type === this.blacklistTypes.USER) {
       if (action === "Blacklist") {
         this.tBlockUsers[value] = name;
       } else if (action === "Unblacklist") {
         delete this.tBlockUsers[value];
       }
       Util.saveLocalSetting(this, "tBlockUsers", this.tBlockUsers);
-    } else if (type === "thread") {
+    } else if (type === this.blacklistTypes.THREAD) {
       if (action === "Blacklist") {
         this.tBlockThreads[value] = name;
       } else if (action === "Unblacklist") {
         delete this.tBlockThreads[value];
       }
       Util.saveLocalSetting(this, "tBlockThreads", this.tBlockThreads);
-    } else if (type === "forum") {
-      /*if (action === "Blacklist") {
+    } else if (type === this.blacklistTypes.FORUM) {
+      /* if (action === "Blacklist") {
         this.tBlockForums[value] = name;
       } else if (action === "Unblacklist") {
         delete this.tBlockForums[value];
       }
-      Util.saveLocalSetting(this, "tBlockForums", this.tBlockForums);*/
+      Util.saveLocalSetting(this, "tBlockForums", this.tBlockForums); */
     }
 
-    if (window.location.href.includes("forumdisplay.php") && type === "thread") {
-      document.getElementById(`tBlockBlacklistBtn-${value}`).setAttribute("tBlockAction", ((action === "Blacklist") ? "Unblacklist" : "Blacklist"));
-      document.getElementById(`tBlockBlacklistBtn-${value}`).querySelector(`small`).innerHTML = ` [${(action === "Blacklist") ? "Unblacklist" : "Blacklist"}]`;
+    const blacklistStatus = ((action === "Blacklist") ? "Unblacklist" : "Blacklist");
+
+    if (window.location.href.includes("forumdisplay.php") && type === this.blacklistTypes.THREAD) {
+      document.getElementById(`hfxtBlockBlacklistBtn-${value}`).setAttribute("tBlockAction", blacklistStatus);
+      document.getElementById(`hfxtBlockBlacklistBtn-${value}`).querySelector("small").innerHTML = ` [${blacklistStatus}]`;
     } else {
-      document.getElementById(`tBlockBlacklistBtn`).setAttribute("tBlockAction", ((action === "Blacklist") ? "Unblacklist" : "Blacklist"));
+      document.getElementById("hfxtBlockBlacklistBtn").setAttribute("tBlockAction", blacklistStatus);
     }
-    
-    Logger.debug(`${action}ing ${type} ${value} - ${name}`);
+
+    Logger.debug(`TBlockRevived ${action}ing ${type} ${value} - ${name}`);
   }
 
   hideThreads() {
     if (window.location.href.includes("search.php")) {
-      let threadElements = document.querySelectorAll(`tr.inline_row span > a[id^="tid_"]`);
+      const threadElements = document.querySelectorAll("tr.inline_row span > a[id^=\"tid_\"]");
       let self = this;
 
-      threadElements.forEach(function (thread) {
-        let threadParent = thread.closest(`tr`);
-        let userValue = threadParent.querySelector(`div.author > a`).getAttribute("href").split("uid=")[1];
-        let value = thread.getAttribute("href").split("tid=")[1];
+      threadElements.forEach(function(thread) {
+        let threadParent = thread.closest("tr");
+        const userId = threadParent.querySelector("div.author > a").getAttribute("href").split("uid=")[1];
+        const threadId = thread.getAttribute("href").split("tid=")[1];
 
-        if (self.getBlacklistBool("thread", value) || self.getBlacklistBool("user", userValue)) {
+        if (self.getBlacklistStatus(this.blacklistTypes.THREAD, threadId) || self.getBlacklistStatus(this.blacklistTypes.USER, userId)) {
           threadParent.style.display = "none";
         }
       });
     } else {
-      let threadElements = document.querySelectorAll(`tr.inline_row span[id^="tid_"]`);
-      let self = this;
+      const threadElements = document.querySelectorAll("tr.inline_row span[id^=\"tid_\"]");
+      const self = this;
 
-      threadElements.forEach(function (thread) {
-        let threadParent = thread.closest(`tr`);
-        let userValue = threadParent.querySelector(`div.author > a`).getAttribute("href").split("uid=")[1];
-        let value = thread.querySelector(`a`).getAttribute("href").split("tid=")[1];
+      threadElements.forEach(function(thread) {
+        let threadParent = thread.closest("tr");
+        const userId = threadParent.querySelector("div.author > a").getAttribute("href").split("uid=")[1];
+        const threadId = thread.querySelector("a").getAttribute("href").split("tid=")[1];
 
-        if (self.getBlacklistBool("thread", value) || self.getBlacklistBool("user", userValue)) {
+        if (self.getBlacklistStatus(this.blacklistTypes.THREAD, threadId) || self.getBlacklistStatus(this.blacklistTypes.USER, userId)) {
           threadParent.style.display = "none";
         }
       });
     }
   }
-
-  /*addMenuOption() {
-    let btnHtml = `<tr><td class="trow1 smalltext"><a href="usercp.php?action=tblock" class="usercp_nav_item usercp_nav_usergroups"><i class="fas fa-ban user-cp-icon"></i>tBlock Revived</a></td></tr>`;
-
-    document.querySelector(`tbody#usercpmisc_e`).insertAdjacentHTML('beforeend', btnHtml);
-  }
-
-  addDashboardPage () {
-
-  }*/
-
 };
 
 module.exports = new TBlockRevived();

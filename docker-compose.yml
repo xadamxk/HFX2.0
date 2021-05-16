@@ -1,0 +1,7 @@
+version: "3.7"
+
+services:
+  hfx:
+    build: ./
+    volumes:
+      - ./:/app

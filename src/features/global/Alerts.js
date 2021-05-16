@@ -12,7 +12,7 @@ class Alerts extends Feature {
       default: true,
       description: "Alert system for new features and changes"
     });
-    this.fetchDelay = Util.isDevelopment ? 0 : 5; // Delay (minutes) between new alert fetches
+    this.fetchDelay = Util.isDevelopment() ? 0 : 5; // Delay (minutes) between new alert fetches
     this.now = Date.now();
     this.fetchLocation = "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/alert.json?nc=" + this.now;
   }

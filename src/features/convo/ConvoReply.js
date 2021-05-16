@@ -36,7 +36,7 @@ class ConvoReply extends Feature {
 
       if (
         messageText.trim().length === 0 ||
-        messageText.startsWith("/flip ") ||
+        messageText.includes("/flip") ||
         block.dataset["uid"] === "1337") {
         return;
       }

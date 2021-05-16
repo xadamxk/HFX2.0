@@ -4,6 +4,8 @@
   "description": "Enhance your HF experience, a native browser extension.",
   "main": "src/HFX.js",
   "scripts": {
+    "commit": "git-cz",
+    "release": "standard-version",
     "lint": "eslint ./src/ ./templates/ ./extension/assets/js/ --fix",
     "test": "jest",
     "config": "gulp libs && gulp build",
@@ -27,7 +29,7 @@
     "@yaireo/tagify": "^3.22.3",
     "bootstrap": "^4.0.0",
     "browserify-resolutions": "^1.1.0",
-    "chart.js": "^2.9.4",
+    "chart.js": "^2.8.0",
     "font-awesome": "^4.7.0",
     "global": "^4.4.0",
     "intro.js": "^3.4.0",
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "browserify": "^16.5.0",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^6.5.0",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.8.0",
@@ -55,5 +58,10 @@
     "mustache": "^3.1.0",
     "sinon-chrome": "^3.0.1",
     "vinyl-source-stream": "^2.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

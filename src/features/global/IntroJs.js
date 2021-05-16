@@ -41,8 +41,7 @@ class IntroJs extends Feature {
       "FULLCHARGETIME": "FULLCHARGETIME",
       "EXPANDPROFILESECTIONS": "EXPANDPROFILESECTIONS",
       "CONVOBLACKLIST": "CONVOBLACKLIST",
-      "CONVOREPLY": "CONVOREPLY",
-      "TBLOCKREVIVED": "TBLOCKREVIVED"
+      "CONVOREPLY": "CONVOREPLY"
     };
     this.storageKey = "introJsVisitedTours";
     this.delay = 1500;
@@ -133,18 +132,6 @@ class IntroJs extends Feature {
     // TODO: Clean up repetitive logic below
     switch (currentPage) {
       case this.pages.THREADS:
-        currentFeature = this.features.TBLOCKREVIVED;
-        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#hfxtBlockBlacklistBtn")) {
-          steps.push({
-            title: "tBlock Revived",
-            element: document.querySelector("#hfxtBlockBlacklistBtn"),
-            intro: "Blacklist threads from being shown in forums, search, and more.",
-            position: "bottom"
-          });
-
-          features.push(currentFeature);
-        }
-
         currentFeature = this.features.GIVEPOPULARITYBUTTON;
         if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXGivePopularityButton")) {
           steps.push({

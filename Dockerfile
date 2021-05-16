@@ -4,19 +4,21 @@ FROM node:stretch-slim
 ## Container
 MAINTAINER Lrrr <lrrr@hackforums.net>
 WORKDIR /app
+VOLUME /app
 COPY . .
 
-## Yarn
-### Update apt
+## Update apt
 RUN apt update
-### Install yarn *(apt doesn't deal with cli installs, so we use apt-get to install)*
-RUN apt-get install -y yarn
 
-### Add gulp
+## Install Requirements
+### *(apt doesn't deal with cli installs, so we use apt-get to install)*
+RUN apt-get install -y yarn
+RUN npm install -g commitizen standard-version
 RUN yarn global add gulp
 
-### Add yarn dependencies
-RUN yarn
+## Copy WD
+RUN commitizen init cz-conventional-changelog --save-dev --save-exact
 
-### Build gulp
+## Install dependencies
+RUN yarn
 RUN gulp build

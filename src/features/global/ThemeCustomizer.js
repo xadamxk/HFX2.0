@@ -147,7 +147,7 @@ class ThemeCustomizer extends Feature {
     }
 
     // logo
-    if (settings["tcChangeLogo"]) {
+    if (settings["tcChangeLogo"] || settings["tcChangeLogo"] == null) {
       const logoImage = settings["tcLogoImage"];
       // if previous HF logo
       if (logoImage !== "default") {

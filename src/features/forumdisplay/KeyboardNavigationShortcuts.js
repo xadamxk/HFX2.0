@@ -4,6 +4,7 @@ const Section = require("../../core/Section");
 const SectionArray = require("../../core/SectionArray");
 
 const threadSection = new Section("/showthread.php");
+const searchSection = new Section("/search.php");
 
 class KeyboardNavigationShortcuts extends Feature {
   constructor() {
@@ -11,8 +12,8 @@ class KeyboardNavigationShortcuts extends Feature {
       section: ForumDisplay,
       name: "Keyboard Navigation Shortcuts",
       default: true,
-      description: "Jump between pages in forums and threads using arrow keys.",
-      additionalSections: new SectionArray(threadSection)
+      description: "Jump between pages in forums, threads, search, and more using arrow keys.",
+      additionalSections: new SectionArray(threadSection, searchSection)
     });
   }
 

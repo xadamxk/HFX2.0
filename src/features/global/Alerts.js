@@ -38,6 +38,8 @@ class Alerts extends Feature {
           }
 
           Settings.set(this, item);
+        }).fail(function() {
+          Logger.error("Failed to fetch alert data.");
         });
       }
     });

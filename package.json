@@ -40,6 +40,7 @@
   "devDependencies": {
     "browserify": "^16.5.0",
     "commitizen": "^4.2.4",
+    "cz-conventional-changelog": "^3.2.0",
     "eslint": "^6.5.0",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.8.0",
@@ -59,5 +60,10 @@
     "sinon-chrome": "^3.0.1",
     "standard-version": "^9.3.0",
     "vinyl-source-stream": "^2.0.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

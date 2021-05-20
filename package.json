@@ -27,7 +27,7 @@
     "@yaireo/tagify": "^3.22.3",
     "bootstrap": "^4.0.0",
     "browserify-resolutions": "^1.1.0",
-    "chart.js": "^2.8.0",
+    "chart.js": "^2.9.4",
     "font-awesome": "^4.7.0",
     "global": "^4.4.0",
     "intro.js": "^3.4.0",

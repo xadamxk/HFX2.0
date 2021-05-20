@@ -21,6 +21,7 @@ module.exports = {
   HideImages: require("./features/global/HideImages"),
   HidePostbitAttributes: require("./features/threads/HidePostbitAttributes"),
   IntroJs: require("./features/global/IntroJs"),
+  KeyboardNavigationShortcuts: require("./features/forumdisplay/KeyboardNavigationShortcuts"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
   PostActivitySearchButtons: require("./features/profile/PostActivitySearchButtons"),
@@ -34,6 +35,7 @@ module.exports = {
   ShowPostNumbers: require("./features/threads/ShowPostNumbers"),
   ShowRecipientCount: require("./features/awards/ShowRecipientCount"),
   SmartQuote: require("./features/threads/SmartQuote"),
+  TBlockRevived: require("./features/forumdisplay/TBlockRevived"),
   TagNotificationSound: require("./features/convo/TagNotificationSound"),
   ThemeCustomizer: require("./features/global/ThemeCustomizer"),
   TrackingLinks: require("./features/pms/TrackingLinks")

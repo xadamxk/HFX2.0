@@ -52,8 +52,12 @@
     "gulplog": "^1.0.0",
     "husky": "^4.2.5",
     "jest": "^24.9.0",
+    "lodash": ">=4.17.21",
     "mustache": "^3.1.0",
+    "node-notifier": ">=8.0.1",
     "sinon-chrome": "^3.0.1",
-    "vinyl-source-stream": "^2.0.0"
+    "vinyl-source-stream": "^2.0.0",
+    "y18n": "4.0.1",
+    "yargs-parser": ">=5.0.0-security.0"
   }
 }

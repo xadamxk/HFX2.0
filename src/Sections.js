@@ -1,4 +1,5 @@
 module.exports = {
+  API: require("./sections/API"),
   Awards: require("./sections/Awards"),
   Convo: require("./sections/Convo"),
   ForumDisplay: require("./sections/ForumDisplay"),

@@ -29,15 +29,14 @@ class EmoteLibrary extends Feature {
   run() {
     Settings.get(this, item => {
       const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
+
       if (Math.floor(timePassed < this.fetchDelay)) {
-        console.log("if");
         Logger.debug(`Emotes: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
 
         if (item.emotes !== undefined) {
           this.appendEmotes(item.emotes);
         }
       } else {
-        console.log("else");
         $.getJSON(this.fetchLocation, fetchedEmotes => {
           item.emotesLastChecked = new Date().getTime();
           item.emotes = fetchedEmotes;
@@ -51,7 +50,6 @@ class EmoteLibrary extends Feature {
   }
 
   appendEmotes(emotes) {
-    console.log(emotes);
     let address = location.href;
 
     switch (address) {
@@ -65,7 +63,7 @@ class EmoteLibrary extends Feature {
       case this.isMatch(address, "/newthread.php"):
         return this.appendSmilies("form[name=input] > table > tbody > tr:eq(4) > td:eq(0)", emotes);
       default:
-        console.log("HFX: New EmoteLibrary page found, please report this error to a developer.");
+        Logger.error("HFX: New EmoteLibrary page found, please report this error to a developer.");
     }
   }
 
@@ -105,7 +103,7 @@ class EmoteLibrary extends Feature {
         $("#emoteCategory_" + emoteCategory).append(
           $("<span>").attr("onclick", `MyBBEditor.insertText(':${emoteKey}:')`)
             .css({"height": "35px", "margin": "5px", "font-size": "18px", "flex": "1 0 calc(25% - 10px)", "box-sizing": "border-box", "cursor": "pointer"})
-            .append($("<img>").attr("src", emoteUrl).css({"height": emoteSize, "width": emoteSize})));
+            .append($("<img>").attr({"src": emoteUrl, "title": `:${emoteKey}:`}).css({"height": emoteSize, "width": emoteSize})));
       });
     });
   }

@@ -54,6 +54,7 @@ class EmoteLibrary extends Feature {
     let address = location.href;
 
     switch (address) {
+      // TODO: add extra param to appendSmilies for where to search for text to replace
       case this.isMatch(address, "/showthread.php"):
         // TODO: Replace text with emotes
         return null;
@@ -67,7 +68,7 @@ class EmoteLibrary extends Feature {
         return $("form[name=input]").length > 0
           ? this.appendSmilies("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4) > td:eq(0)", emotes) : null;
       default:
-        // Logger.log("HFX: New EmoteLibrary page found, please report this error to a developer.");
+        Logger.error("HFX: New EmoteLibrary page found, please report this error to a developer.");
     }
   }
 
@@ -112,15 +113,20 @@ class EmoteLibrary extends Feature {
         $("#hfxEmoteCategory_" + emoteCategory).toggle();
       });
 
-      // Loop emotes in current category
-      // eslint-disable-next-line eqeqeq
-      const emoteSize = emoteCategory == "Legacy" ? "" : "28";
+      // Style for individual emotes
+      const emoteSize = (category) => {
+        switch (category.toLowerCase()) {
+          case "legacy": return "";
+          default: return "28";
+        }
+      };
+      // Append emotes in category to table
       Object.entries(emotesMap).forEach(emote => {
         const [emoteKey, emoteUrl] = emote;
         $("#hfxEmoteCategory_" + emoteCategory).append(
           $("<span>").attr("onclick", `MyBBEditor.insertText(':${emoteKey}:')`)
             .css({"height": "35px", "margin": "4px", "font-size": "18px", "flex": "1 0 calc(25% - 10px)", "box-sizing": "border-box", "cursor": "pointer"})
-            .append($("<img>").attr({"src": emoteUrl, "title": `:${emoteKey}:`}).css({"height": emoteSize, "width": emoteSize})));
+            .append($("<img>").attr({"src": emoteUrl, "title": `:${emoteKey}:`}).css({"height": emoteSize(emoteCategory), "width": emoteSize(emoteCategory)})));
       });
     });
   }

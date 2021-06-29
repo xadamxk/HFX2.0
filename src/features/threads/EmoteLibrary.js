@@ -56,8 +56,7 @@ class EmoteLibrary extends Feature {
     switch (address) {
       // TODO: add extra param to appendSmilies for where to search for text to replace
       case this.isMatch(address, "/showthread.php"):
-        // TODO: Replace text with emotes
-        return null;
+        return this.parseThreadEmotes(emotes);
       case this.isMatch(address, "/newreply.php"):
         return this.appendSmilies("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", emotes);
       case this.isMatch(address, "/editpost.php"):
@@ -72,9 +71,43 @@ class EmoteLibrary extends Feature {
     }
   }
 
+  parseThreadEmotes(emotes) {
+    const self = this;
+    // Loop posts
+    $(".post").each(function() {
+      const post = $(this).find(".post_body");
+      let postHtml = $(post).html();
+      // Loop categories
+      Object.entries(emotes).forEach(entry => {
+        const [emoteCategory, emotesMap] = entry;
+        Object.entries(emotesMap).forEach(emote => {
+          const [emoteKey, emoteUrl] = emote;
+          if (postHtml.includes(emoteKey)) {
+            postHtml = Util.replaceAll(postHtml, `:${emoteKey}:`,
+              `<img 
+              src="${emoteUrl}" 
+              width="${self.emoteSize(emoteCategory)}" 
+              height="${self.emoteSize(emoteCategory)}"
+              title="${emoteKey}" 
+              />`);
+          }
+        });
+      });
+      $(this).find(".post_body").html(postHtml);
+    });
+  }
+
   isMatch(address, match) {
     return address.includes(match) ? address : "";
   }
+
+  // Style for individual emotes
+  emoteSize(category) {
+    switch (category.toLowerCase()) {
+      case "legacy": return "";
+      default: return "28";
+    }
+  };
 
   appendSmilies(tagContainer, emotes) {
     const emotesTable = $(tagContainer).find("div:eq(0)").find("table > tbody");
@@ -112,21 +145,13 @@ class EmoteLibrary extends Feature {
       $("#hfxEmoteCollapse" + emoteCategory).on("click", function() {
         $("#hfxEmoteCategory_" + emoteCategory).toggle();
       });
-
-      // Style for individual emotes
-      const emoteSize = (category) => {
-        switch (category.toLowerCase()) {
-          case "legacy": return "";
-          default: return "28";
-        }
-      };
       // Append emotes in category to table
       Object.entries(emotesMap).forEach(emote => {
         const [emoteKey, emoteUrl] = emote;
         $("#hfxEmoteCategory_" + emoteCategory).append(
-          $("<span>").attr("onclick", `MyBBEditor.insertText(':${emoteKey}:')`)
+          $("<span>").attr("onclick", `MyBBEditor.insertText(':${emoteKey}: ')`)
             .css({"height": "35px", "margin": "4px", "font-size": "18px", "flex": "1 0 calc(25% - 10px)", "box-sizing": "border-box", "cursor": "pointer"})
-            .append($("<img>").attr({"src": emoteUrl, "title": `:${emoteKey}:`}).css({"height": emoteSize(emoteCategory), "width": emoteSize(emoteCategory)})));
+            .append($("<img>").attr({"src": emoteUrl, "title": `:${emoteKey}:`}).css({"height": this.emoteSize(emoteCategory), "width": this.emoteSize(emoteCategory)})));
       });
     });
   }

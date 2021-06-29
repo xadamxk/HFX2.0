@@ -1,5 +1,3 @@
-import { Picker } from "emoji-picker-element";
-
 const Feature = require("../../core/Feature");
 const Section = require("../../core/Section");
 const SectionArray = require("../../core/SectionArray");
@@ -16,9 +14,6 @@ const newPrivateMessageSection = new Section("/private.php");
 // const Settings = require("../../core/Settings");
 const Logger = require("../../core/Logger");
 const Util = require("../../core/Util");
-
-const picker = new Picker();
-document.body.appendChild(picker);
 
 class EmoteLibrary extends Feature {
   constructor() {
@@ -39,7 +34,10 @@ class EmoteLibrary extends Feature {
   }
 
   run(settings) {
-    $(".breadcrumb").after(picker);
+    $("head").append("<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js\"></script>");
+    $("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4)").append("<emoji-picker></emoji-picker>");
+    document.querySelector("emoji-picker")
+      .addEventListener("emoji-click", event => console.log(event.detail));
     // Settings.get(this, item => {
     //   const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 

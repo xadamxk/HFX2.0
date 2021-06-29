@@ -1,8 +1,11 @@
 const Feature = require("../../core/Feature");
 const Section = require("../../core/Section");
 const SectionArray = require("../../core/SectionArray");
+const ConfigurableArray = require("../../core/ConfigurableArray");
+const Checkbox = require("../../configurables/Checkbox");
 const Threads = require("../../sections/Threads");
 
+// TODO: Move from threads to Convo (and move threads to additionalSections)
 const newReplySection = new Section("/newreply.php");
 const editPostSection = new Section("/editpost.php");
 const newThreadSection = new Section("/newthread.php");
@@ -19,7 +22,10 @@ class EmoteLibrary extends Feature {
       name: "Emote Library",
       default: true,
       description: "Adds additional emotes to posts, threads, and more!",
-      additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection, newPrivateMessageSection)
+      additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection, newPrivateMessageSection),
+      configurables: new ConfigurableArray(
+        new Checkbox({ id: "ELEnableThreads", label: "Enable in Threads", default: false })
+      )
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new alert fetches
     this.now = Date.now();
@@ -27,22 +33,19 @@ class EmoteLibrary extends Feature {
     this.emotes = null;
   }
 
-  run() {
+  run(settings) {
     Settings.get(this, item => {
       const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 
-      if (Math.floor(timePassed < this.fetchDelay)) {
+      if (Math.floor(timePassed < this.fetchDelay) && item.emotes) {
         Logger.debug(`Emotes: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
-
-        if (item.emotes !== undefined) {
-          this.appendEmotes(item.emotes);
-        }
+        this.appendEmotes(item.emotes, settings);
       } else {
         $.getJSON(this.fetchLocation, fetchedEmotes => {
           item.emotesLastChecked = new Date().getTime();
           item.emotes = fetchedEmotes;
           Settings.set(this, item);
-          this.appendEmotes(item.emotes);
+          this.appendEmotes(item.emotes, settings);
         }).fail(function() {
           Logger.error("Failed to fetch emote data.");
         });
@@ -50,19 +53,19 @@ class EmoteLibrary extends Feature {
     });
   }
 
-  appendEmotes(emotes) {
+  appendEmotes(emotes, settings) {
     let address = location.href;
-
+    const enabledOnThreads = Util.getConfigurableValue("ELEnableThreads", this, settings);
     switch (address) {
       // TODO: add extra param to appendSmilies for where to search for text to replace
       case this.isMatch(address, "/showthread.php"):
         return this.parseThreadEmotes(emotes);
       case this.isMatch(address, "/newreply.php"):
-        return this.appendSmilies("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", emotes);
+        return enabledOnThreads && this.appendSmilies("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", emotes);
       case this.isMatch(address, "/editpost.php"):
-        return this.appendSmilies("#editpost > table > tbody > tr:eq(4) > td:eq(0)", emotes);
+        return enabledOnThreads && this.appendSmilies("#editpost > table > tbody > tr:eq(4) > td:eq(0)", emotes);
       case this.isMatch(address, "/newthread.php"):
-        return this.appendSmilies("form[name=input] > table > tbody > tr:eq(4) > td:eq(0)", emotes);
+        return enabledOnThreads && this.appendSmilies("form[name=input] > table > tbody > tr:eq(4) > td:eq(0)", emotes);
       case this.isMatch(address, "/private.php"):
         return $("form[name=input]").length > 0
           ? this.appendSmilies("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4) > td:eq(0)", emotes) : null;
@@ -131,7 +134,7 @@ class EmoteLibrary extends Feature {
       // Append category header
       $(emotesTable).append($("<tr>").append($("<td>").addClass("").append($("<div>").addClass("expcolimage")
         .append($("<img>").attr({"src": "https://hackforums.net/images/mobale/collapse.png", "id": "hfxEmoteCollapse" + emoteCategory, "class": "expander", "alt": "[-]", "title": "[-]"}).css("cursor", "pointer")))
-        .append($("<div>").text(emoteCategory))));
+        .append($("<div>").text(`${emoteCategory} (HFX)`))));
       // Append category emotes
       $(emotesTable).append($("<tr>").append($("<td>").addClass("trow1")
         .attr("id", "hfxEmoteCategory_" + emoteCategory)

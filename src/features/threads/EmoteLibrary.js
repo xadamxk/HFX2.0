@@ -1,3 +1,5 @@
+import { Picker } from "emoji-picker-element";
+
 const Feature = require("../../core/Feature");
 const Section = require("../../core/Section");
 const SectionArray = require("../../core/SectionArray");
@@ -11,9 +13,12 @@ const editPostSection = new Section("/editpost.php");
 const newThreadSection = new Section("/newthread.php");
 const newPrivateMessageSection = new Section("/private.php");
 
-const Settings = require("../../core/Settings");
+// const Settings = require("../../core/Settings");
 const Logger = require("../../core/Logger");
 const Util = require("../../core/Util");
+
+const picker = new Picker();
+document.body.appendChild(picker);
 
 class EmoteLibrary extends Feature {
   constructor() {
@@ -34,23 +39,24 @@ class EmoteLibrary extends Feature {
   }
 
   run(settings) {
-    Settings.get(this, item => {
-      const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
+    $(".breadcrumb").after(picker);
+    // Settings.get(this, item => {
+    //   const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 
-      if (Math.floor(timePassed < this.fetchDelay) && item.emotes) {
-        Logger.debug(`Emotes: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
-        this.appendEmotes(item.emotes, settings);
-      } else {
-        $.getJSON(this.fetchLocation, fetchedEmotes => {
-          item.emotesLastChecked = new Date().getTime();
-          item.emotes = fetchedEmotes;
-          Settings.set(this, item);
-          this.appendEmotes(item.emotes, settings);
-        }).fail(function() {
-          Logger.error("Failed to fetch emote data.");
-        });
-      }
-    });
+    //   if (Math.floor(timePassed < this.fetchDelay) && item.emotes) {
+    //     Logger.debug(`Emotes: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
+    //     this.appendEmotes(item.emotes, settings);
+    //   } else {
+    //     $.getJSON(this.fetchLocation, fetchedEmotes => {
+    //       item.emotesLastChecked = new Date().getTime();
+    //       item.emotes = fetchedEmotes;
+    //       Settings.set(this, item);
+    //       this.appendEmotes(item.emotes, settings);
+    //     }).fail(function() {
+    //       Logger.error("Failed to fetch emote data.");
+    //     });
+    //   }
+    // });
   }
 
   appendEmotes(emotes, settings) {

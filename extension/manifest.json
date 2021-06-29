@@ -46,6 +46,7 @@
         "assets/lib/chart.js/Chart.bundle.min.js",
         "assets/lib/@yaireo/jQuery.tagify.min.js",
         "assets/lib/intro.js/intro.min.js",
+        "assets/lib/emoji-picker-element/picker.js",
         "release/js/HFX.js"
       ],
       "css": [

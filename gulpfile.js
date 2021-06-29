@@ -54,6 +54,7 @@ gulp.task("libs", asyncComplete => {
   copyNodeAssets("chart.js", ["dist/Chart.bundle.min.js"]);
   copyNodeAssets("@yaireo", ["tagify/dist/jQuery.tagify.min.js", "tagify/dist/tagify.css"]);
   copyNodeAssets("intro.js", ["minified/intro.min.js", "minified/introjs.min.css"]);
+  copyNodeAssets("emoji-picker-element", ["picker.js", "database.js"]);
   asyncComplete();
 });
 

@@ -73,36 +73,49 @@ class EmoteLibrary extends Feature {
 
   appendSmilies(tagContainer, emotes) {
     const emotesTable = $(tagContainer).find("div:eq(0)").find("table > tbody");
-    $(emotesTable).find("tr:eq(0)").after($("<tr>").text("Standard"));
+    $(emotesTable).find("tr:eq(0)").after($("<tr>").append($("<td>").addClass("").append($("<div>").addClass("expcolimage")
+      .append($("<img>").attr({"src": "https://hackforums.net/images/mobale/collapse.png", "id": "hfxEmoteCollapseDefault", "class": "expander", "alt": "[-]", "title": "[-]"}).css("cursor", "pointer")))
+      .append($("<div>").text("Default"))));
+    // Click listener
+    $("#hfxEmoteCollapseDefault").on("click", function() {
+      $(emotesTable).find("tr:eq(2)").toggle();
+    });
+    // Emote table style
     emotesTable.parent().parent().css({
       "overflow-y": "auto",
       "height": "500px",
-      "width": "190px"
+      "width": "200px"
     });
 
     // Emote categories
     Object.entries(emotes).forEach(entry => {
       const [emoteCategory, emotesMap] = entry;
       // Append category header
-      $(emotesTable).append($("<tr>").append($("<td>").addClass("").append($("<span>").text(emoteCategory))));
+      $(emotesTable).append($("<tr>").append($("<td>").addClass("").append($("<div>").addClass("expcolimage")
+        .append($("<img>").attr({"src": "https://hackforums.net/images/mobale/collapse.png", "id": "hfxEmoteCollapse" + emoteCategory, "class": "expander", "alt": "[-]", "title": "[-]"}).css("cursor", "pointer")))
+        .append($("<div>").text(emoteCategory))));
       // Append category emotes
       $(emotesTable).append($("<tr>").append($("<td>").addClass("trow1")
-        .attr("id", "emoteCategory_" + emoteCategory)
+        .attr("id", "hfxEmoteCategory_" + emoteCategory)
         .css({
           "display": "flex",
           "flex-wrap": "wrap",
           "align-items": "center",
           "justify-content": "center"
         })));
+      // Click listener
+      $("#hfxEmoteCollapse" + emoteCategory).on("click", function() {
+        $("#hfxEmoteCategory_" + emoteCategory).toggle();
+      });
 
       // Loop emotes in current category
       // eslint-disable-next-line eqeqeq
-      const emoteSize = emoteCategory == "Legacy" ? "" : "24";
+      const emoteSize = emoteCategory == "Legacy" ? "" : "28";
       Object.entries(emotesMap).forEach(emote => {
         const [emoteKey, emoteUrl] = emote;
-        $("#emoteCategory_" + emoteCategory).append(
+        $("#hfxEmoteCategory_" + emoteCategory).append(
           $("<span>").attr("onclick", `MyBBEditor.insertText(':${emoteKey}:')`)
-            .css({"height": "35px", "margin": "5px", "font-size": "18px", "flex": "1 0 calc(25% - 10px)", "box-sizing": "border-box", "cursor": "pointer"})
+            .css({"height": "35px", "margin": "4px", "font-size": "18px", "flex": "1 0 calc(25% - 10px)", "box-sizing": "border-box", "cursor": "pointer"})
             .append($("<img>").attr({"src": emoteUrl, "title": `:${emoteKey}:`}).css({"height": emoteSize, "width": emoteSize})));
       });
     });

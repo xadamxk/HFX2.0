@@ -10,6 +10,7 @@ const newReplySection = new Section("/newreply.php");
 const editPostSection = new Section("/editpost.php");
 const newThreadSection = new Section("/newthread.php");
 const newPrivateMessageSection = new Section("/private.php");
+const newConvoSection = new Section("/convo.php");
 
 // const Settings = require("../../core/Settings");
 const Logger = require("../../core/Logger");
@@ -22,7 +23,7 @@ class EmoteLibrary extends Feature {
       name: "Emote Library",
       default: true,
       description: "Adds additional emotes to posts, threads, and more!",
-      additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection, newPrivateMessageSection),
+      additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection, newPrivateMessageSection, newConvoSection),
       configurables: new ConfigurableArray(
         new Checkbox({ id: "ELEnableThreads", label: "Enable in Threads", default: false })
       )
@@ -34,10 +35,8 @@ class EmoteLibrary extends Feature {
   }
 
   run(settings) {
+    this.appendEmotes(null, settings);
     $("head").append("<script type=\"module\" src=\"https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js\"></script>");
-    $("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4)").append("<emoji-picker></emoji-picker>");
-    document.querySelector("emoji-picker")
-      .addEventListener("emoji-click", event => console.log(event.detail));
     // Settings.get(this, item => {
     //   const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 
@@ -73,9 +72,29 @@ class EmoteLibrary extends Feature {
       case this.isMatch(address, "/private.php"):
         return $("form[name=input]").length > 0
           ? this.appendSmilies("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4) > td:eq(0)", emotes) : null;
+      case this.isMatch(address, "/convo.php"):
+        console.log("in here");
+        return this.appendToConvo();
       default:
         Logger.error("HFX: New EmoteLibrary page found, please report this error to a developer.");
     }
+  }
+
+  appendToConvo() {
+    //
+    $("#convoControlsRow").append($("<button>")
+      .addClass("button pro-adv-3d-button").css({
+        "vertical-align": "middle",
+        "background-color": "#1f1f1f",
+        "padding": "7px 15px !important",
+        "font-weight": "bold",
+        "height": "31px",
+        "width": "48px"
+      }).append($("<i>").addClass("fa fa-comment-smile fa-lg")));
+    $(".message-main").parent().after("<emoji-picker></emoji-picker>");
+    // $("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4)").append("<emoji-picker></emoji-picker>");
+    document.querySelector("emoji-picker")
+      .addEventListener("emoji-click", event => console.log(event.detail));
   }
 
   parseThreadEmotes(emotes) {

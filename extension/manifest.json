@@ -44,9 +44,10 @@
         "assets/lib/jquery/jquery.min.js",
         "assets/lib/moment/moment.min.js",
         "assets/lib/chart.js/Chart.bundle.min.js",
-        "assets/lib/@yaireo/jQuery.tagify.min.js",
+        "assets/lib/@yaireo/tagify/jQuery.tagify.min.js",
         "assets/lib/intro.js/intro.min.js",
-        "assets/lib/emoji-picker-element/picker.js",
+        "assets/lib/@webcomponents/custom-elements/custom-elements.min.js",
+        "assets/lib/emoji-picker-element/index.js",
         "release/js/HFX.js"
       ],
       "css": [

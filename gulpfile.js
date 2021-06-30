@@ -50,7 +50,7 @@ gulp.task("libs", asyncComplete => {
   copyNodeAssets("jquery", ["dist/jquery.min.js"]);
   copyNodeAssets("bootstrap", ["dist/css/bootstrap.min.css", "dist/js/bootstrap.min.js"]);
   copyNodeAssets("font-awesome", ["css/font-awesome.min.css", "fonts/*"], {pattern: /url\((?:'|")\.\.\/fonts\/([^'"]+)(?:'|")\)/g, replacement: "url(\"./$1\")"});
-  copyNodeAssets("moment", ["min/moment.min.js"]);
+  copyNodeAssets("moment", ["min/moment.min.js", "min/moment.min.js.map"]);
   copyNodeAssets("chart.js", ["dist/Chart.bundle.min.js"]);
   copyNodeAssets("@yaireo", ["tagify/dist/jQuery.tagify.min.js", "tagify/dist/tagify.css"]);
   copyNodeAssets("intro.js", ["minified/intro.min.js", "minified/introjs.min.css"]);

@@ -81,7 +81,7 @@ class EmoteLibrary extends Feature {
   }
 
   appendToConvo() {
-    //
+    // Append emoji button
     $("#convoControlsRow").append($("<button>")
       .addClass("button pro-adv-3d-button").css({
         "vertical-align": "middle",
@@ -90,11 +90,15 @@ class EmoteLibrary extends Feature {
         "font-weight": "bold",
         "height": "31px",
         "width": "48px"
-      }).append($("<i>").addClass("fa fa-comment-smile fa-lg")));
-    $(".message-main").parent().after("<emoji-picker></emoji-picker>");
-    // $("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4)").append("<emoji-picker></emoji-picker>");
-    document.querySelector("emoji-picker")
-      .addEventListener("emoji-click", event => console.log(event.detail));
+      }).attr("onclick", "$('#hfxEmojiPicker').toggle();")
+      .append($("<i>").addClass("fa fa-comment-smile fa-lg")));
+    // Append emoji picker and hide it
+    $(".message-main").append("<emoji-picker id='hfxEmojiPicker' style='position:absolute; bottom: 70px; right: 0px; z-index:3;'></emoji-picker>");
+    $("#hfxEmojiPicker").hide();
+    // Emoji listener
+    document.querySelector("emoji-picker").addEventListener("emoji-click", event => {
+      document.querySelector("#comment").value += event.detail.unicode;
+    });
   }
 
   parseThreadEmotes(emotes) {

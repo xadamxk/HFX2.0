@@ -93,7 +93,13 @@ class EmoteLibrary extends Feature {
       }).attr("onclick", "$('#hfxEmojiPicker').toggle();")
       .append($("<i>").addClass("fa fa-comment-smile fa-lg")));
     // Append emoji picker and hide it
-    $(".message-main").append("<emoji-picker id='hfxEmojiPicker' style='position:absolute; bottom: 70px; right: 0px; z-index:3;'></emoji-picker>");
+    const picker = new EmojiPickerElement.Picker();
+    $(".message-main").append($(picker).attr("id", "hfxEmojiPicker").css({
+      "position": "absolute",
+      "bottom": "70px",
+      "right": "0px",
+      "z-index": "3"
+    }));
     $("#hfxEmojiPicker").hide();
     // Emoji listener
     document.querySelector("emoji-picker").addEventListener("emoji-click", event => {

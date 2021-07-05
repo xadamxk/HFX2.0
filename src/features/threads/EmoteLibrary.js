@@ -4,6 +4,7 @@ const SectionArray = require("../../core/SectionArray");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");
 const Threads = require("../../sections/Threads");
+const emotes = require("../../../emotes.json");
 
 // TODO: Move from threads to Convo (and move threads to additionalSections)
 const newReplySection = new Section("/newreply.php");
@@ -81,6 +82,7 @@ class EmoteLibrary extends Feature {
   }
 
   appendToConvo() {
+    console.log(emotes);
     // Append emoji button
     $("#convoControlsRow").append($("<button>")
       .addClass("button pro-adv-3d-button").css({
@@ -93,7 +95,9 @@ class EmoteLibrary extends Feature {
       }).attr("onclick", "$('#hfxEmojiPicker').toggle();")
       .append($("<i>").addClass("fa fa-comment-smile fa-lg")));
     // Append emoji picker and hide it
-    const picker = new EmojiPickerElement.Picker();
+    const picker = new EmojiPickerElement.Picker({
+      customEmoji: emotes
+    });
     $(".message-main").append($(picker).attr("id", "hfxEmojiPicker").css({
       "position": "absolute",
       "bottom": "70px",
@@ -103,7 +107,20 @@ class EmoteLibrary extends Feature {
     $("#hfxEmojiPicker").hide();
     // Emoji listener
     document.querySelector("emoji-picker").addEventListener("emoji-click", event => {
-      document.querySelector("#comment").value += event.detail.unicode;
+      console.log(event);
+      let emote = null;
+      // Default
+      if (event.detail.hasOwnProperty("unicode")) {
+        emote = event.detail.unicode;
+      }
+
+      // Custom
+      if (event.detail.hasOwnProperty("name")) {
+        emote = ` :${event.detail.name}:`;
+      }
+
+      //
+      document.querySelector("#comment").value += emote;
     });
   }
 

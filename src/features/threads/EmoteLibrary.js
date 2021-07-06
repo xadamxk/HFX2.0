@@ -4,7 +4,7 @@ const SectionArray = require("../../core/SectionArray");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");
 const Threads = require("../../sections/Threads");
-const emotes = require("../../../emotes.json");
+// const emotes = require("../../../emotes.json");
 
 // TODO: Move from threads to Convo (and move threads to additionalSections)
 const newReplySection = new Section("/newreply.php");
@@ -36,8 +36,7 @@ class EmoteLibrary extends Feature {
   }
 
   run(settings) {
-    // can create picker programmatically via `new EmojiPickerElement.Picker()`
-    // this.appendEmotes(null, settings);
+    // this.appendEmotes(emotes, settings);
     Settings.get(this, item => {
       const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 
@@ -47,7 +46,7 @@ class EmoteLibrary extends Feature {
       } else {
         $.getJSON(this.fetchLocation, fetchedEmotes => {
           item.emotesLastChecked = new Date().getTime();
-          item.emotes = fetchedEmotes;
+          item.emotes = fetchedEmotes["emotes"];
           Settings.set(this, item);
           this.appendEmotes(item.emotes, settings);
         }).fail(function() {
@@ -61,9 +60,9 @@ class EmoteLibrary extends Feature {
     let address = location.href;
     const enabledOnThreads = Util.getConfigurableValue("ELEnableThreads", this, settings);
     switch (address) {
-      // TODO: add extra param to appendSmilies for where to search for text to replace
       case this.isMatch(address, "/showthread.php"):
         return this.parseThreadEmotes(emotes);
+        // TODO: Append emote picker to all threads
       case this.isMatch(address, "/newreply.php"):
         return enabledOnThreads && this.appendSmilies("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", emotes);
       case this.isMatch(address, "/editpost.php"):
@@ -75,13 +74,13 @@ class EmoteLibrary extends Feature {
           ? this.appendSmilies("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4) > td:eq(0)", emotes) : null;
       case this.isMatch(address, "/convo.php"):
         console.log("in here");
-        return this.appendToConvo();
+        return this.appendToConvo(emotes);
       default:
         Logger.error("HFX: New EmoteLibrary page found, please report this error to a developer.");
     }
   }
 
-  appendToConvo() {
+  appendToConvo(emotes) {
     // Append emoji button
     $("#convoControlsRow").append($("<button>")
       .addClass("button pro-adv-3d-button").css({
@@ -123,28 +122,36 @@ class EmoteLibrary extends Feature {
     });
   }
 
+  // Style for individual emotes
+  emoteSize(category) {
+    switch (category.toLowerCase()) {
+      case "legacy": return "";
+      default: return "28";
+    }
+  };
+
   parseThreadEmotes(emotes) {
     const self = this;
     // Loop posts
     $(".post").each(function() {
       const post = $(this).find(".post_body");
       let postHtml = $(post).html();
-      // Loop categories
-      Object.entries(emotes).forEach(entry => {
-        const [emoteCategory, emotesMap] = entry;
-        Object.entries(emotesMap).forEach(emote => {
-          const [emoteKey, emoteUrl] = emote;
-          if (postHtml.includes(emoteKey)) {
-            postHtml = Util.replaceAll(postHtml, `:${emoteKey}:`,
-              `<img 
-              src="${emoteUrl}" 
-              width="${self.emoteSize(emoteCategory)}" 
-              height="${self.emoteSize(emoteCategory)}"
-              title="${emoteKey}" 
-              />`);
-          }
-        });
+      // Loop custom emote array
+      emotes.forEach((emote) => {
+        const category = emote.category;
+        const name = emote.name;
+        const url = emote.url;
+        if (postHtml.includes(name)) {
+          postHtml = Util.replaceAll(postHtml, `:${name}:`,
+            `<img 
+            src="${url}" 
+            width="${self.emoteSize(category)}" 
+            height="${self.emoteSize(category)}"
+            title="${name}" 
+            />`);
+        }
       });
+      // Replace emoji keys with images in html
       $(this).find(".post_body").html(postHtml);
     });
   }

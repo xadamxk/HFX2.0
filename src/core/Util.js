@@ -121,5 +121,9 @@ module.exports = {
   clearLocalSetting(feature, key) {
     const storageKeyString = [feature.class, key].join(".");
     chrome.storage.local.remove(storageKeyString);
+  },
+
+  replaceAll(str, find, replace) {
+    return str.replace(new RegExp(find, "g"), replace);
   }
 };

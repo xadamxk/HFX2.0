@@ -64,6 +64,6 @@
     "sinon-chrome": "^3.0.1",
     "vinyl-source-stream": "^2.0.0",
     "y18n": "4.0.1",
-    "yargs-parser": ">=5.0.0-security.0"
+    "yargs-parser": ">=5.0.1"
   }
 }

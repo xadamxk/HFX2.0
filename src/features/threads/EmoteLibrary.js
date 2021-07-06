@@ -82,7 +82,6 @@ class EmoteLibrary extends Feature {
   }
 
   appendToConvo() {
-    console.log(emotes);
     // Append emoji button
     $("#convoControlsRow").append($("<button>")
       .addClass("button pro-adv-3d-button").css({
@@ -119,7 +118,7 @@ class EmoteLibrary extends Feature {
         emote = ` :${event.detail.name}:`;
       }
 
-      //
+      // Insert emote
       document.querySelector("#comment").value += emote;
     });
   }
@@ -152,61 +151,6 @@ class EmoteLibrary extends Feature {
 
   isMatch(address, match) {
     return address.includes(match) ? address : "";
-  }
-
-  // Style for individual emotes
-  emoteSize(category) {
-    switch (category.toLowerCase()) {
-      case "legacy": return "";
-      default: return "28";
-    }
-  };
-
-  appendSmilies(tagContainer, emotes) {
-    const emotesTable = $(tagContainer).find("div:eq(0)").find("table > tbody");
-    $(emotesTable).find("tr:eq(0)").after($("<tr>").append($("<td>").addClass("").append($("<div>").addClass("expcolimage")
-      .append($("<img>").attr({"src": "https://hackforums.net/images/mobale/collapse.png", "id": "hfxEmoteCollapseDefault", "class": "expander", "alt": "[-]", "title": "[-]"}).css("cursor", "pointer")))
-      .append($("<div>").text("Default"))));
-    // Click listener
-    $("#hfxEmoteCollapseDefault").on("click", function() {
-      $(emotesTable).find("tr:eq(2)").toggle();
-    });
-    // Emote table style
-    emotesTable.parent().parent().css({
-      "overflow-y": "auto",
-      "height": "500px",
-      "width": "200px"
-    });
-
-    // Emote categories
-    Object.entries(emotes).forEach(entry => {
-      const [emoteCategory, emotesMap] = entry;
-      // Append category header
-      $(emotesTable).append($("<tr>").append($("<td>").addClass("").append($("<div>").addClass("expcolimage")
-        .append($("<img>").attr({"src": "https://hackforums.net/images/mobale/collapse.png", "id": "hfxEmoteCollapse" + emoteCategory, "class": "expander", "alt": "[-]", "title": "[-]"}).css("cursor", "pointer")))
-        .append($("<div>").text(`${emoteCategory} (HFX)`))));
-      // Append category emotes
-      $(emotesTable).append($("<tr>").append($("<td>").addClass("trow1")
-        .attr("id", "hfxEmoteCategory_" + emoteCategory)
-        .css({
-          "display": "flex",
-          "flex-wrap": "wrap",
-          "align-items": "center",
-          "justify-content": "center"
-        })));
-      // Click listener
-      $("#hfxEmoteCollapse" + emoteCategory).on("click", function() {
-        $("#hfxEmoteCategory_" + emoteCategory).toggle();
-      });
-      // Append emotes in category to table
-      Object.entries(emotesMap).forEach(emote => {
-        const [emoteKey, emoteUrl] = emote;
-        $("#hfxEmoteCategory_" + emoteCategory).append(
-          $("<span>").attr("onclick", `MyBBEditor.insertText(':${emoteKey}: ')`)
-            .css({"height": "35px", "margin": "4px", "font-size": "18px", "flex": "1 0 calc(25% - 10px)", "box-sizing": "border-box", "cursor": "pointer"})
-            .append($("<img>").attr({"src": emoteUrl, "title": `:${emoteKey}:`}).css({"height": this.emoteSize(emoteCategory), "width": this.emoteSize(emoteCategory)})));
-      });
-    });
   }
 };
 

@@ -86,7 +86,7 @@ class EmoteLibrary extends Feature {
       mutationRecords.forEach(function(mutation) {
         // Loop element nodes
         mutation.addedNodes.forEach((node) => {
-          // Received message
+          // Received or sent message
           if ($(node).hasClass("message-convo-left") || $(node).hasClass("message-convo-right")) {
             const block = node;
 

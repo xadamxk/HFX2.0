@@ -3,10 +3,9 @@ const Section = require("../../core/Section");
 const SectionArray = require("../../core/SectionArray");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Checkbox = require("../../configurables/Checkbox");
-const Threads = require("../../sections/Threads");
-// const emotes = require("../../../emotes.json");
+const Convo = require("../../sections/Convo");
 
-// TODO: Move from threads to Convo (and move threads to additionalSections)
+const threadSection = new Section("/showthread.php");
 const newReplySection = new Section("/newreply.php");
 const editPostSection = new Section("/editpost.php");
 const newThreadSection = new Section("/newthread.php");
@@ -20,13 +19,13 @@ const Util = require("../../core/Util");
 class EmoteLibrary extends Feature {
   constructor() {
     super({
-      section: Threads,
+      section: Convo,
       name: "Emote Library",
       default: true,
-      description: "Adds additional emotes to posts, threads, and more!",
-      additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection, newPrivateMessageSection, newConvoSection),
+      description: "Adds additional emotes to convo, private messages, posts, and more!",
+      additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection, newPrivateMessageSection, newConvoSection, threadSection),
       configurables: new ConfigurableArray(
-        new Checkbox({ id: "ELEnableThreads", label: "Enable in Threads", default: false })
+        new Checkbox({ id: "ELEnableThreads", label: "Enable in Threads", default: true })
       )
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new alert fetches
@@ -73,11 +72,58 @@ class EmoteLibrary extends Feature {
         return $("form[name=input]").length > 0
           ? this.appendSmilies("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4) > td:eq(0)", emotes) : null;
       case this.isMatch(address, "/convo.php"):
-        console.log("in here");
+        this.parseConvoEmotes(emotes);
         return this.appendToConvo(emotes);
       default:
         Logger.error("HFX: New EmoteLibrary page found, please report this error to a developer.");
     }
+  }
+
+  parseConvoEmotes(emotes) {
+    const self = this;
+    const messageMutationHandler = function(mutationRecords) {
+      // Loop mutations
+      mutationRecords.forEach(function(mutation) {
+        // Loop element nodes
+        mutation.addedNodes.forEach((node) => {
+          // Received message
+          if ($(node).hasClass("message-convo-left") || $(node).hasClass("message-convo-right")) {
+            const block = node;
+
+            const message = block.querySelector(".message-bubble.message-bubble-message");
+            let postHtml = $(message).html();
+
+            // Loop custom emote array
+            emotes.forEach((emote) => {
+              const category = emote.category;
+              const name = emote.name;
+              const url = emote.url;
+
+              if (postHtml.includes(`:${name}:`)) {
+                postHtml = Util.replaceAll(postHtml, `:${name}:`,
+                  `<img 
+                  src="${url}" 
+                  width="${self.emoteSize(category)}" 
+                  height="${self.emoteSize(category)}"
+                  title="${name}" 
+                  />`);
+              }
+            });
+            // Replace emoji keys with images in html
+            $(message).html(postHtml);
+          }
+        });
+      });
+    };
+
+    const convoMessagesContainer = $("#message-convo");
+    const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    const messageObserver = new MutationObserver(messageMutationHandler);
+    const obsConfig = {childList: true, characterData: false, attributes: false, subtree: true};
+
+    convoMessagesContainer.each(function() {
+      messageObserver.observe(this, obsConfig);
+    });
   }
 
   appendToConvo(emotes) {
@@ -105,7 +151,6 @@ class EmoteLibrary extends Feature {
     $("#hfxEmojiPicker").hide();
     // Emoji listener
     document.querySelector("emoji-picker").addEventListener("emoji-click", event => {
-      console.log(event);
       let emote = null;
       // Default
       if (event.detail.hasOwnProperty("unicode")) {

@@ -766,6 +766,107 @@
       ],
       "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/hackumon.png?raw=true",
       "category": "Ficon"
+    },
+    {
+      "name": "meme-report",
+      "shortcodes": [
+        "meme",
+        "amongus",
+        "report"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/amongreport.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-monke",
+      "shortcodes": [
+        "meme",
+        "awkward",
+        "monke"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/awkwardmonke.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-cat",
+      "shortcodes": [
+        "meme",
+        "cat"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/cat.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-kekw",
+      "shortcodes": [
+        "meme",
+        "kekw"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/kekw.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-knowledge",
+      "shortcodes": [
+        "meme",
+        "knowledge"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/knowledge.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-pogchamp",
+      "shortcodes": [
+        "meme",
+        "pogchamp"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/pogchamp.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-stonks",
+      "shortcodes": [
+        "meme",
+        "stonks"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/stonks.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "hydra-angry",
+      "shortcodes": [
+        "hydra",
+        "angry"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/angry.png?raw=true",
+      "category": "Hydra"
+    },
+    {
+      "name": "hydra-cry",
+      "shortcodes": [
+        "hydra",
+        "cry"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/cry.png?raw=true",
+      "category": "Hydra"
+    },
+    {
+      "name": "hydra-devil",
+      "shortcodes": [
+        "hydra",
+        "devil"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/devil.png?raw=true",
+      "category": "Hydra"
+    },
+    {
+      "name": "hydra-sleep",
+      "shortcodes": [
+        "hydra",
+        "sleep"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/sleep.png?raw=true",
+      "category": "Hydra"
     }
   ]
 }

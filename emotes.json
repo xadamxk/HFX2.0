@@ -867,6 +867,24 @@
       ],
       "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/sleep.png?raw=true",
       "category": "Hydra"
+    },
+    {
+      "name": "hf-omni",
+      "shortcodes": [
+        "hf",
+        "omni"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hf/omni.png?raw=true",
+      "category": "HF"
+    },
+    {
+      "name": "hf-beard",
+      "shortcodes": [
+        "hf",
+        "beard"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hf/beard.png?raw=true",
+      "category": "HF"
     }
   ]
 }

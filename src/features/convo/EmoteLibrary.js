@@ -63,20 +63,77 @@ class EmoteLibrary extends Feature {
         return this.parseThreadEmotes(emotes);
         // TODO: Append emote picker to all threads
       case this.isMatch(address, "/newreply.php"):
-        return enabledOnThreads && this.appendSmilies("#new_reply_form > table > tbody > tr:eq(2) > td:eq(0)", emotes);
+        this.parseThreadEmotes(emotes);
+        return enabledOnThreads && this.appendEditorEmotePicker(emotes);
       case this.isMatch(address, "/editpost.php"):
-        return enabledOnThreads && this.appendSmilies("#editpost > table > tbody > tr:eq(4) > td:eq(0)", emotes);
+        this.parseThreadEmotes(emotes);
+        return enabledOnThreads && this.appendEditorEmotePicker(emotes);
       case this.isMatch(address, "/newthread.php"):
-        return enabledOnThreads && this.appendSmilies("form[name=input] > table > tbody > tr:eq(4) > td:eq(0)", emotes);
+        this.parseThreadEmotes(emotes);
+        return enabledOnThreads && this.appendEditorEmotePicker(emotes);
       case this.isMatch(address, "/private.php"):
+        this.parseThreadEmotes(emotes);
         return $("form[name=input]").length > 0
-          ? this.appendSmilies("form[name=input] > table > tbody > tr > td > table > tbody > tr:eq(4) > td:eq(0)", emotes) : null;
+          ? this.appendEditorEmotePicker(emotes) : null;
       case this.isMatch(address, "/convo.php"):
         this.parseConvoEmotes(emotes);
         return this.appendToConvo(emotes);
       default:
         Logger.error("HFX: New EmoteLibrary page found, please report this error to a developer.");
     }
+  }
+
+  appendEditorEmotePicker(emotes) {
+    // Append emoji button
+    $(".sceditor-toolbar").append($("<div>").addClass("sceditor-group")
+      .append($("<a>").attr({"title": "HFX: Emotes"}).css({
+        "width": "16pxpx",
+        "height": "20px",
+        "display": "block",
+        "float": "left",
+        "cursor": "pointer",
+        "padding": "3px 5px",
+        "border-radius": "3px",
+        "border": "1px solid #444"
+      }).attr({"onclick": "$('#hfxEmojiPicker').toggle();"})
+        .append($("<div>").attr({"unselectable": "on"}).css({
+          "margin": "2px 0px",
+          "padding": "0px",
+          "overflow": "hidden",
+          "color": "transparent",
+          "width": "16px",
+          "height": "16px"
+        }).append($("<img>").attr({"src": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Emoji_u263a.svg/40px-Emoji_u263a.svg.png"}).css({
+          "width": "16px",
+          "height": "16px"
+        })))));
+    // Append emoji picker and hide it
+    const picker = new EmojiPickerElement.Picker({
+      customEmoji: emotes
+    });
+    $(".sceditor-container").prepend($(picker).attr("id", "hfxEmojiPicker").css({
+      "position": "absolute",
+      "top": "40px",
+      "right": "0px",
+      "z-index": "3"
+    }));
+    $("#hfxEmojiPicker").hide();
+    // Emoji listener
+    document.querySelector("emoji-picker").addEventListener("emoji-click", event => {
+      let emote = null;
+      // Default
+      if (event.detail.hasOwnProperty("unicode")) {
+        emote = event.detail.unicode;
+      }
+
+      // Custom
+      if (event.detail.hasOwnProperty("name")) {
+        emote = ` :${event.detail.name}:`;
+      }
+
+      // Insert emote
+      document.querySelector(".sceditor-container > textarea").value += emote;
+    });
   }
 
   parseConvoEmotes(emotes) {

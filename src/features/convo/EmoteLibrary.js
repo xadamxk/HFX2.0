@@ -206,14 +206,15 @@ class EmoteLibrary extends Feature {
 
   appendToConvo(emotes) {
     // Append emoji button
-    $("#convoControlsRow").append($("<button>")
+    $("#new_message").after($("<button>")
       .addClass("button pro-adv-3d-button").css({
         "vertical-align": "middle",
         "background-color": "#1f1f1f",
         "padding": "7px 15px !important",
         "font-weight": "bold",
         "height": "31px",
-        "width": "48px"
+        "margin": "0px 6px !important",
+        "width": "99%"
       }).attr("onclick", "$('#hfxEmojiPicker').toggle();")
       .append($("<i>").addClass("fa fa-comment-smile fa-lg")));
     // Append emoji picker and hide it
@@ -222,7 +223,7 @@ class EmoteLibrary extends Feature {
     });
     $(".message-main").append($(picker).attr("id", "hfxEmojiPicker").css({
       "position": "absolute",
-      "bottom": "70px",
+      "bottom": "80px",
       "right": "0px",
       "z-index": "3"
     }));

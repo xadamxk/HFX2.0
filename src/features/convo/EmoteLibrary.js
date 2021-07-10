@@ -103,7 +103,7 @@ class EmoteLibrary extends Feature {
           "color": "transparent",
           "width": "16px",
           "height": "16px"
-        }).append($("<img>").attr({"src": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Emoji_u263a.svg/40px-Emoji_u263a.svg.png"}).css({
+        }).append($("<img>").attr({"src": Util.getURL("/assets/images/emoji.png")}).css({
           "width": "16px",
           "height": "16px"
         })))));

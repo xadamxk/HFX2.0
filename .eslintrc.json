@@ -18,7 +18,8 @@
     "$": true,
     "chrome": true,
     "moment": true,
-    "Chart": true
+    "Chart": true,
+    "EmojiPickerElement": true
   },
   "env": {
     "browser": true,

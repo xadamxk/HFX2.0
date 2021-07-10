@@ -2,14 +2,14 @@
   "manifest_version": 2,
   "name": "HF Xtension",
   "short_name": "HFX",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "icons": {
     "16": "assets/images/icon16.png",
     "32": "assets/images/icon32.png",
     "48": "assets/images/icon48.png",
     "128": "assets/images/icon128.png"
   },
-  "version_name": "2.1.0",
+  "version_name": "2.2.0",
   "description": "Enhance your HF Experience!",
   "options_ui": {
     "chrome_style": true,
@@ -44,8 +44,10 @@
         "assets/lib/jquery/jquery.min.js",
         "assets/lib/moment/moment.min.js",
         "assets/lib/chart.js/Chart.bundle.min.js",
-        "assets/lib/@yaireo/jQuery.tagify.min.js",
+        "assets/lib/@yaireo/tagify/jQuery.tagify.min.js",
         "assets/lib/intro.js/intro.min.js",
+        "assets/lib/@webcomponents/custom-elements/custom-elements.min.js",
+        "assets/lib/emoji-picker-element/index.js",
         "release/js/HFX.js"
       ],
       "css": [
@@ -91,6 +93,7 @@
     "/assets/images/theme-customizer/mosaics/mosaic_pink.png",
     "/assets/images/theme-customizer/mosaics/mosaic_pink2.png",
     "/assets/images/theme-customizer/mosaics/mosaic_rainbow.png",
-    "/assets/images/theme-customizer/mosaics/mosaic_yellow.png"
+    "/assets/images/theme-customizer/mosaics/mosaic_yellow.png",
+    "/assets/images/emoji.png"
   ]
 }

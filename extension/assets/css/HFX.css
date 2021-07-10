@@ -27,6 +27,12 @@
   display: none !important;
 }
 
+/* emoji-picker {
+  --num-columns: 6
+  width: 400px;
+  height: 300px;
+} */
+
 /* Extracted from Bootstrap 4 */
 
 .text-monospace {

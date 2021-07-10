@@ -1,0 +1,914 @@
+{
+  "emotes": [
+    {
+      "name": "bebe-pleure",
+      "shortcodes": [
+        "legacy",
+        "cry"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/bebe-pleure.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "biggrin",
+      "shortcodes": [
+        "legacy",
+        "biggrin",
+        "smile",
+        "grin"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/biggrin.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "blink",
+      "shortcodes": [
+        "legacy",
+        "blink",
+        "confused"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/blink.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "cool",
+      "shortcodes": [
+        "legacy",
+        "cool"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/cool.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "hehe",
+      "shortcodes": [
+        "legacy",
+        "hehe"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/hehe.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "lipssealed",
+      "shortcodes": [
+        "legacy",
+        "lipssealed"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/lipssealed.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "ninja",
+      "shortcodes": [
+        "legacy",
+        "ninja"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/ninja.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "nono",
+      "shortcodes": [
+        "legacy",
+        "nono"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/nono.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "ohmy",
+      "shortcodes": [
+        "legacy",
+        "ohmy"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/ohmy.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "omg",
+      "shortcodes": [
+        "legacy",
+        "omg"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/omg.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "oui",
+      "shortcodes": [
+        "legacy",
+        "oui"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/oui.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "pinch",
+      "shortcodes": [
+        "legacy",
+        "pinch"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/pinch.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "roflmao",
+      "shortcodes": [
+        "legacy",
+        "roflmao"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/roflmao.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "rolleyes",
+      "shortcodes": [
+        "legacy",
+        "rolleyes"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/rolleyes.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "victorie",
+      "shortcodes": [
+        "legacy",
+        "victorie"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/victoire.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "superman",
+      "shortcodes": [
+        "legacy",
+        "superman"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/superman.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "thumbsup",
+      "shortcodes": [
+        "legacy",
+        "thumbsup"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/thumbsup.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "whistle",
+      "shortcodes": [
+        "legacy",
+        "whistle"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/whistle.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "blackhat",
+      "shortcodes": [
+        "legacy",
+        "blackhat"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/blackhat.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "pirate",
+      "shortcodes": [
+        "legacy",
+        "pirate"
+      ],
+      "url": "https://github.com/xadamxk/hf-legacy-assets/blob/main/emotes/pirate.gif?raw=true",
+      "category": "Legacy"
+    },
+    {
+      "name": "pepe-ban",
+      "shortcodes": [
+        "pepe",
+        "ban"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-ban.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-berry",
+      "shortcodes": [
+        "pepe",
+        "berry"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-berry.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-bigeyes",
+      "shortcodes": [
+        "pepe",
+        "bigeyes"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-bigeyes.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-blanket",
+      "shortcodes": [
+        "pepe",
+        "blanket"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-blanket.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-comfy",
+      "shortcodes": [
+        "pepe",
+        "comfy"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-comfy.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-cool",
+      "shortcodes": [
+        "pepe",
+        "cool"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-cool.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-cute",
+      "shortcodes": [
+        "pepe",
+        "cute"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-cute.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-damn",
+      "shortcodes": [
+        "pepe",
+        "damn"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-damn.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-facepalm",
+      "shortcodes": [
+        "pepe",
+        "facepalm"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-facepalm.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-happy",
+      "shortcodes": [
+        "pepe",
+        "happy"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-happy.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-hmm",
+      "shortcodes": [
+        "pepe",
+        "hmm"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-hmm.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-lurk",
+      "shortcodes": [
+        "pepe",
+        "lurk"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-lurk.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-nani",
+      "shortcodes": [
+        "pepe",
+        "nani"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-nani.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-no",
+      "shortcodes": [
+        "pepe",
+        "no"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-no.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-nowifi",
+      "shortcodes": [
+        "pepe",
+        "nowifi"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-nowifi.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-omg",
+      "shortcodes": [
+        "pepe",
+        "omg"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-omg.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-party",
+      "shortcodes": [
+        "pepe",
+        "party"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-party.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-pillow",
+      "shortcodes": [
+        "pepe",
+        "pillow"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-pillow.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-respected",
+      "shortcodes": [
+        "pepe",
+        "respected"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-respected.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-sheesh",
+      "shortcodes": [
+        "pepe",
+        "sheesh"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-sheesh.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-shrug",
+      "shortcodes": [
+        "pepe",
+        "shrug"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-shrug.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-sleep",
+      "shortcodes": [
+        "pepe",
+        "sleep"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-sleep.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-smug",
+      "shortcodes": [
+        "pepe",
+        "smug"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-smug.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-studying",
+      "shortcodes": [
+        "pepe",
+        "studying"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-studying.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-sus",
+      "shortcodes": [
+        "pepe",
+        "sus"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-sus.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-yeaa",
+      "shortcodes": [
+        "pepe",
+        "yeaa"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-yeaa.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-yes",
+      "shortcodes": [
+        "pepe",
+        "yes"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-yes.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-5head",
+      "shortcodes": [
+        "pepe",
+        "5head"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-5head.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-coffee",
+      "shortcodes": [
+        "pepe",
+        "coffee"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-coffee.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-hands",
+      "shortcodes": [
+        "pepe",
+        "hands"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-hands.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-monkas",
+      "shortcodes": [
+        "pepe",
+        "monkas"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-monkas.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-pepega",
+      "shortcodes": [
+        "pepe",
+        "pepega"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-pepega.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-simp",
+      "shortcodes": [
+        "pepe",
+        "simp"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-simp.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-sleep2",
+      "shortcodes": [
+        "pepe",
+        "sleep"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-sleep2.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "pepe-toxic",
+      "shortcodes": [
+        "pepe",
+        "toxic"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/pepe/pepe-toxic.png?raw=true",
+      "category": "Pepe"
+    },
+    {
+      "name": "ficon-achievers",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "achievers"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/achievers.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-brotherhood",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "brotherhood"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/brotherhood.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-dawn",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "dawn"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/dawn.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-equilibrium",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "equilibrium"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/equilibrium.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-exchangers",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "exchangers"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/exchangers.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-fate",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "fate"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/fate.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-gamblers",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "gamblers"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/gamblers.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-hf",
+      "shortcodes": [
+        "ficon",
+        "hf"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/hf.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-hustlers",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "hustlers"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/hustlers.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-infamous",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "infamous"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/infamous.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-legends",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "legends"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/legends.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-lionsleague",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "lionsleague"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/lionsleague.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-member",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "member"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/member.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-mentor",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "mentor"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/mentor.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-mrpotatohead",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "mrpotatohead"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/mrpotatohead.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-officer",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "officer"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/officer.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-panthers",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "panthers"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/panthers.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-panthers2",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "panthers2"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/panthers2.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-pinklsz",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "pinklsz"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/pinklsz.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-polymath",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "polymath"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/polymath.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-sociopaths",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "sociopaths"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/sociopaths.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-succubus",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "succubus"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/succubus.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-vendors",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "vendors"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/vendors.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "ficon-wolfpack",
+      "shortcodes": [
+        "ficon",
+        "hf",
+        "wolfpack"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/wolfpack.png?raw=true",
+      "category": "Ficon"
+    },
+    {
+      "name": "meme-report",
+      "shortcodes": [
+        "meme",
+        "amongus",
+        "report"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/amongreport.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-monke",
+      "shortcodes": [
+        "meme",
+        "awkward",
+        "monke"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/awkwardmonke.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-cat",
+      "shortcodes": [
+        "meme",
+        "cat"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/cat.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-kekw",
+      "shortcodes": [
+        "meme",
+        "kekw"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/kekw.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-knowledge",
+      "shortcodes": [
+        "meme",
+        "knowledge"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/knowledge.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-pogchamp",
+      "shortcodes": [
+        "meme",
+        "pogchamp"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/pogchamp.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "meme-stonks",
+      "shortcodes": [
+        "meme",
+        "stonks"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/memes/stonks.png?raw=true",
+      "category": "Meme"
+    },
+    {
+      "name": "hydra-angry",
+      "shortcodes": [
+        "hydra",
+        "angry"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/angry.png?raw=true",
+      "category": "Hydra"
+    },
+    {
+      "name": "hydra-cry",
+      "shortcodes": [
+        "hydra",
+        "cry"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/cry.png?raw=true",
+      "category": "Hydra"
+    },
+    {
+      "name": "hydra-devil",
+      "shortcodes": [
+        "hydra",
+        "devil"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/devil.png?raw=true",
+      "category": "Hydra"
+    },
+    {
+      "name": "hydra-sleep",
+      "shortcodes": [
+        "hydra",
+        "sleep"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hydra/sleep.png?raw=true",
+      "category": "Hydra"
+    },
+    {
+      "name": "hf-omni",
+      "shortcodes": [
+        "hf",
+        "omni"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hf/omni.png?raw=true",
+      "category": "HF"
+    },
+    {
+      "name": "hf-beard",
+      "shortcodes": [
+        "hf",
+        "beard"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hf/beard.png?raw=true",
+      "category": "HF"
+    },
+    {
+      "name": "hf-hackumon",
+      "shortcodes": [
+        "hf",
+        "hackumon"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/hackumon.png?raw=true",
+      "category": "HF"
+    },
+    {
+      "name": "hfx-monkey",
+      "shortcodes": [
+        "hfx",
+        "monkey"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/trophy_codemonkey.png?raw=true",
+      "category": "HFX"
+    },
+    {
+      "name": "hfx-donator",
+      "shortcodes": [
+        "hfx",
+        "donator"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/trophy_donator.png?raw=true",
+      "category": "HFX"
+    },
+    {
+      "name": "hfx-logo",
+      "shortcodes": [
+        "hfx",
+        "logo"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/trophy_hfx.png?raw=true",
+      "category": "HFX"
+    },
+    {
+      "name": "hfx-supporter",
+      "shortcodes": [
+        "hfx",
+        "supporter"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/trophy_supporter.png?raw=true",
+      "category": "HFX"
+    },
+    {
+      "name": "hfx-tester",
+      "shortcodes": [
+        "hfx",
+        "tester"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/trophy_tester.png?raw=true",
+      "category": "HFX"
+    }
+  ]
+}

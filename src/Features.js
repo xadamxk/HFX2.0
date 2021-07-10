@@ -10,6 +10,7 @@ module.exports = {
   ConvoReply: require("./features/convo/ConvoReply"),
   DisplayTempUb3rStatus: require("./features/threads/DisplayTempUb3rStatus"),
   EasyCite: require("./features/global/EasyCite"),
+  EmoteLibrary: require("./features/convo/EmoteLibrary"),
   ExpandBlockedPosts: require("./features/threads/ExpandBlockedPosts"),
   ExpandProfileSections: require("./features/profile/ExpandProfileSections"),
   ExpandProfileShortcuts: require("./features/profile/ExpandProfileShortcuts"),

@@ -25,7 +25,9 @@ class EmoteLibrary extends Feature {
       description: "Adds additional emotes to convo, private messages, posts, and more!",
       additionalSections: new SectionArray(newReplySection, editPostSection, newThreadSection, newPrivateMessageSection, newConvoSection, threadSection),
       configurables: new ConfigurableArray(
-        new Checkbox({ id: "ELEnableThreads", label: "Enable in Threads", default: true })
+        new Checkbox({ id: "ELEnableThreads", label: "Enable in Threads", default: true }),
+        new Checkbox({ id: "ELEnableConvo", label: "Enable in Convo", default: true }),
+        new Checkbox({ id: "ELEnablePM", label: "Enable in PMs", default: true })
       )
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new alert fetches
@@ -35,7 +37,6 @@ class EmoteLibrary extends Feature {
   }
 
   run(settings) {
-    // this.appendEmotes(emotes, settings);
     Settings.get(this, item => {
       const timePassed = item.emotesLastChecked !== undefined ? Math.floor((new Date().getTime() - item.emotesLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 
@@ -57,27 +58,47 @@ class EmoteLibrary extends Feature {
 
   appendEmotes(emotes, settings) {
     let address = location.href;
-    const enabledOnThreads = Util.getConfigurableValue("ELEnableThreads", this, settings);
+    const enabledInThreads = Util.getConfigurableValue("ELEnableThreads", this, settings);
+    const enabledInConvo = Util.getConfigurableValue("ELEnableConvo", this, settings);
+    const enabledInPM = Util.getConfigurableValue("ELEnablePM", this, settings);
+
     switch (address) {
       case this.isMatch(address, "/showthread.php"):
-        return this.parseThreadEmotes(emotes);
-        // TODO: Append emote picker to all threads
+        if (enabledInThreads) {
+          return this.parseThreadEmotes(emotes);
+        }
+        break;
       case this.isMatch(address, "/newreply.php"):
-        this.parseThreadEmotes(emotes);
-        return enabledOnThreads && this.appendEditorEmotePicker(emotes);
+        if (enabledInThreads) {
+          this.parseThreadEmotes(emotes);
+          return enabledInThreads && this.appendEditorEmotePicker(emotes);
+        }
+        break;
       case this.isMatch(address, "/editpost.php"):
-        this.parseThreadEmotes(emotes);
-        return enabledOnThreads && this.appendEditorEmotePicker(emotes);
+        if (enabledInThreads) {
+          this.parseThreadEmotes(emotes);
+          return this.appendEditorEmotePicker(emotes);
+        }
+        break;
       case this.isMatch(address, "/newthread.php"):
-        this.parseThreadEmotes(emotes);
-        return enabledOnThreads && this.appendEditorEmotePicker(emotes);
+        if (enabledInThreads) {
+          this.parseThreadEmotes(emotes);
+          return this.appendEditorEmotePicker(emotes);
+        }
+        break;
       case this.isMatch(address, "/private.php"):
-        this.parseThreadEmotes(emotes);
-        return $("form[name=input]").length > 0
-          ? this.appendEditorEmotePicker(emotes) : null;
+        if (enabledInPM) {
+          this.parseThreadEmotes(emotes);
+          return $("form[name=input]").length > 0
+            ? this.appendEditorEmotePicker(emotes) : null;
+        }
+        break;
       case this.isMatch(address, "/convo.php"):
-        this.parseConvoEmotes(emotes);
-        return this.appendToConvo(emotes);
+        if (enabledInConvo) {
+          this.parseConvoEmotes(emotes);
+          return this.appendToConvo(emotes);
+        }
+        break;
       default:
         Logger.error("HFX: New EmoteLibrary page found, please report this error to a developer.");
     }

@@ -569,26 +569,6 @@
       "category": "Ficon"
     },
     {
-      "name": "ficon-hackumon",
-      "shortcodes": [
-        "ficon",
-        "hf",
-        "hackumon"
-      ],
-      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/hackumon.png?raw=true",
-      "category": "Ficon"
-    },
-    {
-      "name": "ficon-",
-      "shortcodes": [
-        "ficon",
-        "hf",
-        ""
-      ],
-      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/.png?raw=true",
-      "category": "Ficon"
-    },
-    {
       "name": "ficon-hf",
       "shortcodes": [
         "ficon",
@@ -758,16 +738,6 @@
       "category": "Ficon"
     },
     {
-      "name": "ficon-hackumon",
-      "shortcodes": [
-        "ficon",
-        "hf",
-        "hackumon"
-      ],
-      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/hackumon.png?raw=true",
-      "category": "Ficon"
-    },
-    {
       "name": "meme-report",
       "shortcodes": [
         "meme",
@@ -884,6 +854,15 @@
         "beard"
       ],
       "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/hf/beard.png?raw=true",
+      "category": "HF"
+    },
+    {
+      "name": "hf-hackumon",
+      "shortcodes": [
+        "hf",
+        "hackumon"
+      ],
+      "url": "https://github.com/xadamxk/HFX2.0/blob/develop/emotes/ficons/hackumon.png?raw=true",
       "category": "HF"
     },
     {

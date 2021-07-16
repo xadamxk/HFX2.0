@@ -32,8 +32,6 @@ class InteractivePostStats extends Feature {
               .append($("<a>").attr({"href": `https://hackforums.net/search.php?action=finduserthreads&uid=${userId}`}).text(valueText)));
             break;
           case "βytes:":
-            const donateButton = $(this).find("a:eq(0)");
-            console.log($(donateButton));
             $(value).replaceWith($("<div>").addClass("author_value")
               .append($("<a>").attr({"href": "javascript:void(0)", "onclick": `MyBB.popupWindow('/myps.php?action=donate&uid=${userId}&pid=${postId}&modal=1'); return false;`})
                 .append($("<i>").addClass("fa fa-plus-circle").css({"color": "#4CAF50"}).attr({"aria-hidden": "true"})))

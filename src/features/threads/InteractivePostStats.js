@@ -13,10 +13,12 @@ class InteractivePostStats extends Feature {
 
   run() {
     // Loop post author
-    $(".post_author").each(function() {
-      const userId = $(this).find(".author_information .largetext > a").attr("href").split("&uid=")[1];
+    $(".post").each(function() {
+      const postbitTable = $(this).find(".post_author");
+      const userId = $(postbitTable).find(".author_information .largetext > a").attr("href").split("&uid=")[1];
+      const postId = $(this).attr("id").replace("post_", "");
       // Loop rows
-      $(this).find(".author_row").each(function() {
+      $(postbitTable).find(".author_row").each(function() {
         const label = $(this).find(".author_label").text().toLowerCase();
         const value = $(this).find(".author_value");
         const valueText = $(value).text();
@@ -30,10 +32,11 @@ class InteractivePostStats extends Feature {
               .append($("<a>").attr({"href": `https://hackforums.net/search.php?action=finduserthreads&uid=${userId}`}).text(valueText)));
             break;
           case "βytes:":
-            // TODO: find best implementation
             const donateButton = $(this).find("a:eq(0)");
             console.log($(donateButton));
-            $(value).find("a:eq(1)").after($("<div>").addClass("author_value")
+            $(value).replaceWith($("<div>").addClass("author_value")
+              .append($("<a>").attr({"href": "javascript:void(0)", "onclick": `MyBB.popupWindow('/myps.php?action=donate&uid=${userId}&pid=${postId}&modal=1'); return false;`})
+                .append($("<i>").addClass("fa fa-plus-circle").css({"color": "#4CAF50"}).attr({"aria-hidden": "true"})))
               .append($("<a>").attr({"href": `https://hackforums.net/myps.php?action=history&uid=${userId}`}).text(valueText)));
             break;
           default:

@@ -23,6 +23,7 @@ module.exports = {
   HidePostbitAttributes: require("./features/threads/HidePostbitAttributes"),
   InteractivePostStats: require("./features/threads/InteractivePostStats"),
   IntroJs: require("./features/global/IntroJs"),
+  JoindateOnPosts: require("./features/threads/JoindateOnPosts"),
   KeyboardNavigationShortcuts: require("./features/forumdisplay/KeyboardNavigationShortcuts"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),

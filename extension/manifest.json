@@ -2,14 +2,14 @@
   "manifest_version": 2,
   "name": "HF Xtension",
   "short_name": "HFX",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "icons": {
     "16": "assets/images/icon16.png",
     "32": "assets/images/icon32.png",
     "48": "assets/images/icon48.png",
     "128": "assets/images/icon128.png"
   },
-  "version_name": "2.2.0",
+  "version_name": "2.2.1",
   "description": "Enhance your HF Experience!",
   "options_ui": {
     "chrome_style": true,

@@ -14,7 +14,7 @@ class TabNotifications extends Feature {
       section: Global,
       name: "Tab Notifications",
       default: true,
-      description: "Notifications also appear in browser tab.",
+      description: "Notifications appear in browser tab.",
       configurables: new ConfigurableArray(
         new Checkbox({ id: "TNCustomSoundEnable", label: "Enable Custom Sound", default: false }),
         new Text({ id: "TNCustomSoundLink", label: "MP3 Link", default: "https://store2.gofile.io/download/ca848df4-fc96-4496-83e3-457b77fa062c/mixkit-message-pop-alert-2354.mp3" }),

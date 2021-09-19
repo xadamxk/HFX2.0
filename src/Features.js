@@ -39,6 +39,7 @@ module.exports = {
   ShowRecipientCount: require("./features/awards/ShowRecipientCount"),
   SmartQuote: require("./features/threads/SmartQuote"),
   TBlockRevived: require("./features/forumdisplay/TBlockRevived"),
+  TabNotifications: require("./features/global/TabNotifications"),
   TagNotificationSound: require("./features/convo/TagNotificationSound"),
   ThemeCustomizer: require("./features/global/ThemeCustomizer"),
   TrackingLinks: require("./features/pms/TrackingLinks")

@@ -1,5 +1,3 @@
-// Coded by device & xadamxk.
-
 const Feature = require("../../core/Feature");
 const Global = require("../../sections/Global");
 const ConfigurableArray = require("../../core/ConfigurableArray");

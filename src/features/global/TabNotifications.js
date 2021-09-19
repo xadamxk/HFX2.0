@@ -15,8 +15,8 @@ class TabNotifications extends Feature {
       default: true,
       description: "Notifications appear in browser tab.",
       author: {
-        name: "+mK",
-        profile: "https://hackforums.net/member.php?action=profile&uid=585389"
+        name: "device",
+        profile: "https://hackforums.net/member.php?action=profile&uid=1255039"
       },
       configurables: new ConfigurableArray(
         new Checkbox({ id: "TNCustomSoundEnable", label: "Enable Custom Sound", default: false }),

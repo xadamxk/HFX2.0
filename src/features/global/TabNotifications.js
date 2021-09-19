@@ -18,12 +18,19 @@ class TabNotifications extends Feature {
       },
       configurables: new ConfigurableArray(
         new Checkbox({ id: "TNCustomSoundEnable", label: "Enable Custom Sound", default: false }),
-        new Text({ id: "TNCustomSoundLink", label: "MP3 Link", default: "https://store2.gofile.io/download/ca848df4-fc96-4496-83e3-457b77fa062c/mixkit-message-pop-alert-2354.mp3" }),
+        new Text({ id: "TNCustomSoundLink", label: "MP3 Link", default: "https://store2.gofile.io/download/ca848df4-fc96-4496-83e3-457b77fa062c/mixkit-message-pop-alert-2354.mp3" })
       )
     });
   }
 
   run(settings) {
+    var notifyButton = document.querySelectorAll(".notifycp");
+
+    for (var i = 0; i < notifyButton.length; ++i) {
+      notifyButton[i].addEventListener("click", function() {
+        document.title = existingTitle;
+      });
+    }
     // Page attributes
     const notificationElement = $("#notify_number_notify");
     const existingTitle = $(".breadcrumb").find("a").last().text();
@@ -49,6 +56,8 @@ class TabNotifications extends Feature {
       notificationObserver.observe(this, obsConfig);
     });
 
+    //
+
     // Check if notification already exists when DOM is loaded
     this.checkForNotifications(notificationElement, existingTitle);
   }
@@ -59,7 +68,6 @@ class TabNotifications extends Feature {
       document.title = `(${notificationCount}) ${existingTitle}`;
       return true;
     }
-    return false;
   }
 };
 

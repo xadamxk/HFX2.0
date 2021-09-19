@@ -1,4 +1,3 @@
-// Tab Notifications 1.0
 // Coded by device & xadamxk.
 
 const Feature = require("../../core/Feature");

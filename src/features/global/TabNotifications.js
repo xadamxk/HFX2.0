@@ -55,9 +55,6 @@ class TabNotifications extends Feature {
     notificationElement.each(function() {
       notificationObserver.observe(this, obsConfig);
     });
-
-    //
-
     // Check if notification already exists when DOM is loaded
     this.checkForNotifications(notificationElement, existingTitle);
   }

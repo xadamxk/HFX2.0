@@ -24,6 +24,7 @@ class TabNotifications extends Feature {
   }
 
   run(settings) {
+    // Use an event listener to reset the page title after notifications is clicked
     const notifyButton = $("#notifycp");
     for (let i = 0; i < notifyButton.length; ++i) {
       notifyButton[i].addEventListener("click", function() {

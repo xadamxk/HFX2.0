@@ -79,6 +79,7 @@ class MyFeature extends Feature {
             name: "My Feature",
             default: true,
             description: "Does something cool",
+            forceEnabled: true, // Removes the ability for users to disable feature
             configurables: new ConfigurableArray(
                 new Checkbox({ id: "myCheckbox", label: "Enable sub-option", default: true }),
                 new Text({ id: "myTextbox", label: "Sub-option value", default: "Secret Setting" }),

@@ -31,7 +31,6 @@ class TabNotifications extends Feature {
 
     for (let i = 0; i < notifyButton.length; ++i) {
       notifyButton[i].addEventListener("click", function() {
-        alert("Hi");
         document.title = existingTitle;
       });
     }

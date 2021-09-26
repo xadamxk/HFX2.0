@@ -11,7 +11,7 @@ class TabNotifications extends Feature {
       section: Global,
       name: "Tab Notifications",
       default: true,
-      description: "Notifications appear in browser tab. W/wo sound",
+      description: "Notifications appear in browser tab (Optional: sound).",
       author: {
         name: "device",
         profile: "https://hackforums.net/member.php?action=profile&uid=1255039"

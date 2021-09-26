@@ -24,16 +24,17 @@ class TabNotifications extends Feature {
   }
 
   run(settings) {
-    // Use an event listener to reset the page title after notifications is clicked
-    const notifyButton = $("#notifycp");
+    // Page attributes
+    const notifyButton = document.getElementsByClassName("notifycp");
+    const notificationElement = $("#notify_number_notify");
+    const existingTitle = $(".breadcrumb").find("a").last().text();
+
     for (let i = 0; i < notifyButton.length; ++i) {
       notifyButton[i].addEventListener("click", function() {
+        alert("Hi");
         document.title = existingTitle;
       });
     }
-    // Page attributes
-    const notificationElement = $("#notify_number_notify");
-    const existingTitle = $(".breadcrumb").find("a").last().text();
     // Use a mutation handler to check if notifications come after DOM is loaded
     const notificationMutationHandler = () => {
       if (this.checkForNotifications(notificationElement, existingTitle)) {
@@ -65,7 +66,6 @@ class TabNotifications extends Feature {
       document.title = `(${notificationCount}) ${existingTitle}`;
       return true;
     }
-  }
+  };
 };
-
 module.exports = new TabNotifications();

@@ -25,16 +25,15 @@ class TabNotifications extends Feature {
 
   run(settings) {
     // Page attributes
-    const notifyButton = document.getElementsByClassName("notifycp");
     const notificationElement = $("#notify_number_notify");
     const existingTitle = $(".breadcrumb").find("a").last().text();
 
     // Event listener, checking for click on the notification icon.
-    for (let i = 0; i < notifyButton.length; ++i) {
-      notifyButton[i].addEventListener("click", function() {
+    $("li").each(function(index) {
+      this.addEventListener("click", function() {
         document.title = existingTitle;
       });
-    }
+    });
     // Use a mutation handler to check if notifications come after DOM is loaded
     const notificationMutationHandler = () => {
       if (this.checkForNotifications(notificationElement, existingTitle)) {

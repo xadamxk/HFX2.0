@@ -7,7 +7,9 @@ class ShowContractedReplies extends Feature {
       section: Global,
       name: "Show Contracted Replies",
       default: true,
-      description: "Button to show contracted replies"
+      description: "Button to show contracted replies",
+      author: "device",
+      profile: "https://hackforums.net/member.php?action=profile&uid=1255039"
     });
   }
 
@@ -17,7 +19,6 @@ class ShowContractedReplies extends Feature {
     if (breadcrumb.includes("Marketplace")) {
       let button = document.createElement("button");
       button.innerHTML = "Contracted Replies";
-      button.type = "button";
       $(button).prependTo($(".float_right.mobile-remove"));
       button.onclick = function() {
         (location.href = location.href + "&mode=contracted");

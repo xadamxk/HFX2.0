@@ -1,10 +1,10 @@
 const Feature = require("../../core/Feature");
-const Global = require("../../sections/Global");
+const Threads = require("../../sections/Threads");
 
 class ShowContractedReplies extends Feature {
   constructor() {
     super({
-      section: Global,
+      section: Threads,
       name: "Show Contracted Replies",
       default: true,
       description: "Button to show contracted replies",

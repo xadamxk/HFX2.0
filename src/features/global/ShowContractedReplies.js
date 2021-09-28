@@ -19,7 +19,9 @@ class ShowContractedReplies extends Feature {
     if (breadcrumb.includes("Marketplace")) {
       let button = document.createElement("button");
       button.innerHTML = "Contracted Replies";
+      $(button).css({"padding": "10px", "background-color": "#1f1f1f", "font-size": "14px"});
       $(button).prependTo($(".float_right.mobile-remove"));
+
       button.onclick = function() {
         (location.href = location.href + "&mode=contracted");
       };

@@ -16,8 +16,9 @@ class ShowContractedReplies extends Feature {
   run() {
     //  Set forum categories breadcrumb
     let threadId = 0;
+    const url = "https://hackforums.net/showthread.php?tid=";
     //  Get thread ID\
-    if (document.getElementsByClassName("breadcrumb-back-arrow")[1].href.includes("php?fid=105")) {
+    if ($(".breadcrumb-back-arrow")[1].href.includes("php?fid=105")) {
       $("input[type=hidden]").each(function() {
         if ($(this).attr("name") === "tid") {
           threadId = $(this).attr("value");
@@ -30,12 +31,12 @@ class ShowContractedReplies extends Feature {
       $(button).css({"padding": "11px", "background-color": "#1f1f1f", "border": "none", "font-size": "14px"});
       $(button).prependTo($(".float_right.mobile-remove"));
       button.onclick = function() {
-        location.href = "https://hackforums.net/showthread.php?tid=" + threadId + "&mode=contracted";
+        location.href = url + threadId + "&mode=contracted";
       };
-      if (location.href === "https://hackforums.net/showthread.php?tid=" + threadId + "&mode=contracted") {
+      if (location.href === url + threadId + "&mode=contracted") {
         button.innerHTML = "Back to thread";
         button.onclick = function() {
-          location.href = "https://hackforums.net/showthread.php?tid=" + threadId;
+          location.href = url + threadId;
         };
       }
     }

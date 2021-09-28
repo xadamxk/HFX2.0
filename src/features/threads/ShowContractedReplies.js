@@ -27,7 +27,7 @@ class ShowContractedReplies extends Feature {
       // Creates a "Contracted replies" button
       let button = document.createElement("button");
       button.innerHTML = "Contracted Posts";
-      button.className = "button new_reply_button";
+      button.className = "button contracted-posts";
       $(button).css({"padding": "11px", "background-color": "#1f1f1f", "border": "none", "font-size": "14px"});
       $(button).prependTo($(".float_right.mobile-remove"));
       button.onclick = function() {

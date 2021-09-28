@@ -15,10 +15,9 @@ class ShowContractedReplies extends Feature {
 
   run() {
     //  Set forum categories breadcrumb
-    const breadcrumb = $(".breadcrumb")[0].innerHTML;
     let threadId = 0;
-    //  Get thread ID
-    if (breadcrumb.includes("Marketplace")) {
+    //  Get thread ID\
+    if (document.getElementsByClassName("breadcrumb-back-arrow")[1].href.includes("php?fid=105")) {
       $("input[type=hidden]").each(function() {
         if ($(this).attr("name") === "tid") {
           threadId = $(this).attr("value");

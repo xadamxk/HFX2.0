@@ -14,7 +14,6 @@ class ShowContractedReplies extends Feature {
   }
 
   run() {
-    //  Set forum categories breadcrumb
     let threadId = 0;
     const url = "https://hackforums.net/showthread.php?tid=";
     //  Get thread ID\

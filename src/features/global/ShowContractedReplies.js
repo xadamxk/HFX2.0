@@ -23,7 +23,11 @@ class ShowContractedReplies extends Feature {
       $(button).prependTo($(".float_right.mobile-remove"));
 
       button.onclick = function() {
-        (location.href = location.href + "&mode=contracted");
+        if (location.href.includes("&mode=contracted")) {
+          window.location.reload();
+        } else {
+          (location.href += "&mode=contracted");
+        }
       };
     }
   }

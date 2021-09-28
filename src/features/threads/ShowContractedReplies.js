@@ -14,21 +14,22 @@ class ShowContractedReplies extends Feature {
   }
 
   run() {
+    //  Set forum categories breadcrumb
     const breadcrumb = $(".breadcrumb")[0].innerHTML;
     let threadId = 0;
-
-    $("input[type=hidden]").each(function() {
-      if ($(this).attr("name") === "tid") {
-        threadId = $(this).attr("value");
-      }
-    });
-
+    //  Get thread ID
     if (breadcrumb.includes("Marketplace")) {
+      $("input[type=hidden]").each(function() {
+        if ($(this).attr("name") === "tid") {
+          threadId = $(this).attr("value");
+        }
+      });
+      // Creates a "Contracted replies" button
       let button = document.createElement("button");
       button.innerHTML = "Contracted Replies";
-      $(button).css({"padding": "10px", "background-color": "#1f1f1f", "font-size": "14px"});
+      button.className = "button new_reply_button";
+      $(button).css({"padding": "11px", "background-color": "#1f1f1f", "border": "none", "font-size": "14px"});
       $(button).prependTo($(".float_right.mobile-remove"));
-
       button.onclick = function() {
         location.href = "https://hackforums.net/showthread.php?tid=" + threadId + "&mode=contracted";
       };

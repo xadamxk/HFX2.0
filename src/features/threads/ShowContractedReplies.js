@@ -15,6 +15,13 @@ class ShowContractedReplies extends Feature {
 
   run() {
     const breadcrumb = $(".breadcrumb")[0].innerHTML;
+    let threadId = 0;
+
+    $("input[type=hidden]").each(function() {
+      if ($(this).attr("name") === "tid") {
+        threadId = $(this).attr("value");
+      }
+    });
 
     if (breadcrumb.includes("Marketplace")) {
       let button = document.createElement("button");
@@ -23,11 +30,7 @@ class ShowContractedReplies extends Feature {
       $(button).prependTo($(".float_right.mobile-remove"));
 
       button.onclick = function() {
-        if (location.href.includes("&mode=contracted")) {
-          window.location.reload();
-        } else {
-          (location.href += "&mode=contracted");
-        }
+        location.href = "https://hackforums.net/showthread.php?tid=" + threadId + "&mode=contracted";
       };
     }
   }

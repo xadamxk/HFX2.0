@@ -33,6 +33,12 @@ class ShowContractedReplies extends Feature {
       button.onclick = function() {
         location.href = "https://hackforums.net/showthread.php?tid=" + threadId + "&mode=contracted";
       };
+      if (location.href === "https://hackforums.net/showthread.php?tid=" + threadId + "&mode=contracted") {
+        button.innerHTML = "Back to thread";
+        button.onclick = function() {
+          location.href = "https://hackforums.net/showthread.php?tid=" + threadId;
+        };
+      }
     }
   }
 };

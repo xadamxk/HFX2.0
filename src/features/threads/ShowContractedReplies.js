@@ -7,7 +7,7 @@ class ShowContractedReplies extends Feature {
       section: Threads,
       name: "Show Contracted Replies",
       default: true,
-      description: "Button to show contracted replies",
+      description: "Button to show contracted replies on Marketplace threads",
       author: {
         name: "device",
         profile: "https://hackforums.net/member.php?action=profile&uid=1255039"

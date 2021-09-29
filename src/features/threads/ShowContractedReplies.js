@@ -8,15 +8,17 @@ class ShowContractedReplies extends Feature {
       name: "Show Contracted Replies",
       default: true,
       description: "Button to show contracted replies",
-      author: "device",
-      profile: "https://hackforums.net/member.php?action=profile&uid=1255039"
+      author: {
+        name: "device",
+        profile: "https://hackforums.net/member.php?action=profile&uid=1255039"
+      }
     });
   }
 
   run() {
     let threadId = 0;
     const url = "https://hackforums.net/showthread.php?tid=";
-    //  Get thread ID\
+    //  Get thread ID
     if ($(".breadcrumb-back-arrow")[1].href.includes("php?fid=105")) {
       $("input[type=hidden]").each(function() {
         if ($(this).attr("name") === "tid") {
@@ -27,6 +29,7 @@ class ShowContractedReplies extends Feature {
       let button = document.createElement("button");
       button.innerHTML = "Contracted Posts";
       button.className = "button contracted-posts";
+      button.id = "hfxShowContractedReplies";
       $(button).css({
         "padding": "11px",
         "background-color": "#1f1f1f",
@@ -37,7 +40,7 @@ class ShowContractedReplies extends Feature {
       button.onclick = function() {
         location.href = url + threadId + "&mode=contracted";
       };
-      if (location.href === url + threadId + "&mode=contracted") {
+      if (location.href.includes("&mode=contracted")) {
         button.innerHTML = "Back to thread";
         button.onclick = function() {
           location.href = url + threadId;

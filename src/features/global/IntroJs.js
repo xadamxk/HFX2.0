@@ -42,7 +42,8 @@ class IntroJs extends Feature {
       "EXPANDPROFILESECTIONS": "EXPANDPROFILESECTIONS",
       "CONVOBLACKLIST": "CONVOBLACKLIST",
       "CONVOREPLY": "CONVOREPLY",
-      "TBLOCKREVIVED": "TBLOCKREVIVED"
+      "TBLOCKREVIVED": "TBLOCKREVIVED",
+      "SHOWCONTRACTEDREPLIES": "SHOWCONTRACTEDREPLIES"
     };
     this.storageKey = "introJsVisitedTours";
     this.delay = 1500;
@@ -221,6 +222,18 @@ class IntroJs extends Feature {
             title: "Quick Unsubscribe",
             element: document.querySelector("#HFXQuickUnsubscribe"),
             intro: "If you're subscribed to the current thread in any way, this button removes all active subscriptions.",
+            position: "bottom"
+          });
+
+          features.push(currentFeature);
+        }
+        break;
+        currentFeature = this.features.SHOWCONTRACTEDREPLIES;
+        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#hfxShowContractedReplies")) {
+          steps.push({
+            title: "Show Contracted Replies",
+            element: document.querySelector("#hfxShowContractedReplies"),
+            intro: "Show all contracted replies for Marketplace threads.",
             position: "bottom"
           });
 

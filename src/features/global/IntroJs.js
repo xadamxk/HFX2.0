@@ -227,9 +227,9 @@ class IntroJs extends Feature {
 
           features.push(currentFeature);
         }
-        break;
+
         currentFeature = this.features.SHOWCONTRACTEDREPLIES;
-        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#hfxShowContractedReplies")) {
+        if (!vistedFeatures.includes(currentFeature) && document.querySelector("#HFXShowContractedReplies")) {
           steps.push({
             title: "Show Contracted Replies",
             element: document.querySelector("#hfxShowContractedReplies"),

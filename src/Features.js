@@ -35,6 +35,7 @@ module.exports = {
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),
   ShortcutLeaderboard: require("./features/game/ShortcutLeaderboard"),
   ShortcutLogs: require("./features/game/ShortcutLogs"),
+  ShowContractedReplies: require("./features/threads/ShowContractedReplies"),
   ShowPostNumbers: require("./features/threads/ShowPostNumbers"),
   ShowRecipientCount: require("./features/awards/ShowRecipientCount"),
   SmartQuote: require("./features/threads/SmartQuote"),

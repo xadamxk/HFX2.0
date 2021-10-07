@@ -2,7 +2,7 @@
 FROM node:stretch-slim
 
 ## Container
-MAINTAINER Lrrr <lrrr@hackforums.net>
+LABEL maintainer="Lrrr <lrrr@hackforums.net>""
 WORKDIR /app
 COPY . .
 

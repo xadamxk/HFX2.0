@@ -3,7 +3,7 @@
 ## Docker
 - Build and tag the container:
 ```bash
-docker build -t hfx:develop
+docker build . -t hfx:develop
 ```
 - Interacting with the container
 ```

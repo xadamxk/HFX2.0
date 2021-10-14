@@ -2,6 +2,7 @@ module.exports = {
   Alerts: require("./features/global/Alerts"),
   AntiCapsLockTitles: require("./features/forumdisplay/AntiCapsLockTitles"),
   AutoFullScreen: require("./features/convo/AutoFullScreen"),
+  AwardGoalAdditions: require("./features/awards/AwardGoalAdditions"),
   Badges: require("./features/threads/Badges"),
   BatteryAbsoluteTime: require("./features/game/BatteryAbsoluteTime"),
   BatteryPercent: require("./features/game/BatteryPercent"),

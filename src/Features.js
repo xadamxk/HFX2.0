@@ -26,6 +26,7 @@ module.exports = {
   IntroJs: require("./features/global/IntroJs"),
   JoindateOnPosts: require("./features/threads/JoindateOnPosts"),
   KeyboardNavigationShortcuts: require("./features/forumdisplay/KeyboardNavigationShortcuts"),
+  LinkedAwards: require("./features/threads/LinkedAwards"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   PMFromPost: require("./features/threads/PMFromPost"),
   PostActivitySearchButtons: require("./features/profile/PostActivitySearchButtons"),

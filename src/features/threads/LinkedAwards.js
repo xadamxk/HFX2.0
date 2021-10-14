@@ -7,7 +7,7 @@ class LinkedAwards extends Feature {
       section: Threads,
       name: "Linked Awards",
       default: true,
-      description: "Make awards that are coupled to a specific thread/post linkable.",
+      description: "Makes awards clickable if the description contains a link.",
       author: {
         name: "False King",
         profile: "https://hackforums.net/member.php?action=profile&uid=1665634"

@@ -16,6 +16,7 @@ module.exports = {
   ExpandProfileSections: require("./features/profile/ExpandProfileSections"),
   ExpandProfileShortcuts: require("./features/profile/ExpandProfileShortcuts"),
   GivePopularityButton: require("./features/threads/GivePopularityButton"),
+  GroupMemberCountLinks: require("./features/showgroups/GroupMemberCountLinks"),
   HFToolBar: require("./features/global/HFToolBar"),
   HideAwardRows: require("./features/threads/HideAwardRows"),
   HideBlockedPosts: require("./features/threads/HideBlockedPosts"),

@@ -4,6 +4,7 @@ module.exports = {
   ForumDisplay: require("./sections/ForumDisplay"),
   Game: require("./sections/Game"),
   Global: require("./sections/Global"),
+  Groups: require("./sections/Groups"),
   PMs: require("./sections/PMs"),
   Profile: require("./sections/Profile"),
   Reputation: require("./sections/Reputation"),

@@ -10,7 +10,8 @@ class Alerts extends Feature {
       section: Global,
       name: "HFX Alerts",
       default: true,
-      description: "Alert system for new features and changes"
+      description: "Alert system for new features and changes",
+      forceEnabled: true
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 5; // Delay (minutes) between new alert fetches
     this.now = Date.now();

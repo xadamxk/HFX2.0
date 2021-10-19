@@ -88,7 +88,15 @@ $(document).ready(function() {
             </div>
             <div class="col-1">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="${feature.class}Toggle" data-section="${section.class}" data-feature="${feature.class}" data-setting="enabled" ${settings.enabled ? "checked" : ""}>
+                <input 
+                type="checkbox" 
+                class="custom-control-input" 
+                id="${feature.class}Toggle" 
+                data-section="${section.class}" 
+                data-feature="${feature.class}" 
+                data-setting="enabled" 
+                ${feature.forceEnabled ? "disabled" : ""} 
+                ${feature.forceEnabled || settings.enabled ? "checked" : ""}>
                 <label class="custom-control-label" for="${feature.class}Toggle"></label>
               </div>
             </div>

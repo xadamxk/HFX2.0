@@ -23,7 +23,8 @@ module.exports = class Feature {
         "profile": "string"
       },
       "configurables": ConfigurableArray,
-      "additionalSections": SectionArray
+      "additionalSections": SectionArray,
+      "forceEnabled": "boolean"
     }, opts);
 
     if (required.unset.length > 0 || required.invalid.length > 0 || optional.invalid.length > 0) {
@@ -45,6 +46,7 @@ module.exports = class Feature {
     this.author = opts.author;
     this.configurables = opts.configurables;
     this.additionalSections = opts.additionalSections;
+    this.forceEnabled = opts.forceEnabled;
   }
 
   initialize() {
@@ -151,6 +153,14 @@ module.exports = class Feature {
 
   set additionalSections(_additionalSections) {
     this._additionalSections = _additionalSections;
+  }
+
+  get forceEnabled() {
+    return this._forceEnabled;
+  }
+
+  set forceEnabled(_forceEnabled) {
+    this._forceEnabled = _forceEnabled;
   }
   // #endregion
 };

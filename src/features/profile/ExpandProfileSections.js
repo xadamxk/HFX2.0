@@ -75,9 +75,9 @@ class ExpandProfileSections extends Feature {
     );
     // Append awards to table
     $(awardsContainer).find(".award_sprite").each(function() {
-      const splitTitle = $(this).attr("title").split("-");
-      const name = (splitTitle)[0];
-      const description = splitTitle.slice(1, splitTitle.length)[0].trim();
+      const awardTitle = $(this).attr("title");
+      const name = awardTitle.split("-")[0].trim();
+      const description = awardTitle.substring(awardTitle.indexOf("-") + 1).trim();
       $("#epsAwardTbody").append($("<tr>")
         .append($("<td>").addClass("tcat").addClass("trow1").append($(this)))
         .append($("<td>").addClass("tcat").addClass("trow1").append($("<strong>").text(name)))

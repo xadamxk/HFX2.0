@@ -61,7 +61,6 @@ Enhance your HackForums experience - rewritten from the ground up with the commu
 
 <h2>Contributing to HFX</h2>
 To learn more about contributing to the development of HFX, get started <a href="contributing.md">here</a>.
-    
 
 <h2>Reviews</h2>
 <ul><li><a href="https://chrome.google.com/webstore/detail/hf-xtension/hcfofmfmidhgbblcnnipcphhegcmdeeb/reviews">125+ Google Chrome Reviews</a></li></ul> 

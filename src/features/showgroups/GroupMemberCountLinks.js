@@ -17,9 +17,18 @@ class GroupMemberCountLinks extends Feature {
 
   run() {
     document.querySelectorAll("div.groupContainer > div").forEach((node) => {
-      const groupId = node.querySelector("div.groupLabel > div.groupName > span > strong").innerHTML.match(/"group(\d+)"/)[1];
+      const nameColorMatch = node.querySelector("div.groupLabel > div.groupName > span > strong").innerHTML.match(/"group(\d+)"/);
+      const joinGroupMatch = node.querySelector("div.groupDesc > span").innerHTML.match(/href="usercp.php\?action=usergroups&amp;joingroup=(\d+)&amp;my_post_key=(?:\d*\w*)+"/);
+      const displayGroupMatch = node.querySelector("div.groupControls").innerHTML.match(/href="usercp.php\?action=usergroups&amp;displaygroup=(\d+)&amp;my_post_key=(?:\d*\w*)+"/);
+
+      let groupId = 0;
+
+      if (displayGroupMatch && displayGroupMatch[1] > 0) groupId = displayGroupMatch[1];
+      else if (joinGroupMatch && joinGroupMatch[1] > 0) groupId = joinGroupMatch[1];
+      else if (nameColorMatch && nameColorMatch[1] > 0) groupId = nameColorMatch[1];
+
       const memberPart = node.querySelector("div.groupMembers");
-      memberPart.innerHTML = memberPart.innerHTML.replace(/Members: (\d+)/, (match, m1) => `<span>Members: <a href="https://hackforums.net/memberlist.php?group_choice=${groupId}">${m1}</a></span>`);
+      if (groupId > 0) memberPart.innerHTML = memberPart.innerHTML.replace(/Members: (\d+)/, (match, m1) => `<span>Members: <a href="https://hackforums.net/memberlist.php?group_choice=${groupId}">${m1}</a></span>`);
     });
   }
 };

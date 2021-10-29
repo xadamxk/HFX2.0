@@ -21,16 +21,28 @@ class ThemeCustomizer extends Feature {
           default: "default",
           dropdownOptions: [
             new Option("default", "Default"),
-            new Option("cyan", "Cyan"),
-            new Option("gray", "Gray"),
+            new Option("blueAzul", "Blue (Azul)"),
+            new Option("cyan", "Blue (Cyan)"),
+            new Option("blueDeep", "Blue (Deep)"),
+            new Option("blueSoft", "Blue (Soft)"),
+            new Option("twitterBlue", "Blue (Twitter)"),
+            new Option("creme", "Creme"),
+            new Option("gold", "Gold"),
+            new Option("gray", "Gray (Dark)"),
+            new Option("grayLight", "Gray (Light)"),
+            new Option("greenBlue", "Green Blue"),
+            new Option("greenTurtle", "Green (Turtle)"),
+            new Option("redLight", "Red (Light)"),
             new Option("magenta", "Magenta"),
             new Option("orange", "Orange"),
             new Option("orange2", "Orange2"),
             new Option("pink", "Pink"),
             new Option("pink2", "Pink2"),
-            new Option("twitterBlue", "Twitter Blue"),
+            new Option("purple", "Purple (Hacker)"),
+            new Option("redOrange", "Red Orange"),
             new Option("rainbow", "Rainbow"),
-            new Option("yellow", "Yellow")
+            new Option("yellow", "Yellow (Bright)"),
+            new Option("yellowDark", "Yellow (Dark)")
           ]}),
         new Checkbox({ id: "tcChangeLogo", label: "Change Logo", default: true }),
         new Checkbox({ id: "tcChangeMosaic", label: "Change Mosaic", default: true }),
@@ -91,6 +103,33 @@ class ThemeCustomizer extends Feature {
     let css = "";
 
     switch (settings["tcThemeName"]) {
+      case "blueAzul":
+        logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_blue_azul.png");
+        accentColor = "#2f525d";
+        break;
+      case "blueDeep":
+        logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_blue_deep.png");
+        accentColor = "#030C40";
+        break;
+      case "blueSoft":
+        logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_blue_soft.png");
+        accentColor = "#153440";
+        break;
+        // TODO: logo
+      case "creme":
+        // logo = Util.getURL("");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_creme.png");
+        accentColor = "#40362A";
+        break;
+        // TODO: logo
+      case "gold":
+        // logo = Util.getURL("");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_gold.png");
+        accentColor = "#3F3602";
+        break;
       case "cyan":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_cyan.png");
@@ -99,7 +138,25 @@ class ThemeCustomizer extends Feature {
       case "gray":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_gray.png");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_gray.png");
+        accentColor = "#1C1F26";
+        break;
+        // TODO: logo
+      case "grayLight":
+        // logo = Util.getURL("/assets/images/theme-customizer/logos/logo_gray.png");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_gray2.png");
         accentColor = "#807e7e";
+        break;
+        // TODO: logo
+      case "greenBlue":
+        // logo = Util.getURL("/assets/images/theme-customizer/logos/.png");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_green_blue.png");
+        accentColor = "#094026";
+        break;
+        // TODO: logo
+      case "greenTurtle":
+        // logo = Util.getURL("/assets/images/theme-customizer/logos/.png");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_green_turtle.png");
+        accentColor = "#16402C";
         break;
       case "magenta":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_magenta.gif");
@@ -126,6 +183,17 @@ class ThemeCustomizer extends Feature {
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_pink2.png");
         accentColor = "#5d2f47";
         break;
+        // TODO: logo
+      case "purple":
+        // logo = Util.getURL("/assets/images/theme-customizer/logos/.gif");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_purple_hacker.png");
+        accentColor = "#360259";
+        break;
+      case "redOrange":
+        logo = Util.getURL("/assets/images/theme-customizer/logos/logo_orange.png");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_red_orange.png");
+        accentColor = "#40150B";
+        break;
       case "twitterBlue":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_cyan.png");
@@ -141,6 +209,11 @@ class ThemeCustomizer extends Feature {
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_yellow.gif");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_yellow.png");
         accentColor = "#cab41b";
+        break;
+      case "yellowDark":
+        logo = Util.getURL("/assets/images/theme-customizer/logos/logo_yellow.gif");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_yellow_dark.png");
+        accentColor = "#736B06";
         break;
       default:
         isDefaultTheme = true;

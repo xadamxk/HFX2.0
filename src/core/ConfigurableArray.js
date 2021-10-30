@@ -1,3 +1,4 @@
+const LineBreak = require("../configurables/LineBreak");
 const Configurable = require("./Configurable");
 
 module.exports = class ConfigurableArray {
@@ -14,15 +15,14 @@ module.exports = class ConfigurableArray {
   }
 
   render(section, feature, settings) {
-    return `
-      <div class="row align-items-center">
-        ${this.configurables.map(configurable => `
-          <div class="col-auto">
-            ${configurable.render(section, feature, settings)}
-          </div>
-        `).join("")}
-      </div>
-    `;
+    return this.configurables.map(configurable => {
+      if (configurable.class === LineBreak.name) {
+        return "<hr>";
+      }
+      return `<div class="row align-items-center"><div class="col-auto">
+      ${configurable.render(section, feature, settings)}
+      </div></div>`;
+    }).join("");
   }
 
   // #region Property Getter/Setters

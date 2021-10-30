@@ -3,6 +3,7 @@ const Convo = require("../../sections/Convo");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Text = require("../../configurables/Text");
 const Checkbox = require("../../configurables/Checkbox");
+const LineBreak = require("../../configurables/LineBreak");
 const Util = require("../../core/Util");
 const Logger = require("../../core/Logger");
 
@@ -15,6 +16,7 @@ class ConvoFilters extends Feature {
       description: "Filter convos by keyword, user, group, and more.",
       configurables: new ConfigurableArray(
         new Text({ id: "ConvoFilterKeywords", label: "Blacklisted Terms (ie. ebook,anime)", default: "" }),
+        new LineBreak({}),
         new Checkbox({ id: "ConvoFilterFlips", label: "Hide Flips", default: false }),
         new Checkbox({ id: "ConvoFilterJackpot", label: "Hide Jackpot", default: false }),
         new Checkbox({ id: "ConvoFilterUsers", label: "Enable User Blacklist", default: true })

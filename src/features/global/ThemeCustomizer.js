@@ -4,6 +4,7 @@ const Global = require("../../sections/Global");
 const ConfigurableArray = require("../../core/ConfigurableArray");
 const Dropdown = require("../../configurables/Dropdown");
 const Checkbox = require("../../configurables/Checkbox");
+const LineBreak = require("../../configurables/LineBreak");
 const Option = require("../../models/option.js");
 const Util = require("../../core/Util");
 
@@ -44,9 +45,11 @@ class ThemeCustomizer extends Feature {
             new Option("yellow", "Yellow (Bright)"),
             new Option("yellowDark", "Yellow (Dark)")
           ]}),
+        new LineBreak({}),
         new Checkbox({ id: "tcChangeLogo", label: "Change Logo", default: true }),
         new Checkbox({ id: "tcChangeMosaic", label: "Change Mosaic", default: true }),
         new Checkbox({ id: "tcBackgroundShadow", label: "Enable Background Shadow", default: false }),
+        new LineBreak({}),
         new Dropdown({
           id: "tcLogoImage",
           label: "Previous Logos (Default: uses theme logo)",

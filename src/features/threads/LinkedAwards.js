@@ -26,7 +26,7 @@ class LinkedAwards extends Feature {
           "award_143" // Ruby
         ];
 
-        let result = '';
+        let result = "";
 
         if (urlRegex.test(award.title)) {
           const matches = award.title.match(urlRegex);

@@ -59,7 +59,7 @@ class IntroJs extends Feature {
     document.onreadystatechange = () => {
       if (document.readyState === "complete") {
         // Delay after page is ready to wait for additional DOM changes
-        setTimeout(async function () {
+        setTimeout(async function() {
           self.determineTours();
         }, this.delay);
       }
@@ -347,7 +347,7 @@ class IntroJs extends Feature {
       showStepNumbers: true
     })
       .start()
-      .onexit(function () {
+      .onexit(function() {
         self.savePageVisit(features, visitedFeatures, yScrollIndex);
       });
   }

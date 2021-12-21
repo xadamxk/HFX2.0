@@ -1,17 +1,22 @@
 const Feature = require("../../core/Feature");
-const Global = require("../../sections/Global");
+const HFX = require("../../sections/HFX");
 const Settings = require("../../core/Settings");
 const Logger = require("../../core/Logger");
 const Util = require("../../core/Util");
 
+const SectionArray = require("../../core/SectionArray");
+const Section = require("../../core/Section");
+const globalSection = new Section("/");
+
 class Alerts extends Feature {
   constructor() {
     super({
-      section: Global,
+      section: HFX,
       name: "HFX Alerts",
       default: true,
       description: "Alert system for new features and changes",
-      forceEnabled: true
+      forceEnabled: true,
+      additionalSections: new SectionArray(globalSection)
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 5; // Delay (minutes) between new alert fetches
     this.now = Date.now();
@@ -39,7 +44,7 @@ class Alerts extends Feature {
           }
 
           Settings.set(this, item);
-        }).fail(function() {
+        }).fail(function () {
           Logger.error("Failed to fetch alert data.");
         });
       }

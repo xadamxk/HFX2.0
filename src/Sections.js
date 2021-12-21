@@ -5,6 +5,7 @@ module.exports = {
   Game: require("./sections/Game"),
   Global: require("./sections/Global"),
   Groups: require("./sections/Groups"),
+  HFX: require("./sections/HFX"),
   PMs: require("./sections/PMs"),
   Profile: require("./sections/Profile"),
   Reputation: require("./sections/Reputation"),

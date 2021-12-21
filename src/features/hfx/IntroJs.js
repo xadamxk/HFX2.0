@@ -1,14 +1,19 @@
 const Feature = require("../../core/Feature");
-const Global = require("../../sections/Global");
+const HFX = require("../../sections/HFX");
 const Util = require("../../core/Util");
+
+const SectionArray = require("../../core/SectionArray");
+const Section = require("../../core/Section");
+const globalSection = new Section("/");
 
 class IntroJs extends Feature {
   constructor() {
     super({
-      section: Global,
+      section: HFX,
       name: "HFX Tour",
       default: true,
-      description: "Guides user through HFX features on the current page."
+      description: "Guides user through HFX features on the current page.",
+      additionalSections: new SectionArray(globalSection)
     });
     // Determine which filters to check for
     this.pages = {
@@ -54,7 +59,7 @@ class IntroJs extends Feature {
     document.onreadystatechange = () => {
       if (document.readyState === "complete") {
         // Delay after page is ready to wait for additional DOM changes
-        setTimeout(async function() {
+        setTimeout(async function () {
           self.determineTours();
         }, this.delay);
       }
@@ -293,7 +298,7 @@ class IntroJs extends Feature {
       case this.pages.PROFILE:
         currentFeature = this.features.EXPANDPROFILESECTIONS;
         if (!vistedFeatures.includes(currentFeature) &&
-        $(".pro-adv-content-info").find(".pro-adv-card").length > 3) {
+          $(".pro-adv-content-info").find(".pro-adv-card").length > 3) {
           steps.push({
             title: "Expand Profile Sections",
             element: document.querySelector(".pro-adv-card"),
@@ -342,7 +347,7 @@ class IntroJs extends Feature {
       showStepNumbers: true
     })
       .start()
-      .onexit(function() {
+      .onexit(function () {
         self.savePageVisit(features, visitedFeatures, yScrollIndex);
       });
   }

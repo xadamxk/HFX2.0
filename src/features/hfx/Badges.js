@@ -1,17 +1,22 @@
 const Feature = require("../../core/Feature");
-const Threads = require("../../sections/Threads");
+const HFX = require("../../sections/HFX");
 const Settings = require("../../core/Settings");
 const Logger = require("../../core/Logger");
 const Util = require("../../core/Util");
 
+const SectionArray = require("../../core/SectionArray");
+const Section = require("../../core/Section");
+const globalSection = new Section("/");
+
 class Badges extends Feature {
   constructor() {
     super({
-      section: Threads,
+      section: HFX,
       name: "HFX Badges",
       default: true,
       disableToggle: true,
-      description: "HFX User Badges earned in various ways. Learn more on the release thread."
+      description: "HFX User Badges earned in various ways. Learn more on the release thread.",
+      additionalSections: new SectionArray(globalSection)
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new alert fetches
     this.now = Date.now();
@@ -39,7 +44,7 @@ class Badges extends Feature {
           }
 
           Settings.set(this, item);
-        }).fail(function() {
+        }).fail(function () {
           Logger.error("Failed to fetch badge data.");
         });
       }
@@ -72,7 +77,7 @@ class Badges extends Feature {
       // Append badge container
       const containerName = ["userBadgeContainer", uid, postIndex].join("-");
       $(post).find(".post_myawards").prepend($("<div>")
-        .css({"width": "144px", "text-align": "center"})
+        .css({ "width": "144px", "text-align": "center" })
         .attr("id", containerName));
 
       // Loop badge entries

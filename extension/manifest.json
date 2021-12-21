@@ -52,7 +52,8 @@
       ],
       "css": [
         "assets/css/HFX.css",
-        "assets/lib/intro.js/introjs.min.css"
+        "assets/lib/intro.js/introjs.min.css",
+        "assets/css/ChristmasLights.css"
       ]
     }
   ],

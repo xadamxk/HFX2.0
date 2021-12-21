@@ -23,6 +23,7 @@ module.exports = {
   HideClosedThreads: require("./features/forumdisplay/HideClosedThreads"),
   HideImages: require("./features/global/HideImages"),
   HidePostbitAttributes: require("./features/threads/HidePostbitAttributes"),
+  HolidayEvents: require("./features/hfx/HolidayEvents"),
   InteractivePostStats: require("./features/threads/InteractivePostStats"),
   IntroJs: require("./features/hfx/IntroJs"),
   JoindateOnPosts: require("./features/threads/JoindateOnPosts"),

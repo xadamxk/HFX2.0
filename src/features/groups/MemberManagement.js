@@ -80,7 +80,7 @@ class MemberManagement extends Feature {
     $(groupsYouLead).after($("<button>").css({ float: "right" }).text(addGroupDataStr)
       .attr({ "title": "HFX: Update Member Management Groups", "id": "hfxUpdateMembers" }));
 
-    $("#hfxUpdateMembers").on("click", function (event) {
+    $("#hfxUpdateMembers").on("click", (event) => {
       const groupsLeadTbody = $(groupsYouLead).parent().parent().parent();
       const groupLeaderData = [];
       $(groupsLeadTbody).find("tr").each((index, tr) => {

@@ -93,21 +93,21 @@ module.exports = {
   },
 
   getLocalStorageKeys() {
-    chrome.storage.local.get(null, function(items) {
+    chrome.storage.local.get(null, function (items) {
       console.log(Object.keys(items));
     });
   },
 
   saveLocalSetting(feature, key, value) {
     const storageKeyString = [feature.class, key].join(".");
-    chrome.storage.local.set({[storageKeyString]: value});
+    chrome.storage.local.set({ [storageKeyString]: value });
   },
 
   async getLocalSetting(feature, key) {
     const storageKeyString = [feature.class, key].join(".");
     try {
-      var promise = new Promise(function(resolve, reject) {
-        chrome.storage.local.get(storageKeyString, function(item) {
+      var promise = new Promise(function (resolve, reject) {
+        chrome.storage.local.get(storageKeyString, function (item) {
           resolve(item[storageKeyString]);
         });
       });
@@ -125,5 +125,9 @@ module.exports = {
 
   replaceAll(str, find, replace) {
     return str.replace(new RegExp(find, "g"), replace);
+  },
+
+  isAddressMatch(currentAddress, desiredAddress) {
+    return currentAddress.includes(desiredAddress) ? currentAddress : "";
   }
 };

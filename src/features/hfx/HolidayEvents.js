@@ -40,7 +40,7 @@ class HolidayEvents extends Feature {
       return output;
     };
 
-    $(".panel-nav-lower").each(function () {
+    $(".panel-nav-lower").each(function() {
       const width = $(this).css("width").replace("px", "");
       console.log(`Width: ${width}`);
       const lightCount = Math.floor(width / 51);

@@ -93,7 +93,7 @@ module.exports = {
   },
 
   getLocalStorageKeys() {
-    chrome.storage.local.get(null, function (items) {
+    chrome.storage.local.get(null, function(items) {
       console.log(Object.keys(items));
     });
   },
@@ -106,8 +106,8 @@ module.exports = {
   async getLocalSetting(feature, key) {
     const storageKeyString = [feature.class, key].join(".");
     try {
-      var promise = new Promise(function (resolve, reject) {
-        chrome.storage.local.get(storageKeyString, function (item) {
+      var promise = new Promise(function(resolve, reject) {
+        chrome.storage.local.get(storageKeyString, function(item) {
           resolve(item[storageKeyString]);
         });
       });

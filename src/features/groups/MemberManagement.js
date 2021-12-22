@@ -42,17 +42,33 @@ class MemberManagement extends Feature {
     $(".pro-adv-content-feed").prepend(
       $("<div>").addClass("pro-adv-card").css({ padding: "10px" })
         .attr({ "id": "hfxMemberManagement" }));
-    // TODO: If groupData is empty, append info to forward user to group management page
-    groupData.forEach(groupItem => {
-      const { id, name } = groupItem;
-      const userbars = $(".pro-adv-groups-group img") || [];
-      const userGroups = [];
-      userbars.each((index, userbar) => {
-        const title = $(userbar).attr("title");
-        userGroups.push(title);
+    if (groupData.length > 0) {
+      groupData.forEach(groupItem => {
+        const { id, name } = groupItem;
+        const userbars = $(".pro-adv-groups-group img") || [];
+        const userGroups = [];
+        userbars.each((index, userbar) => {
+          const title = $(userbar).attr("title");
+          userGroups.push(title);
+        });
+        const manageButtonTxt = userGroups.includes(name) ? "Remove" : "Add";
+        $("#hfxMemberManagement").append($("<div>").text(`${name}: `).append($("<button>").addClass("hfxToggleGroupMembership").attr({ "value": id, "isadded": userGroups.includes(name) }).text(manageButtonTxt)));
       });
-      const manageButtonTxt = userGroups.includes(name) ? "Remove" : "Add";
-      $("#hfxMemberManagement").append($("<div>").text(`${name}: `).append($("<button>").attr({ "value": id }).text(manageButtonTxt)));
+    } else {
+      $("#hfxMemberManagement").append($("<div>").append("HFX Member Management: No group data found. Navigate to <a href='https://hackforums.net/usercp.php?action=usergroups'>Group Membership Page</a> and click 'Add Groups'."));
+    }
+
+    $(".hfxToggleGroupMembership").on("click", (event) => {
+      const isAdded = $(event.target).attr("isadded") || false;
+      const groupId = event.target.value;
+      const postKey = this.getMyPostKey();
+      const username = this.getProfileUsername();
+      const userId = this.getProfileUserId();
+      if (isAdded === "true") {
+        this.removeUser(groupId, postKey, userId);
+      } else {
+        this.addUser(groupId, postKey, username);
+      }
     });
   }
 
@@ -64,7 +80,7 @@ class MemberManagement extends Feature {
     $(groupsYouLead).after($("<button>").css({ float: "right" }).text(addGroupDataStr)
       .attr({ "title": "HFX: Update Member Management Groups", "id": "hfxUpdateMembers" }));
 
-    $("#hfxUpdateMembers").on("click", function(event) {
+    $("#hfxUpdateMembers").on("click", function (event) {
       const groupsLeadTbody = $(groupsYouLead).parent().parent().parent();
       const groupLeaderData = [];
       $(groupsLeadTbody).find("tr").each((index, tr) => {
@@ -85,6 +101,55 @@ class MemberManagement extends Feature {
       alert(`HFX Member Management groups updated: ${JSON.stringify(groupLeaderData)}`);
     });
   }
+
+  addUser(gid, postKey, username) {
+    $.ajax({
+      type: "POST",
+      contentType: "application/x-www-form-urlencoded",
+      url: "/managegroup.php",
+      data: {
+        "my_post_key": postKey,
+        "action": "do_add",
+        "gid": gid,
+        "username": username
+      },
+      success: (data) => {
+        location.reload();
+      }
+    });
+  }
+
+  removeUser(gid, postKey, userId) {
+    var tempRemoveUserKey = "removeuser[" + userId + "]";
+
+    $.ajax({
+      type: "POST",
+      contentType: "application/x-www-form-urlencoded",
+      url: "/managegroup.php",
+      data: {
+        "my_post_key": postKey,
+        "action": "do_manageusers",
+        "gid": gid,
+        [tempRemoveUserKey]: userId
+      },
+      success: (data) => {
+        location.reload();
+      }
+    });
+  }
+
+  getProfileUsername() {
+    return $(".pro-adv-card .largetext").text() || "";
+  }
+
+  getProfileUserId() {
+    return window.location.href.replace(/[^0-9]/g, "") || 0;
+  }
+
+  getMyPostKey() {
+    return $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop() || null;
+  }
 };
+// Remove action: do_manageusers
 
 module.exports = new MemberManagement();

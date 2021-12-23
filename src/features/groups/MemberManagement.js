@@ -14,7 +14,7 @@ class MemberManagement extends Feature {
       section: Groups,
       name: "Member Management",
       default: false,
-      description: "Easily add and remove group members directly from their profile.",
+      description: "GROUP LEADERS ONLY: Easily add and remove group members directly from their profile.",
       additionalSections: new SectionArray(usergroupManagement, userProfiles)
 
     });
@@ -42,6 +42,7 @@ class MemberManagement extends Feature {
     $(".pro-adv-content-feed").prepend(
       $("<div>").addClass("pro-adv-card").css({ padding: "10px" })
         .attr({ "id": "hfxMemberManagement" }));
+    $("#hfxMemberManagement").append($("<div>").append("HFX Member Management: Navigate to <a href='https://hackforums.net/usercp.php?action=usergroups'>Group Membership Page</a> and click 'Add Groups' to update your group leader permissions."));
     if (groupData.length > 0) {
       groupData.forEach(groupItem => {
         const { id, name } = groupItem;
@@ -52,10 +53,8 @@ class MemberManagement extends Feature {
           userGroups.push(title);
         });
         const manageButtonTxt = userGroups.includes(name) ? "Remove" : "Add";
-        $("#hfxMemberManagement").append($("<div>").text(`${name}: `).append($("<button>").addClass("hfxToggleGroupMembership").attr({ "value": id, "isadded": userGroups.includes(name) }).text(manageButtonTxt)));
+        $("#hfxMemberManagement").append($("<div>").css({ margin: "10px" }).text(`${name}: `).append($("<button>").addClass("hfxToggleGroupMembership").attr({ "value": id, "isadded": userGroups.includes(name) }).text(manageButtonTxt)));
       });
-    } else {
-      $("#hfxMemberManagement").append($("<div>").append("HFX Member Management: No group data found. Navigate to <a href='https://hackforums.net/usercp.php?action=usergroups'>Group Membership Page</a> and click 'Add Groups'."));
     }
 
     $(".hfxToggleGroupMembership").on("click", (event) => {

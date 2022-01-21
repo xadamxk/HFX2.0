@@ -100,7 +100,7 @@ module.exports = {
 
   saveLocalSetting(feature, key, value) {
     const storageKeyString = [feature.class, key].join(".");
-    chrome.storage.local.set({[storageKeyString]: value});
+    chrome.storage.local.set({ [storageKeyString]: value });
   },
 
   async getLocalSetting(feature, key) {
@@ -125,5 +125,9 @@ module.exports = {
 
   replaceAll(str, find, replace) {
     return str.replace(new RegExp(find, "g"), replace);
+  },
+
+  isAddressMatch(currentAddress, desiredAddress) {
+    return currentAddress.includes(desiredAddress) ? currentAddress : "";
   }
 };

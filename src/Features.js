@@ -37,6 +37,7 @@ module.exports = {
   QuoteStripping: require("./features/pms/QuoteStripping"),
   RepCharts: require("./features/reputation/RepCharts"),
   SearchYourThreads: require("./features/forumdisplay/SearchYourThreads"),
+  SelectAllUsers: require("./features/groups/SelectAllUsers"),
   ShortcutLeaderboard: require("./features/game/ShortcutLeaderboard"),
   ShortcutLogs: require("./features/game/ShortcutLogs"),
   ShowContractedReplies: require("./features/threads/ShowContractedReplies"),

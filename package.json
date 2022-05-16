@@ -24,7 +24,7 @@
   "author": "xadamxk",
   "license": "ISC",
   "dependencies": {
-    "@yaireo/tagify": "^3.22.3",
+    "@yaireo/tagify": "^4.9.8",
     "bootstrap": "^4.0.0",
     "browserify-resolutions": "^1.1.0",
     "chart.js": "^2.9.4",

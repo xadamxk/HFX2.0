@@ -26,7 +26,7 @@ class AutoDraft extends Feature {
     });
   }
 
-  run() {
+  run(settings) {
     let messageBox, tid, replyButton;
     const pathName = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
@@ -69,7 +69,7 @@ class AutoDraft extends Feature {
         return;
       }
 
-      let hoursToCheck = Util.getConfigurableValue("removeAfterHours");
+      let hoursToCheck = Util.getConfigurableValue("removeAfterHours", this, settings);
 
       if (isNaN(hoursToCheck) || hoursToCheck < 1) {
         hoursToCheck = 24;

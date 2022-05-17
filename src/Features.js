@@ -1,6 +1,7 @@
 module.exports = {
   Alerts: require("./features/hfx/Alerts"),
   AntiCapsLockTitles: require("./features/forumdisplay/AntiCapsLockTitles"),
+  AutoDraft: require("./features/threads/AutoDraft"),
   AutoFullScreen: require("./features/convo/AutoFullScreen"),
   AwardGoalAdditions: require("./features/awards/AwardGoalAdditions"),
   Badges: require("./features/hfx/Badges"),

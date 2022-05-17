@@ -33,7 +33,7 @@ class QuickUnsubscribe extends Feature {
       $("#HFXQuickUnsubscribe").on("click", () => {
         $.ajax({
           type: "POST",
-          url: "/usercp2.php?ajax=1",
+          url: `${window.location.origin}/usercp2.php?ajax=1`,
           data: `action=removesubscription&my_post_key=${postKey}&tid=${threadId}`,
           success: function(res) {
             location.reload();

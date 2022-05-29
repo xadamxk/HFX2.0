@@ -33,7 +33,7 @@ class LinkedAwards extends Feature {
           result = matches[0];
         } else if (eggAwards.includes(award.classList.item(1))) {
           const postId = award.title.match(/\d+/g);
-          result = "https://hackforums.net/showthread.php?pid=" + postId + "#" + postId;
+          result = "https://hackforums.net/showthread.php?tid=" + postId;
         }
 
         if (result.length > 0) {

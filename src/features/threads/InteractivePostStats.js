@@ -15,7 +15,13 @@ class InteractivePostStats extends Feature {
     // Loop post author
     $(".post").each(function() {
       const postbitTable = $(this).find(".post_author");
-      const userId = $(postbitTable).find(".author_information .largetext > a").attr("href").split("&uid=")[1];
+      try {
+        const userId = $(postbitTable).find(".author_information .largetext > a").attr("href").split("&uid=")[1];
+      }
+      catch(err) {
+        // https://stackoverflow.com/a/17162375
+        return;
+      }
       const postId = $(this).attr("id").replace("post_", "");
       // Loop rows
       $(postbitTable).find(".author_row").each(function() {

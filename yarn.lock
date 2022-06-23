@@ -1396,10 +1396,10 @@
   resolved "https://registry.yarnpkg.com/@webcomponents/custom-elements/-/custom-elements-1.4.3.tgz#1800d49f38bb4425ebfd160b50115e62776109d7"
   integrity sha512-iD0YW46SreUQANGccywK/eC+gZELNHocZZrY2fGwrIlx/biQOTkAF9IohisibHbrmIHmA9pVCIdGwzfO+W0gig==
 
-"@yaireo/tagify@^3.22.3":
-  version "3.23.0"
-  resolved "https://registry.yarnpkg.com/@yaireo/tagify/-/tagify-3.23.0.tgz#ea74e971d520af3db9ecbd404d075fbe31fcf183"
-  integrity sha512-zSfCnHHniMP9OsucYGqQISOntCHo4VOtjOsI6SSlq+4SbWrB58BxG9KCjqv7iWKVV2WLtgYOGtzfJF3T+AWndA==
+"@yaireo/tagify@^4.9.8":
+  version "4.9.8"
+  resolved "https://registry.yarnpkg.com/@yaireo/tagify/-/tagify-4.9.8.tgz#67082ecca81fbbec4d75bb95581280f27af22fba"
+  integrity sha512-JqRTN4vb5tx06PJIRIOAlriO/B6u+a3jD/VBb5x6E1MOlC4wrMfaLHmNnrMpiZCHMXox7pVmrtNuyBe4YReJ4w==
 
 JSONStream@^1.0.3:
   version "1.3.5"

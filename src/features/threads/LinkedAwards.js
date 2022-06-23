@@ -32,8 +32,8 @@ class LinkedAwards extends Feature {
           const matches = award.title.match(urlRegex);
           result = matches[0];
         } else if (eggAwards.includes(award.classList.item(1))) {
-          const postId = award.title.match(/\d+/g);
-          result = "https://hackforums.net/showthread.php?tid=" + postId;
+          const threadId = award.title.match(/\d+/g);
+          result = "https://hackforums.net/showthread.php?tid=" + threadId;
         }
 
         if (result.length > 0) {

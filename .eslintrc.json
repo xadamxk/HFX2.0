@@ -26,5 +26,8 @@
     "jest": true,
     "es6": true
   },
-  "root": true
+  "root": true,
+  "parserOptions": {
+    "ecmaVersion": 2020
+  }
 }

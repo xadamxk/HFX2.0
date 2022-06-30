@@ -20,6 +20,7 @@ class ExpandProfileSections extends Feature {
   run(settings) {
     // Profile username
     const profileUsername = $(".Aligner").find(".largetext").text();
+    const profileUID = location.href.split("uid=")[1] || "";
 
     // Append cards in reverse order
     // Comrades
@@ -30,7 +31,7 @@ class ExpandProfileSections extends Feature {
     const awardsContainer = $(".pro-adv-awards-group");
     if (Util.getConfigurableValue("EPSExpandAwards", this, settings)) {
       // custom
-      this.appendAwardCard(awardsContainer, profileUsername);
+      this.appendAwardCard(awardsContainer, profileUsername, profileUID);
     } else {
       this.appendProfileCard(awardsContainer, "Awards", profileUsername);
     }
@@ -57,15 +58,16 @@ class ExpandProfileSections extends Feature {
     );
   }
 
-  appendAwardCard(awardsContainer, username) {
+  appendAwardCard(awardsContainer, username, uid) {
     // Append table for awards
+    const awardCount = $(awardsContainer).find(".award_sprite").length;
     $(awardsContainer).parent().parent().after(
       $("<div>").addClass("pro-adv-card pro-adv-card-p-5").css({"max-height": "450px", "overflow-y": "scroll"})
         .append($("<table>").css({"width": "100%"}).addClass("tborder").attr({"border": "0", "cellspacing": "0", "cellpadding": "5"})
           .append($("<tbody>").attr({"id": "epsAwardTbody"})
             .append($("<tr>")
               .append($("<td>").addClass("thead").attr({"colspan": "3"})
-                .append($("<strong>").text(`${username} Awards`))
+                .append($("<strong>").append(`<a href="https://hackforums.net/myawards.php?uid=${uid}">${username} Awards (${awardCount})</a>`))
               ))
             .append($("<tr>")
               .append($("<td>").addClass("tcat").attr({"width": "15%"}).append($("<strong>").text("Award")))

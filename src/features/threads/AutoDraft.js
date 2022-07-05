@@ -52,7 +52,7 @@ class AutoDraft extends Feature {
     };
 
     const restore = async () => {
-      const draftRaw = Util.getLocalSetting(this, `hackforums-auto-draft-${tid}`);
+      const draftRaw = await Util.getLocalSetting(this, `hackforums-auto-draft-${tid}`);
       const draft = JSON.parse(draftRaw);
 
       if (!draft) {

@@ -15,7 +15,7 @@ class AutoDraft extends Feature {
       section: Threads,
       name: "Auto Draft",
       default: false,
-      description: "Auto-saving your replies in threads, so in case your browser or PC crashes, you won't lose what you have typed in as your reply.",
+      description: "Auto-saves your replies in threads",
       author: {
         name: "xHeaven", profile: "https://hackforums.net/member.php?action=profile&uid=3193396"
       },
@@ -51,8 +51,8 @@ class AutoDraft extends Feature {
       return !(!messageBox || !tid || !replyButton);
     };
 
-    const restore = () => {
-      const draftRaw = localStorage.getItem(`hackforums-auto-draft-${tid}`);
+    const restore = async () => {
+      const draftRaw = Util.getLocalSetting(this, `hackforums-auto-draft-${tid}`);
       const draft = JSON.parse(draftRaw);
 
       if (!draft) {
@@ -76,12 +76,12 @@ class AutoDraft extends Feature {
       }
 
       if (this.isMoreThanXHours(new Date(), draftDate, hoursToCheck)) {
-        console.log(`Draft is more than one day old, not restoring. Removing it from cache... - ${tid}`);
-        localStorage.removeItem(`hackforums-auto-draft-${tid}`);
-        console.log(`Removed! - ${tid}`);
+        Logger.debug(`Draft is more than one day old, not restoring. Removing it from cache... - ${tid}`);
+        Util.clearLocalSetting(this, `hackforums-auto-draft-${tid}`);
+        Logger.debug(`Removed! - ${tid}`);
       } else {
         messageBox.value = draft.message;
-        console.log(`Draft restored! - ${tid}`);
+        Logger.debug(`Draft restored! - ${tid}`);
       }
     };
 
@@ -93,19 +93,19 @@ class AutoDraft extends Feature {
 
         const draft = JSON.stringify(draftObj);
 
-        localStorage.setItem(`hackforums-auto-draft-${tid}`, draft);
+        Util.saveLocalSetting(this, `hackforums-auto-draft-${tid}`, draft);
 
-        console.log(`Draft saved! - ${tid}`);
+        Logger.debug(`Draft saved! - ${tid}`);
       }));
 
       replyButton.addEventListener("click", () => {
-        localStorage.removeItem(`hackforums-auto-draft-${tid}`);
-        console.log(`Draft removed because you've replied! - ${tid}`);
+        Util.clearLocalSetting(this, `hackforums-auto-draft-${tid}`);
+        Logger.debug(`Draft removed because you've replied! - ${tid}`);
       });
     };
 
     if (!init()) {
-      console.log(`HF Auto-Draft init failed. - ${tid}`);
+      Logger.debug(`HF Auto-Draft init failed. - ${tid}`);
       return;
     }
 

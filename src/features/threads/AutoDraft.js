@@ -1,6 +1,7 @@
 const Feature = require("../../core/Feature");
 const Threads = require("../../sections/Threads");
 const Section = require("../../core/Section.js");
+const Logger = require("../../core/Logger");
 const SectionArray = require("../../core/SectionArray.js");
 const ConfigurableArray = require("../../core/ConfigurableArray.js");
 const Stepper = require("../../configurables/Stepper.js");
@@ -51,7 +52,7 @@ class AutoDraft extends Feature {
       return !(!messageBox || !tid || !replyButton);
     };
 
-    const restore = async () => {
+    const restore = async() => {
       const draftRaw = await Util.getLocalSetting(this, `hackforums-auto-draft-${tid}`);
       const draft = JSON.parse(draftRaw);
 

@@ -65,32 +65,32 @@ class EmoteLibrary extends Feature {
     switch (address) {
       case this.isMatch(address, "/showthread.php"):
         if (enabledInThreads) {
-          return this.parseThreadEmotes(emotes);
+          return this.parseThreadEmotes(emotes, true);
         }
         break;
       case this.isMatch(address, "/newreply.php"):
         if (enabledInThreads) {
           this.parseThreadEmotes(emotes);
-          return enabledInThreads && this.appendEditorEmotePicker(emotes);
+          return enabledInThreads && this.appendEditorEmotePicker(emotes, true);
         }
         break;
       case this.isMatch(address, "/editpost.php"):
         if (enabledInThreads) {
           this.parseThreadEmotes(emotes);
-          return this.appendEditorEmotePicker(emotes);
+          return this.appendEditorEmotePicker(emotes, true);
         }
         break;
       case this.isMatch(address, "/newthread.php"):
         if (enabledInThreads) {
           this.parseThreadEmotes(emotes);
-          return this.appendEditorEmotePicker(emotes);
+          return this.appendEditorEmotePicker(emotes, true);
         }
         break;
       case this.isMatch(address, "/private.php"):
         if (enabledInPM) {
           this.parseThreadEmotes(emotes);
           return $("form[name=input]").length > 0
-            ? this.appendEditorEmotePicker(emotes) : null;
+            ? this.appendEditorEmotePicker(emotes, true) : null;
         }
         break;
       case this.isMatch(address, "/convo.php"):
@@ -104,7 +104,7 @@ class EmoteLibrary extends Feature {
     }
   }
 
-  appendEditorEmotePicker(emotes) {
+  appendEditorEmotePicker(emotes, enableInvisibleWrapper = false) {
     // Append emoji button
     $(".sceditor-toolbar").append($("<div>").addClass("sceditor-group")
       .append($("<a>").attr({"title": "HFX: Emotes"}).css({
@@ -152,6 +152,10 @@ class EmoteLibrary extends Feature {
         emote = ` :${event.detail.name}:`;
       }
 
+      // Wrap emoji text in transparent wrapper for non-HFX users
+      if (enableInvisibleWrapper) {
+        emote = `[color=transparent]${emote}[/color]`;
+      }
       // Insert emote
       document.querySelector(".sceditor-container > textarea").value += emote;
     });

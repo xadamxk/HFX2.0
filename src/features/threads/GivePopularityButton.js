@@ -16,7 +16,7 @@ class GivePopularityPostbitButton extends Feature {
   }
 
   run() {
-    document.querySelectorAll("div.post_wrapper a[href*='reputation.php?uid=']").forEach((postbit) => {
+    document.querySelectorAll("div.author_wrapper a[href*='reputation.php?uid=']").forEach((postbit) => {
       let rate = document.createElement("a");
 
       rate.href = `javascript:MyBB.reputation(${postbit.getAttribute("href").split("=")[1]})`;

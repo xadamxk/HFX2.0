@@ -12,7 +12,9 @@ class ExpandProfileSections extends Feature {
       default: true,
       description: "Expands profile visitors, groups, awards, and comrades on member profiles.",
       configurables: new ConfigurableArray(
-        new Checkbox({ id: "EPSExpandAwards", label: "Expand Awards", default: true })
+        new Checkbox({ id: "EPSExpandAwards", label: "Expand Awards", default: true }),
+        new Checkbox({ id: "EPSShowVisitorNames", label: "Show Visitor Names", default: true }),
+        new Checkbox({ id: "EPSShowComradeNames", label: "Show Comrade Names", default: true })
       )
     });
   }
@@ -25,7 +27,11 @@ class ExpandProfileSections extends Feature {
     // Append cards in reverse order
     // Comrades
     const comradesContainer = $(".pro-adv-buddy-group");
-    this.appendProfileCard(comradesContainer, "Comrades", profileUsername);
+    this.appendProfileCard(comradesContainer, "Comrades", profileUsername, "hfxComradeCard");
+
+    if (Util.getConfigurableValue("EPSShowComradeNames", this, settings)) {
+      this.appendProfileNames("#hfxComradeCard > div");
+    }
 
     // Awards
     const awardsContainer = $(".pro-adv-awards-group");
@@ -33,25 +39,42 @@ class ExpandProfileSections extends Feature {
       // custom
       this.appendAwardCard(awardsContainer, profileUsername, profileUID);
     } else {
-      this.appendProfileCard(awardsContainer, "Awards", profileUsername);
+      this.appendProfileCard(awardsContainer, "Awards", profileUsername, "hfxAwardCard");
     }
 
     // Groups
     const groupsContainer = $(".pro-adv-groups-group");
-    this.appendProfileCard(groupsContainer, "Groups", profileUsername);
+    this.appendProfileCard(groupsContainer, "Groups", profileUsername, "hfxGroupsCard");
 
     // Profile Views
     const profileViewersContainer = $(".pro-adv-visitor-group");
-    this.appendProfileCard(profileViewersContainer, "Profile Visitors", profileUsername);
+    this.appendProfileCard(profileViewersContainer, "Profile Visitors", profileUsername, "hfxProfileVisitors");
+
+    if (Util.getConfigurableValue("EPSShowVisitorNames", this, settings)) {
+      this.appendProfileNames("#hfxProfileVisitors > div");
+    }
 
     // Remove original section
     $(".pro-adv-visitor-group").parent().parent().hide();
   }
 
-  appendProfileCard(container, title, username) {
+  appendProfileNames(selector) {
+    if (!$(selector)) { return; }
+    $(selector).each((index, profileContainer) => {
+      if (index !== 0) {
+        const profile = $(profileContainer).find("a:first");
+        const profileName = $(profile).attr("title");
+        $(profile).prepend($("<div>")
+          .css({"text-align": "center", "font-weight": "bold", "font-size": "10px"})
+          .text(profileName));
+      }
+    });
+  }
+
+  appendProfileCard(container, title, username, id) {
     const elements = $(container).children().clone();
     $(container).parent().parent().after(
-      $("<div>").addClass("pro-adv-card pro-adv-card-p-5")
+      $("<div>").addClass("pro-adv-card pro-adv-card-p-5").attr({"id": id})
         .append($("<strong>").text([username, title].join(" ")))
         .append($("<div>").css({"margin": "5px", "margin-bottom": "10px"}).append("<hr>"))
         .append(elements)

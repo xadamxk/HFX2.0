@@ -29,6 +29,7 @@ module.exports = {
   JoindateOnPosts: require("./features/threads/JoindateOnPosts"),
   KeyboardNavigationShortcuts: require("./features/forumdisplay/KeyboardNavigationShortcuts"),
   LinkedAwards: require("./features/threads/LinkedAwards"),
+  LinkedThreadStatusIcons: require("./features/forumdisplay/LinkedThreadStatusIcons"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
   MemberManagement: require("./features/groups/MemberManagement"),
   PMFromPost: require("./features/threads/PMFromPost"),

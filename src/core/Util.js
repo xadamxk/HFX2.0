@@ -123,11 +123,18 @@ module.exports = {
     chrome.storage.local.remove(storageKeyString);
   },
 
+  // TODO: move above to LibraryUtils
   replaceAll(str, find, replace) {
     return str.replace(new RegExp(find, "g"), replace);
   },
 
   isAddressMatch(currentAddress, desiredAddress) {
     return currentAddress.includes(desiredAddress) ? currentAddress : "";
+  },
+
+  getUrlParameterValue(urlParameter) {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    return urlParams.get(urlParameter) || null;
   }
 };

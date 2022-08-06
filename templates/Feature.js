@@ -17,7 +17,7 @@ class {{{ name }}} extends Feature {
 
   run() {
   }
-};
+}
 
 module.exports = new {{{ name }}}();
 `;

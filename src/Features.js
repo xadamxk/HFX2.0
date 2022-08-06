@@ -34,6 +34,7 @@ module.exports = {
   PMFromPost: require("./features/threads/PMFromPost"),
   PostActivitySearchButtons: require("./features/profile/PostActivitySearchButtons"),
   PostsOnThread: require("./features/threads/PostsOnThread"),
+  PrefixLinks: require("./features/forumdisplay/PrefixLinks"),
   QuickUnsubscribe: require("./features/threads/QuickUnsubscribe"),
   QuoteStripping: require("./features/pms/QuoteStripping"),
   RepCharts: require("./features/reputation/RepCharts"),

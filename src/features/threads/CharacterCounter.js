@@ -42,7 +42,6 @@ class CharacterCounter extends Feature {
   generateTag(tagContainer, inputElement, backgroundColor = "#1f1f1f", borderColor = "#0E0E0E") {
     let self = this;
     let charCount = inputElement.val()?.length;
-    if (!charCount) return;
     let threshold = this.calculateThreshold(charCount);
     $(tagContainer).append("<hr>")
       .append($("<div>").css("text-align", "center").attr({"title": "HFX Character Counter"})

@@ -1,4 +1,4 @@
 {
-  "AlertKey": 1642728135455,
-  "AlertValue": "<u>HFX Alerts: v2.4.0 Changelog</u><br>Changes: Group Management via Profiles, Showgroups.php member count links, and bug fixes.<br>Version 2.4.0 has been submitted to Chrome and FireFox - awaiting review.<br><a href='https://hackforums.net/showthread.php?tid=6152837'>HFX 2.0 Release Thread</a>"
+  "AlertKey": 1659810797383,
+  "AlertValue": "<u>HFX Alerts: v2.5.0 Changelog</u><br>New Features: LinkedThreadStatusIcon, ForumPrefixLinks, AutoDraft <br>Updated EmoteLibrary, ExpandProfileSections, LinkedAwards<br> Fixed: CharacterCounter, LinkedAwards, GivePopularityButton, and InteractivePostStats bugs<br>Version 2.5.0 has been submitted to Chrome and FireFox - awaiting review.<br><a href='https://hackforums.net/showthread.php?tid=6152837'>HFX 2.0 Release Thread</a>"
 }

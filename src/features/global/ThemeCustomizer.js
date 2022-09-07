@@ -21,6 +21,7 @@ class ThemeCustomizer extends Feature {
           default: "default",
           dropdownOptions: [
             new Option("default", "Default"),
+            new Option("mobale_blue", "Mobale Blue"),
             new Option("cyan", "Cyan"),
             new Option("gray", "Gray"),
             new Option("magenta", "Magenta"),
@@ -41,6 +42,7 @@ class ThemeCustomizer extends Feature {
           default: "default",
           dropdownOptions: [
             new Option("default", "Default"),
+            new Option("https://hackforums.net/images/logo/", "Previous Theme"),
             new Option("https://hackforums.net/images/logo/logo-hf.png", "Black Convo"),
             new Option("https://hackforums.net/images/logo/logo.10th.png", "10 Year Anniversary"),
             new Option("https://hackforums.net/images/logo/logo.gwm.png", "Goodwill Monday"),
@@ -91,6 +93,11 @@ class ThemeCustomizer extends Feature {
     let css = "";
 
     switch (settings["tcThemeName"]) {
+      case "mobale_blue":
+        logo = Util.getURL("/assets/images/theme-customizer/logos/logo_default.gif");
+        mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_default.png");
+        accentColor = "#2f3b5d";
+        break;
       case "cyan":
         logo = Util.getURL("/assets/images/theme-customizer/logos/logo_cyan.gif");
         mosaic = Util.getURL("/assets/images/theme-customizer/mosaics/mosaic_cyan.png");

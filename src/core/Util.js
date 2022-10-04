@@ -136,5 +136,9 @@ module.exports = {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     return urlParams.get(urlParameter) || null;
+  },
+
+  getUserPostKey() {
+    return $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop() || null;
   }
 };

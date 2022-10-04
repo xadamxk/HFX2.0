@@ -1,6 +1,7 @@
 const Feature = require("../../core/Feature");
 const Logger = require("../../core/Logger");
 const Threads = require("../../sections/Threads");
+const Util = require("../../core/Util");
 
 class QuickUnsubscribe extends Feature {
   constructor() {
@@ -15,7 +16,7 @@ class QuickUnsubscribe extends Feature {
   run() {
     const unsubscribeElement = $(".subscription_remove");
     if (unsubscribeElement.length) {
-      const postKey = $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop();
+      const postKey = Util.getUserPostKey();
       const threadId = $(unsubscribeElement).find("a").attr("onclick").replace(/\D/g, "");
       $(unsubscribeElement).after($("<li>")
         .append($("<i>").addClass("fa fa-sign-out-alt").css({

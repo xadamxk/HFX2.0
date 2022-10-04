@@ -1,5 +1,6 @@
 const Feature = require("../../core/Feature");
 const Threads = require("../../sections/Threads");
+const Util = require("../../core/Util");
 
 class PMFromPost extends Feature {
   constructor() {
@@ -16,7 +17,7 @@ class PMFromPost extends Feature {
     this.startDynamicListeners();
 
     $(".post").each(function(index) {
-      const myPostKey = $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop();
+      const myPostKey = Util.getMyPostKey();
       const postId = $(this).attr("id").split("_").pop();
       const postLink = $(this).find(`#post_url_${postId}`).attr("href");
       const postUser = $(this).find(".author_information a").eq(0).text();

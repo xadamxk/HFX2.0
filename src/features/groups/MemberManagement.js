@@ -60,7 +60,7 @@ class MemberManagement extends Feature {
     $(".hfxToggleGroupMembership").on("click", (event) => {
       const isAdded = $(event.target).attr("isadded") || false;
       const groupId = event.target.value;
-      const postKey = this.getMyPostKey();
+      const postKey = Util.getUserPostKey();
       const username = this.getProfileUsername();
       const userId = this.getProfileUserId();
       if (isAdded === "true") {
@@ -143,10 +143,6 @@ class MemberManagement extends Feature {
 
   getProfileUserId() {
     return window.location.href.replace(/[^0-9]/g, "") || 0;
-  }
-
-  getMyPostKey() {
-    return $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop() || null;
   }
 };
 // Remove action: do_manageusers

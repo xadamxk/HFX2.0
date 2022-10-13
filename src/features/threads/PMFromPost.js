@@ -17,7 +17,7 @@ class PMFromPost extends Feature {
     this.startDynamicListeners();
 
     $(".post").each(function(index) {
-      const myPostKey = Util.getMyPostKey();
+      const myPostKey = Util.getUserPostKey();
       const postId = $(this).attr("id").split("_").pop();
       const postLink = $(this).find(`#post_url_${postId}`).attr("href");
       const postUser = $(this).find(".author_information a").eq(0).text();

@@ -8,6 +8,7 @@ const SectionArray = require("../../core/SectionArray");
 const Section = require("../../core/Section");
 const threadSection = new Section("/showthread.php");
 const profileSection = new Section("/member.php");
+const legacyReputationSection = new Section("/reputation_archive.php");
 
 class LegacyReputation extends Feature {
   constructor() {
@@ -16,7 +17,7 @@ class LegacyReputation extends Feature {
       name: "Legacy Reputation",
       default: true,
       description: "Show legacy reptutation total on posts, profiles, and more.",
-      additionalSections: new SectionArray(threadSection, profileSection)
+      additionalSections: new SectionArray(threadSection, profileSection, legacyReputationSection)
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new alert fetches
     this.now = Date.now();
@@ -27,27 +28,38 @@ class LegacyReputation extends Feature {
   }
 
   run() {
-    Settings.get(this, item => {
-      const timePassed = item.legacyReputationLastChecked !== undefined ? Math.floor((new Date().getTime() - item.legacyReputationLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
-
-      if (Math.floor(timePassed < this.fetchDelay)) {
-        Logger.debug(`LegacyReputation: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
-
-        if (item.currentLegacyReputation !== undefined) {
-          this.appendData(item.currentLegacyReputation);
+    const url = window.location.href;
+    if (url.includes("reputation_archive.php")) {
+      $(".breadcrumb").after($("<div>").css({ "paddingBottom": "4px", "float": "right" }).append($("<a>").addClass("button").attr({ "href": "javascript:void(0);", "id": "shareReputationArchive" }).append($("<span>").text("Share Summary"))));
+      const self = this;
+      $("#shareReputationArchive").click(function() {
+        if (confirm("Are you sure you want to share your reputation archive summary with xadamxk?")) {
+          self.sendLegacyReport();
         }
-      } else {
-        $.getJSON(this.fetchLocation, fetchedData => {
-          item.legacyReputationLastChecked = new Date().getTime();
-          item.currentLegacyReputation = fetchedData;
-          this.appendData(item.currentLegacyReputation);
+      });
+    } else {
+      Settings.get(this, item => {
+        const timePassed = item.legacyReputationLastChecked !== undefined ? Math.floor((new Date().getTime() - item.legacyReputationLastChecked) / (this.fetchDelay * 60 * 1000)) : this.fetchDelay;
 
-          Settings.set(this, item);
-        }).fail(function() {
-          Logger.error("Failed to fetch LegacyReputation data.");
-        });
-      }
-    });
+        if (Math.floor(timePassed < this.fetchDelay)) {
+          Logger.debug(`LegacyReputation: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`);
+
+          if (item.currentLegacyReputation !== undefined) {
+            this.appendData(item.currentLegacyReputation);
+          }
+        } else {
+          $.getJSON(this.fetchLocation, fetchedData => {
+            item.legacyReputationLastChecked = new Date().getTime();
+            item.currentLegacyReputation = fetchedData;
+            this.appendData(item.currentLegacyReputation);
+
+            Settings.set(this, item);
+          }).fail(function() {
+            Logger.error("Failed to fetch LegacyReputation data.");
+          });
+        }
+      });
+    }
   }
 
   determineReputationClass(value) {
@@ -90,6 +102,62 @@ class LegacyReputation extends Feature {
             .append($("<strong>").addClass(this.determineReputationClass(reputationRecord)).text(reputationLabel.toLocaleString()))));
     }
   }
+
+  getLegacyReputationSummary() {
+    const totalReputation = $(".repbox").text().replace(",", "");
+    const allTimeRow = $(".reputation > tbody > tr:eq(4)")[0];
+    const allTimePositives = $(allTimeRow).find("td:eq(1)").text();
+    const allTimeNeutrals = $(allTimeRow).find("td:eq(2)").text();
+    const allTimeNegatives = $(allTimeRow).find("td:eq(3)").text();
+    const userId = $(".welcome > strong > a").attr("href").replace("https://hackforums.net/member.php?action=profile&uid=", "");
+    const username = $(".welcome > strong > a").text();
+    return {
+      "uid": parseInt(userId),
+      "username": username,
+      "total": parseInt(totalReputation),
+      "positives": parseInt(allTimePositives),
+      "neutrals": parseInt(allTimeNeutrals),
+      "negatives": parseInt(allTimeNegatives)
+
+    };
+  };
+
+  formatLegacyReputationSummary(summary) {
+    const currentTimeInSeconds = new Date().getTime() / 1000;
+    return `[quote="ReputationArchiveExport" dateline="${Math.floor(currentTimeInSeconds)}"]
+    ${btoa(JSON.stringify(summary))}
+    [/quote]`;
+  };
+
+  sendLegacyReport() {
+    const userPostKey = $("head").html().match(/my_post_key = "([a-f0-9]+)"/).pop() || null;
+    const summary = this.getLegacyReputationSummary();
+    try {
+      $.ajax({
+        type: "POST",
+        url: "https://hackforums.net/private.php",
+        data: {
+          "my_post_key": userPostKey,
+          "to": "xadamxk",
+          "bcc": "",
+          "subject": Util.isDevelopment ? `ReputationArchiveExport_${new Date().getTime()}` : "ReputationArchiveExport",
+          "message": this.formatLegacyReputationSummary(summary),
+          "action": "do_send",
+          "submit": "Send Message"
+        },
+        success: () => {
+          this.sendNotification("Successfully shared Reputation Archive Summary with xadamxk. Thank you :)");
+        }
+      });
+    } catch (err) {
+      console.log(err);
+      this.sendNotification("Failed to share Reputation Archive Summary. Contact xadamxk for assistance.", false);
+    };
+  };
+
+  sendNotification(message, isError = false) {
+    alert(message);
+  };
 }
 
 module.exports = new LegacyReputation();

@@ -28,6 +28,7 @@ module.exports = {
   IntroJs: require("./features/hfx/IntroJs"),
   JoindateOnPosts: require("./features/threads/JoindateOnPosts"),
   KeyboardNavigationShortcuts: require("./features/forumdisplay/KeyboardNavigationShortcuts"),
+  LegacyReputation: require("./features/reputation/LegacyReputation"),
   LinkedAwards: require("./features/threads/LinkedAwards"),
   LinkedThreadStatusIcons: require("./features/forumdisplay/LinkedThreadStatusIcons"),
   MedalOfHonorTracker: require("./features/game/MedalOfHonorTracker"),
@@ -51,5 +52,6 @@ module.exports = {
   TabNotifications: require("./features/global/TabNotifications"),
   TagNotificationSound: require("./features/convo/TagNotificationSound"),
   ThemeCustomizer: require("./features/global/ThemeCustomizer"),
+  ThreadMentions: require("./features/threads/ThreadMentions"),
   TrackingLinks: require("./features/pms/TrackingLinks")
 };

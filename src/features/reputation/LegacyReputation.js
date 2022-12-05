@@ -21,10 +21,9 @@ class LegacyReputation extends Feature {
     });
     this.fetchDelay = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new alert fetches
     this.now = Date.now();
-    // TODO: update
-    this.fetchLocation = "https://raw.githubusercontent.com/xadamxk/HFX2.0/feature/legacy-reputation/reputationArchive.json"; // "https://raw.githubusercontent.com/xadamxk/HFX2.0/feature/legacy-reputation/reputationArchive.json";
+    this.fetchLocation = "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/reputationArchive.json";
     this.legacyCutoffDate = new Date("June 11, 2018 11:50"); // https://hackforums.net/showthread.php?tid=5847386
-    this.threadLink = "";
+    this.threadLink = "https://hackforums.net/showthread.php?tid=6152837";
   }
 
   run() {
@@ -150,7 +149,7 @@ class LegacyReputation extends Feature {
         }
       });
     } catch (err) {
-      console.log(err);
+      Logger.error(err);
       this.sendNotification("Failed to share Reputation Archive Summary. Contact xadamxk for assistance.", false);
     };
   };

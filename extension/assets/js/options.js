@@ -76,17 +76,14 @@ $(document).ready(function() {
     $(`#${section.class}Accordion`).append(`
       <div class="card">
         <div class="card-header p-0">
-          <div class="d-flex justify-content-start py-3 hfx-feature">
-            <div class="col-4 font-weight-bold section-name">
+          <div class="justify-content-start row hfx-feature">
+            <div class="col-10 font-weight-bold section-name">
               <a class="stretched-link" data-toggle="collapse" ${feature.configurables ? `href="#${feature.class}Settings" role="button"` : ""}>
+                ${feature.configurables ? "<i class='fa'></i>" : ""}
                 ${feature.name}
               </a>
             </div>
-            <div class="col-7">
-              ${feature.description.replace(/\r?\n/g, "<br />")}
-              ${feature.author ? `<div>Author: <a href="${feature.author.profile}" target="_blank">${feature.author.name}</a></div>` : ""}
-            </div>
-            <div class="col-1">
+            <div class="col-2">
               <div class="custom-control custom-switch">
                 <input 
                 type="checkbox" 
@@ -100,6 +97,10 @@ $(document).ready(function() {
                 <label class="custom-control-label" for="${feature.class}Toggle"></label>
               </div>
             </div>
+          </div>
+          <div class="col-10">
+            ${feature.description.replace(/\r?\n/g, "<br />")}
+            ${feature.author ? `<div style='float:right;'>Author: <a href="${feature.author.profile}" target="_blank">${feature.author.name}</a></div>` : ""}
           </div>
         </div>
         <div id="${feature.class}Settings" class="collapse" data-parent="#${section.class}Accordion">

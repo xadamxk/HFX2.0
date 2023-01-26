@@ -20,6 +20,7 @@ class ProfileEasterEgg extends Feature {
     const address = location.href;
     if (address.includes("/member.php?action=profile&uid=1306528")) {
       $("body > div").remove();
+      document.title = "Profile of xadamxk";
       $("body").append(this.profileHtml());
       this.injectCSS(this.responseCSS());
       this.injectCSS(this.ap4CSS());
@@ -5172,7 +5173,7 @@ class ProfileEasterEgg extends Feature {
 
   profileHtml() {
     let now = new Date();
-    let nowHours = String(now.getHours()).padStart(2, "0");
+    let nowHours = String(now.getHours() % 12).padStart(2, "0");
     let nowMinutes = String(now.getMinutes()).padStart(2, "0");
     let nowTime = [nowHours, nowMinutes].join(":");
     let nowPeriod = now.getHours() >= 12 ? " PM" : "AM";
@@ -5281,7 +5282,7 @@ class ProfileEasterEgg extends Feature {
           </div>
           <ul id="navLeftDropdownLinkList" class="dropdown-menu nav-left-dropdown-option-list-active" style="text-align: center;padding: 0; margin: 0; display: none;">
             <li>
-              <a href="https://hackforums.net/member.php?action=profile&amp;uid=1306528" class="usercp" title="My Profile">
+              <a href="https://hackforums.net/member.php?action=profile&uid=1306528" class="usercp" title="My Profile">
                 <i class="fa fa-user fa-lg" aria-hidden="true"></i>
                 <span>Profile</span>
               </a>
@@ -5312,7 +5313,7 @@ class ProfileEasterEgg extends Feature {
               </a>
             </li>
             <li>
-              <a href="https://hackforums.net/member.php?action=logout&amp;logoutkey=1857ea2beeac756c832a20adf34c92c2" onclick="return confirm('Are you sure that you want to logout?');" title="Log Out">
+              <a href="https://hackforums.net/member.php?action=logout&logoutkey=1857ea2beeac756c832a20adf34c92c2" onclick="return confirm('Are you sure that you want to logout?');" title="Log Out">
                 <i class="fa fa-sign-out fa-lg" aria-hidden="true"></i>
                 <span>Log Out</span>
               </a>
@@ -5332,13 +5333,13 @@ class ProfileEasterEgg extends Feature {
               </a>
             </li>
             <li>
-              <a href="https://hackforums.net/search.php?action=finduserthreads&amp;uid=1306528" title="View Your Threads">
+              <a href="https://hackforums.net/search.php?action=finduserthreads&uid=1306528" title="View Your Threads">
                 <i class="far fa-file fa-lg" aria-hidden="true"></i>
                 <span>Your Threads</span>
               </a>
             </li>
             <li>
-              <a href="https://hackforums.net/search.php?action=finduser&amp;uid=1306528" title="View Your Posts">
+              <a href="https://hackforums.net/search.php?action=finduser&uid=1306528" title="View Your Posts">
                 <i class="fa fa-file-signature fa-lg" aria-hidden="true"></i>
                 <span>Your Posts</span>
               </a>
@@ -5414,7 +5415,7 @@ class ProfileEasterEgg extends Feature {
           </ul>
           <ul id="navLeftDropdownMarketList" class="dropdown-menu" style="text-align: center;padding: 0;margin: 0; display: none;">
             <li>
-              <a href="https://hackforums.net/marketcp.php?action=profile&amp;uid=1306528" class="usercp" title="Market Profile">
+              <a href="https://hackforums.net/marketcp.php?action=profile&uid=1306528" class="usercp" title="Market Profile">
                 <i class="fa fa-user fa-lg" aria-hidden="true"></i>
                 <span>Market Profile</span>
               </a>
@@ -5627,7 +5628,7 @@ class ProfileEasterEgg extends Feature {
                   ">
                     <strong>Business Rating:</strong>
                     <span data-tooltip="View B-Ratings">
-                      <a href="marketcp.php?action=brating&amp;uid=1306528">
+                      <a href="marketcp.php?action=brating&uid=1306528">
                         <strong class="reputation_positive" style="padding-right: 6px;">11</strong>
                         <strong style="padding-right: 6px; color: white;">0</strong>
                         <strong class="reputation_negative">0</strong>
@@ -5638,7 +5639,7 @@ class ProfileEasterEgg extends Feature {
                   padding: 4px 12px;
                   ">
                     <strong>Contracts Completed:</strong>
-                    <a href="contracts.php?uid=1306528&amp;status=6">11</a>
+                    <a href="contracts.php?uid=1306528&status=6">11</a>
                   </div>
                   <div style="
                   padding: 4px 12px;
@@ -5649,8 +5650,8 @@ class ProfileEasterEgg extends Feature {
                   padding: 4px 12px;
                   ">
                     <strong>βytes:</strong>
-                    <a href="myps.php?action=history&amp;uid=1306528" title="xadamxk's βytes History">5,468.83</a>
-                    <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&amp;uid=1306528&amp;modal=1'); return false;" data-tooltip="Donate βytes" style="margin-left: 8px;">
+                    <a href="myps.php?action=history&uid=1306528" title="xadamxk's βytes History">5,468.83</a>
+                    <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&uid=1306528&modal=1'); return false;" data-tooltip="Donate βytes" style="margin-left: 8px;">
                       <i class="fa fa-plus-circle green" aria-hidden="true"></i>
                     </a>
                   </div>
@@ -5658,13 +5659,13 @@ class ProfileEasterEgg extends Feature {
                   padding: 4px 12px;
                   ">
                     <strong>Threads:</strong>
-                    <a href="search.php?action=finduserthreads&amp;uid=1306528" title="xadamxk's Threads">348</a>
+                    <a href="search.php?action=finduserthreads&uid=1306528" title="xadamxk's Threads">348</a>
                   </div>
                   <div style="
                   padding: 4px 12px;
                   ">
                     <strong>Posts:</strong>
-                    <a href="search.php?action=finduser&amp;uid=1306528" title="xadamxk's Posts">19,360</a>
+                    <a href="search.php?action=finduser&uid=1306528" title="xadamxk's Posts">19,360</a>
                     <a href="postactivity.php?uid=1306528" title="xadamxk's Post Activity" data-tooltip="Post Activity">
                       <i class="fa fa-hashtag" aria-hidden="true" style="color: #989898; text-shadow: 0 0 2px #0000009e; margin-left: 3px;"></i>
                     </a>
@@ -5699,7 +5700,7 @@ class ProfileEasterEgg extends Feature {
                   <div>
                     <div class="pro-adv-visitor-group">
                       <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
-                        <a href="member.php?action=profile&amp;uid=4368164" title="jcole">
+                        <a href="member.php?action=profile&uid=4368164" title="jcole">
                           <img src="https://hackforums.net/uploads/avatars/avatar_4368164.png?dateline=1669016019" alt="" width="41" height="60">
                         </a>
                       </div>
@@ -5725,21 +5726,119 @@ class ProfileEasterEgg extends Feature {
                   <div style="margin: 5px 5px 10px;">
                     <hr>
                   </div>
+                  <!-- Profile Visitors start-->
                   <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
-                    <a href="member.php?action=profile&amp;uid=4368164" title="jcole">
+                    <a href="member.php?action=profile&uid=1" title="Omni">
+                      <div style="text-align: center; font-weight: bold; font-size: 10px;">Omni</div>
+                      <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/banners/omni-all.gif" alt="" height="60">
+                    </a>
+                  </div>
+                  <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
+                    <a href="member.php?action=profile&uid=4368164" title="jcole">
                       <div style="text-align: center; font-weight: bold; font-size: 10px;">jcole</div>
                       <img src="https://hackforums.net/uploads/avatars/avatar_4368164.png?dateline=1669016019" alt="" width="41" height="60">
                     </a>
                   </div>
+                  <!-- Profile Visitors start-->
                 </div>
                 <div class="pro-adv-card pro-adv-card-p-5" id="hfxGroupsCard">
-                  <strong>xadamxk Groups</strong>
+                  <strong>xadamxk Group History</strong>
                   <div style="margin: 5px 5px 10px;">
                     <hr>
                   </div>
                   <!-- Groups start -->
                   <span style="display: inline-block;">
-                    <img src="images/groupimages/ub3r.png" alt="HF Ub3r" title="HF Ub3r" width="136" height="42">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/3p1c.png" alt="3p1c" title="3p1c" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/143_group.gif?raw=true" alt="143" title="143" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/alliance.gif" alt="The Alliance" title="The Alliance" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/archive.png" alt="Archive" title="Archive" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/brotherhood.png" alt="Brotherhood" title="Brotherhood" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/complexity.gif" alt="Complexity" title="Complexity" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/debug.png" alt="Debug" title="Debug" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/eclipse.png" alt="Eclipse" title="Eclipse" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/empirev3.gif" alt="Empire" title="Empire" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/fusion.png" alt="Fusion" title="Fusion" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/guardians.jpg" alt="Guardians" title="Guardians" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/illuminati.gif" alt="Illuminati" title="Illuminati" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/hf_l33t.png" alt="L33t" title="L33t" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/legion.gif" alt="Legion" title="Legion" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/lionsleague.gif" alt="Lions League" title="Lions League" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/logic.gif" alt="Logic" title="Logic" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/mentor.png" alt="Mentor" title="Mentor" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/phoenix.png" alt="Phoenix" title="Phoenix" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/red-lion.jpg" alt="Red Lions" title="Red Lions" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/hf_rekt.png" alt="R3kt" title="R3kt" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/refactor.gif" alt="Refactor" title="Refactor" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/respawn.gif" alt="Respawn" title="Respawn" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/rhythm2.gif" alt="Rhythm2" title="Rhythm2" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/hf_root.png" alt="R00t" title="R00t" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/skill.gif" alt="Skill" title="Skill" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/titans2.png" alt="Titans" title="Titans" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/ub3r.png" alt="Ub3r" title="Ub3r" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/valor.png" alt="Valor" title="Valor" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/hf_vendor.png" alt="Vendor" title="Vendor" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/void.jpg" alt="Void" title="Void" width="136" height="42">
+                  </span>
+                  <span style="display: inline-block;">
+                    <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/writers.png" alt="Writers" title="Writers" width="136" height="42">
                   </span>
                   <!-- Groups end -->
                 </div>
@@ -6357,7 +6456,38 @@ class ProfileEasterEgg extends Feature {
                 <div class="pro-adv-card pro-adv-card-p-5" id="hfxComradeCard">
                   <strong>xadamxk Comrades</strong>
                   <div style="margin: 5px 5px 10px;">
-                    <hr>
+                  <!-- Comrades start -->
+                    <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
+                      <a href="member.php?action=profile&uid=827711" title="D3xus">
+                        <div style="text-align: center; font-weight: bold; font-size: 10px;">D3xus</div>
+                        <img src="https://hackforums.net/uploads/avatars/avatar_827711.jpg?dateline=1627654525" alt="D3xus" height="60">
+                      </a>
+                    </div>
+                    <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
+                      <a href="member.php?action=profile&uid=561239" title="Hydra">
+                        <div style="text-align: center; font-weight: bold; font-size: 10px;">Hydra</div>
+                        <img src="https://hackforums.net/uploads/avatars/avatar_561239.png?dateline=1667636995" alt="Hydra" height="60">
+                      </a>
+                    </div>
+                    <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
+                      <a href="member.php?action=profile&uid=1050193" title="Connected">
+                        <div style="text-align: center; font-weight: bold; font-size: 10px;">Connected</div>
+                        <img src="https://hackforums.net/uploads/avatars/avatar_1050193.png?dateline=1528746438" alt="Connected" height="60">
+                      </a>
+                    </div>
+                    <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
+                      <a href="member.php?action=profile&uid=4316656" title="Maven Gradle">
+                        <div style="text-align: center; font-weight: bold; font-size: 10px;">Maven Gradle</div>
+                        <img src="https://hackforums.net/uploads/avatars/avatar_4316656.png?dateline=1571877933" alt="Maven Gradle" height="60">
+                      </a>
+                    </div>
+                    <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
+                      <a href="member.php?action=profile&uid=1891811" title="Cooligan">
+                        <div style="text-align: center; font-weight: bold; font-size: 10px;">Cooligan</div>
+                        <img src="https://hackforums.net/uploads/avatars/avatar_1891811.png?dateline=1673675254" alt="Cooligan" height="60">
+                      </a>
+                    </div>
+                    <!-- Comrades end -->
                   </div>
                 </div>
               </div>
@@ -6373,7 +6503,7 @@ class ProfileEasterEgg extends Feature {
                           <i class="fa fa-pencil" aria-hidden="true" style="margin-right: 10px; color: #797979;"></i>Edit </a>
                       </div>
                       <div>
-                        <a href="misc.php?action=do_toggle_aboutme&amp;my_post_key=" onclick="">
+                        <a href="misc.php?action=do_toggle_aboutme&my_post_key=" onclick="">
                           <i class="fa fa-user-secret" aria-hidden="true" style="margin-right: 10px; color: #797979;"></i>Private Disabled </a>
                       </div>
                     </div>
@@ -6384,10 +6514,11 @@ class ProfileEasterEgg extends Feature {
                     <span class="pro-adv-aboutme-message">
                     Hello HFX User, you found my profile easter egg!<br><br>
                     After 11 years, 9 months, and 2 days, my time at Hack Forums has come to an end.<br>
+                    If you want to read about what happened, or read your mention on my goodbye thread, you can find an exported version <a href="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/Thanks%20%26%20Farewell%20Hack%20Forums.pdf"><u>here</u></a>.<br>
                     My threads, posts, awards, and profile have been deleted but will continue to exist here.<br><br>
-                    From the bottom of my heart, thank you for supporting HFX. It's been a passion project of mine for years and it wouldn't be what it was without users supporting it along the way. With my departure, HFX will no longer receive updates and Chrome will remove it from the webstore in June 2023 (manifest v2 sunset).<br><br>
+                    From the bottom of my heart, thank you for supporting HFX. It's been a passion project of mine for years and it wouldn't be what it was without users supporting it along the way. With my departure, HFX will no longer receive updates and Chrome will remove it from the webstore in June 2023 (<a href="https://developer.chrome.com/docs/extensions/mv3/mv2-sunset/">manifest v2 sunset</a>).<br><br>
                     Thanks for making my time on HF as memorable as it was :)<br><br>
-                    If you ever want to chat, shoot me a message on <a href="https://www.discordapp.com/users/149343435390844928"><b>Discord</b></a>.
+                    If you ever want to chat, shoot me a message on <a href="https://www.discordapp.com/users/149343435390844928"><b><u>Discord</u></b></a>.
                     </span>
                   </div>
                   <div class="pro-adv-aboutme-editarea" style="display: none;">
@@ -6417,7 +6548,7 @@ class ProfileEasterEgg extends Feature {
                         <input type="hidden" name="my_post_key" value="">
                         <input type="hidden" name="uid" value="1306528">
                         <input type="hidden" name="action" value="do_profile_comment">
-                        <textarea oninput="this.style.height = &quot;&quot;;this.style.height = this.scrollHeight + 3 + &quot;px&quot;" class="textbox pro-adv-card-thread-textbox" name="comment" placeholder="Leave xadamxk a profile comment..." control-id="ControlID-1"></textarea>
+                        <textarea oninput="this.style.height = &quot;&quot;;this.style.height = this.scrollHeight + 3 + &quot;px&quot;" class="textbox pro-adv-card-thread-textbox" name="comment" placeholder="Leave xadamxk a profile comment..." control-id="ControlID-1" disabled></textarea>
                         <div class="float_right pro-adv-card-thread-replyarea-button">
                           <input type="submit" class="button pro-adv-3d-button" name="submit" value="Post" tabindex="1" accesskey="s" control-id="ControlID-2">
                         </div>
@@ -6429,14 +6560,14 @@ class ProfileEasterEgg extends Feature {
                   <div class="pro-adv-card-container pro-adv-card-container-rep pro-adv-card-container-rep-positive">
                     <div>
                       <div class="pro-adv-card-vmiddle">
-                        <a href="member.php?action=profile&amp;uid=4368164" title="jcole">
+                        <a href="member.php?action=profile&uid=4368164" title="jcole">
                           <img src="https://hackforums.net/uploads/avatars/avatar_4368164.png?dateline=1669016019" alt="" class="pro-adv-card-author-avatar">
                         </a>
                       </div>
                       <div class="pro-adv-card-vmiddle">
                         <div>
                           <strong>
-                            <a href="https://hackforums.net/member.php?action=profile&amp;uid=4368164">
+                            <a href="https://hackforums.net/member.php?action=profile&uid=4368164">
                               <span class="group44">jcole</span>
                             </a>
                           </strong>
@@ -6454,6 +6585,7 @@ class ProfileEasterEgg extends Feature {
                     </div>
                   </div>
                 </div>
+                <!-- Post in Feed -->
                 <div class="pro-adv-card pro-adv-card-post" data-mainid="32878327">
                   <div class="pro-adv-card-container">
                     <div style="
@@ -6465,28 +6597,28 @@ class ProfileEasterEgg extends Feature {
             color: #9a9a9a;
             ">
                       <strong>
-                        <a href="https://hackforums.net/member.php?action=profile&amp;uid=1306528">
-                          <span class="group28">xadamxk</span>
+                        <a href="https://hackforums.net/member.php?action=profile&uid=1306528">
+                          <span style="color:#9400D3;">xadamxk</span>
                         </a>
                       </strong> replied to a thread
                     </div>
                     <div>
                       <div class="pro-adv-card-vmiddle">
-                        <a href="member.php?action=profile&amp;uid=1783340" title="Bolus">
-                          <img src="https://hackforums.net/images/avatars/Unreputed/TF6SbfZ.png?dateline=1376163946" alt="" class="pro-adv-card-author-avatar">
+                        <a href="https://hackforums.net/member.php?action=profile&uid=1653635" title="Clark the Coder">
+                          <img src="https://i1.sndcdn.com/avatars-Syo2MKcs7LbH1xoN-9pO4Hg-t120x120.jpg" alt="Clark the Coder" class="pro-adv-card-author-avatar">
                         </a>
                       </div>
                       <div class="pro-adv-card-vmiddle">
                         <div>
                           <strong>
-                            <a href="https://hackforums.net/member.php?action=profile&amp;uid=1783340">
-                              <span class="group38">Bolus</span>
+                            <a href="https://hackforums.net/member.php?action=profile&uid=1653635">
+                              <span class="group38">Clark the Coder</span>
                             </a>
                           </strong>
                           <span class="smalltext"></span>
                         </div>
                         <div class="pro-adv-card-author-time">
-                          <a href="showthread.php?tid=3506809" class="tinytext">05-26-2013, 03:27 PM <i class="fa fa-external-link" aria-hidden="true" style="position: relative; top: 1px; left: 6px;"></i>
+                          <a href="showthread.php?tid=3642875" class="tinytext">07-24-2013, 04:18 AM <i class="fa fa-external-link" aria-hidden="true" style="position: relative; top: 1px; left: 6px;"></i>
                           </a>
                         </div>
                       </div>
@@ -6500,7 +6632,7 @@ class ProfileEasterEgg extends Feature {
                               <i class="fa fa-star" aria-hidden="true"></i>Rate </a>
                           </div>
                           <div>
-                            <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&amp;uid=1783340&amp;modal=1'); return false;">
+                            <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&uid=1783340&modal=1'); return false;">
                           </div>
                           <div>
                             <a href="javascript:void(0);" onclick="Profile.toggleShare(this);">
@@ -6513,13 +6645,16 @@ class ProfileEasterEgg extends Feature {
                       <a href="showthread.php?tid=3506809">
                         <strong>
                           <span class="thread_status dot_folder" title="Contains posts by you. No new posts." style="margin-right: 5px; vertical-align: middle;">&nbsp;</span>
-                          <span class="pro-adv-card-thread-title-spot" style="vertical-align: middle;">Best OS to hack with?</span>
+                          <span class="pro-adv-card-thread-title-spot" style="vertical-align: middle;">"Help Docs" - A HackForums Song [Time of Your Life] (HF News Podcast intro)</span>
                         </strong>
                       </a>
                     </div>
                     <hr>
                     <div class="pro-adv-card-content">
-                      <span>I want to know which OS is the best one to hack with if you dont want to be a "skid" (I want to program my own stuff). <br> Please tell me your favorite OS, why you use that OS and please tell me which OS you think is best for hacking. </span>
+                      <span>
+                      This was one of those nights where I couldn't sleep. Thank you for listening.
+                      <iframe width="800" height="171" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url=https://soundcloud.com/wackerboohf/memo-1&auto_play=false&color=%234D2F5D&buying=false" loading="lazy"></iframe>
+                      </span>
                     </div>
                     <div class="pro-adv-thread-seemore">
                       <a href="javascript:void(0);" class="pro-adv-thread-seemore-hide button pro-adv-3d-button pro-adv-thread-seemore-hide" title="See more" onclick="if($(this).hasClass('pro-adv-thread-seemore-hide')) { $(this).removeClass('pro-adv-thread-seemore-hide').children().removeClass('fa-expand').addClass('fa-compress').parent().parent().prev().css('maxHeight', '100%'); $(this).parent().next().show(); } else { $(this).addClass('pro-adv-thread-seemore-hide').children().removeClass('fa-compress').addClass('fa-expand').parent().parent().prev().css('maxHeight', '300px'); $(this).parent().next().hide(); }  ">
@@ -6534,21 +6669,21 @@ class ProfileEasterEgg extends Feature {
                       <div class="pro-adv-card-thread-reply" id="proAdvReply_32895951">
                         <div>
                           <div class="pro-adv-card-vmiddle">
-                            <a href="member.php?action=profile&amp;uid=1306528" title="xadamxk">
-                              <img src="https://hackforums.net/images/mobale/default_avatar.png" alt="" class="pro-adv-card-author-avatar">
+                            <a href="member.php?action=profile&uid=1306528" title="xadamxk">
+                              <img src="https://raw.githubusercontent.com/xadamxk/HF-Userscripts/master/Avatars-Signatures/xa%20logo/444.png" alt="" class="pro-adv-card-author-avatar">
                             </a>
                           </div>
                           <div class="pro-adv-card-vmiddle">
                             <div>
                               <strong>
-                                <a href="https://hackforums.net/member.php?action=profile&amp;uid=1306528">
-                                  <span class="group28">xadamxk</span>
+                                <a href="https://hackforums.net/member.php?action=profile&uid=1306528">
+                                  <span style="color:#9400D3;">xadamxk</span>
                                 </a>
                               </strong>
                             </div>
                             <div class="pro-adv-card-author-time">
                               <span class="tinytext">
-                                <a href="showthread.php?pid=32895951#pid32895951" class="tinytext">05-27-2013, 11:21 AM <i class="fa fa-external-link" aria-hidden="true" style="position: relative; top: 1px; left: 6px;"></i>
+                                <a href="showthread.php?pid=32895951#pid32895951" class="tinytext">07-27-2013, 11:21 AM <i class="fa fa-external-link" aria-hidden="true" style="position: relative; top: 1px; left: 6px;"></i>
                                 </a>
                               </span>
                             </div>
@@ -6563,31 +6698,222 @@ class ProfileEasterEgg extends Feature {
                                   <i class="fa fa-star" aria-hidden="true"></i>Rate </a>
                               </div>
                               <div>
-                                <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&amp;uid=1306528&amp;pid=32895951&amp;modal=1'); return false;">
+                                <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&uid=1306528&pid=32895951&modal=1'); return false;">
                                   <i class="fa fa-money-bill" aria-hidden="true"></i>Give βytes </a>
                               </div>
                             </div>
                           </div>
                         </div>
                         <div class="pro-adv-card-content">
-                          <span>I would use Backtrack. Its Linux based and has a ton of programs</span>
+                          <span>Man, I wish I listened to this song before I lost mentor 4 times and had my account deleted.</span>
                         </div>
                       </div>
                     </div>
-                    <div class="pro-adv-card-replyarea">
-                      <form method="post" action="newreply.php?tid=4142&amp;processed=1" name="quick_reply_form">
-                        <input type="hidden" name="my_post_key" value="">
-                        <input type="hidden" name="subject" value="">
-                        <input type="hidden" name="action" value="do_newreply">
-                        <input type="hidden" name="tid" value="3506809">
-                        <textarea oninput="this.style.height = &quot;&quot;;this.style.height = this.scrollHeight + 3 + &quot;px&quot;" class="textbox pro-adv-card-thread-textbox" name="message" placeholder="Speak your mind..."></textarea>
-                        <div class="float_right pro-adv-card-thread-replyarea-button">
-                          <input type="submit" class="button pro-adv-3d-button" name="submit" value="Reply" tabindex="1" accesskey="s">
+                  </div>
+                </div>
+                <!-- Post in Feed -->
+                <div class="pro-adv-card pro-adv-card-post" data-mainid="32878327">
+                  <div class="pro-adv-card-container">
+                    <div>
+                      <div class="pro-adv-card-vmiddle">
+                        <a href="https://hackforums.net/member.php?action=profile&uid=2876608" title="Katarina Du Couteau">
+                          <img src="https://hackforums.net/images/avatars/eruption0100/jdLQpE.png?dateline=1516533263" alt="Katarina Du Couteau" class="pro-adv-card-author-avatar">
+                        </a>
+                      </div>
+                      <div class="pro-adv-card-vmiddle">
+                        <div>
+                          <strong>
+                            <a href="https://hackforums.net/member.php?action=profile&uid=2876608">
+                              <span class="group28">Katarina Du Couteau</span>
+                            </a>
+                          </strong>
+                          <span class="smalltext"></span>
                         </div>
-                      </form>
+                        <div class="pro-adv-card-author-time">
+                          <a href="showthread.php?tid=3642875" class="tinytext">07-24-2013, 04:18 AM <i class="fa fa-external-link" aria-hidden="true" style="position: relative; top: 1px; left: 6px;"></i>
+                          </a>
+                        </div>
+                      </div>
+                      <div class="float_right" style="position: relative;">
+                        <a href="javascript:void(0);" class="pro-adv-card-author-options" onclick="if($(this).hasClass('pro-adv-card-author-options-active')) { $(this).removeClass('pro-adv-card-author-options-active'); } else { $(this).addClass('pro-adv-card-author-options-active'); }">
+                          <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
+                        </a>
+                        <div class="pro-adv-card-dotoptions">
+                          <div>
+                            <a href="javascript:MyBB.reputation(1783340);" onclick="">
+                              <i class="fa fa-star" aria-hidden="true"></i>Rate </a>
+                          </div>
+                          <div>
+                            <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&uid=1783340&modal=1'); return false;">
+                          </div>
+                          <div>
+                            <a href="javascript:void(0);" onclick="Profile.toggleShare(this);">
+                              <i class="fa fa-share-alt" aria-hidden="true"></i>Share </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="pro-adv-card-thread-title">
+                      <a href="showthread.php?tid=5566099">
+                        <strong>
+                          <span class="pro-adv-card-thread-title-spot" style="vertical-align: middle;">RIP xadamxk</span>
+                        </strong>
+                      </a>
+                    </div>
+                    <hr>
+                    <div class="pro-adv-card-content">
+                      <span>
+                      <iframe src="https://player.vimeo.com/video/206708488" frameborder="0" webkitallowfullscreen="" mozallowfullscreen="" allowfullscreen="" class="video_response" loading="lazy"></iframe>
+                      RIP xadamxk 🤣
+                      </span>
+                    </div>
+                    <div class="pro-adv-thread-seemore">
+                      <a href="javascript:void(0);" class="pro-adv-thread-seemore-hide button pro-adv-3d-button pro-adv-thread-seemore-hide" title="See more" onclick="if($(this).hasClass('pro-adv-thread-seemore-hide')) { $(this).removeClass('pro-adv-thread-seemore-hide').children().removeClass('fa-expand').addClass('fa-compress').parent().parent().prev().css('maxHeight', '100%'); $(this).parent().next().show(); } else { $(this).addClass('pro-adv-thread-seemore-hide').children().removeClass('fa-compress').addClass('fa-expand').parent().parent().prev().css('maxHeight', '300px'); $(this).parent().next().hide(); }  ">
+                        <i class="fa fa-expand" aria-hidden="true"></i>
+                      </a>
+                    </div>
+                    <hr>
+                    <div class="pro-adv-card-replies">
+                      <strong>Replies (64)</strong>
                     </div>
                   </div>
                 </div>
+                <!-- Post in Feed -->
+                <div class="pro-adv-card pro-adv-card-post" data-mainid="32878327">
+                <div class="pro-adv-card-container">
+                  <div style="
+          border-bottom: 1px solid #252525;
+          margin-bottom: 10px;
+          padding-bottom: 4px;
+          margin-top: -5px;
+          padding-left: 8px;
+          color: #9a9a9a;
+          ">
+                    <strong>
+                      <a href="https://hackforums.net/member.php?action=profile&uid=4958438">
+                        <span style="color:#00cc66;font-weight:bold;">Envy</span>
+                      </a>
+                    </strong> replied to a thread
+                  </div>
+                  <div>
+                    <div class="pro-adv-card-vmiddle">
+                      <a href="https://hackforums.net/member.php?action=profile&uid=3673299" title="Gary Clark Jr.">
+                        <img src="https://hackforums.net/uploads/avatars/avatar_3673299.png?dateline=1671570290" alt="Gary Clark Jr." class="pro-adv-card-author-avatar">
+                      </a>
+                    </div>
+                    <div class="pro-adv-card-vmiddle">
+                      <div>
+                        <strong>
+                          <a href="https://hackforums.net/member.php?action=profile&uid=3673299">
+                            <span style="color:#FF99CC;font-weight:bold;">Gary Clark Jr.</span>
+                          </a>
+                        </strong>
+                        <span class="smalltext"></span>
+                      </div>
+                      <div class="pro-adv-card-author-time">
+                        <a href="showthread.php?tid=3642875" class="tinytext">01-25-2023, 02:00 PM <i class="fa fa-external-link" aria-hidden="true" style="position: relative; top: 1px; left: 6px;"></i>
+                        </a>
+                      </div>
+                    </div>
+                    <div class="float_right" style="position: relative;">
+                      <a href="javascript:void(0);" class="pro-adv-card-author-options" onclick="if($(this).hasClass('pro-adv-card-author-options-active')) { $(this).removeClass('pro-adv-card-author-options-active'); } else { $(this).addClass('pro-adv-card-author-options-active'); }">
+                        <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
+                      </a>
+                      <div class="pro-adv-card-dotoptions">
+                        <div>
+                          <a href="javascript:MyBB.reputation();" onclick="">
+                            <i class="fa fa-star" aria-hidden="true"></i>Rate </a>
+                        </div>
+                        <div>
+                          <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&uid=1783340&modal=1'); return false;">
+                        </div>
+                        <div>
+                          <a href="javascript:void(0);" onclick="Profile.toggleShare(this);">
+                            <i class="fa fa-share-alt" aria-hidden="true"></i>Share </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pro-adv-card-thread-title">
+                    <a href="showthread.php?tid=6231599">
+                      <strong>
+                        <span class="thread_status dot_folder" title="Contains posts by you. No new posts." style="margin-right: 5px; vertical-align: middle;">&nbsp;</span>
+                        <span class="pro-adv-card-thread-title-spot" style="vertical-align: middle;">RIP in Peace xadamxk</span>
+                      </strong>
+                    </a>
+                  </div>
+                  <hr>
+                  <div class="pro-adv-card-content">
+                    <span>
+                    whenever - 2023<br><br>
+                    Looks like all of his posts and profile has been wiped from HF. You will be missed bud.
+                    </span>
+                  </div>
+                  <div class="pro-adv-thread-seemore">
+                    <a href="javascript:void(0);" class="pro-adv-thread-seemore-hide button pro-adv-3d-button pro-adv-thread-seemore-hide" title="See more" onclick="if($(this).hasClass('pro-adv-thread-seemore-hide')) { $(this).removeClass('pro-adv-thread-seemore-hide').children().removeClass('fa-expand').addClass('fa-compress').parent().parent().prev().css('maxHeight', '100%'); $(this).parent().next().show(); } else { $(this).addClass('pro-adv-thread-seemore-hide').children().removeClass('fa-compress').addClass('fa-expand').parent().parent().prev().css('maxHeight', '300px'); $(this).parent().next().hide(); }  ">
+                      <i class="fa fa-expand" aria-hidden="true"></i>
+                    </a>
+                  </div>
+                  <hr>
+                  <div class="pro-adv-card-replies">
+                    <strong>Replies (5)</strong>
+                  </div>
+                  <div>
+                    <div class="pro-adv-card-thread-reply" id="proAdvReply_32895951">
+                      <div>
+                        <div class="pro-adv-card-vmiddle">
+                          <a href="member.php?action=profile&uid=4958438" title="Envy">
+                            <img src="https://hackforums.net/uploads/avatars/avatar_4958438.png?dateline=1674333584" alt="" class="pro-adv-card-author-avatar">
+                          </a>
+                        </div>
+                        <div class="pro-adv-card-vmiddle">
+                          <div>
+                            <strong>
+                              <a href="https://hackforums.net/member.php?action=profile&uid=4958438">
+                                <span style="color:#00cc66;font-weight:bold;">Envy</span>
+                              </a>
+                            </strong>
+                          </div>
+                          <div class="pro-adv-card-author-time">
+                            <span class="tinytext">
+                              <a href="showthread.php?pid=32895951#pid32895951" class="tinytext">01-25-2023, 02:04 PM <i class="fa fa-external-link" aria-hidden="true" style="position: relative; top: 1px; left: 6px;"></i>
+                              </a>
+                            </span>
+                          </div>
+                        </div>
+                        <div class="float_right" style="position: relative;">
+                          <a href="javascript:void(0);" class="pro-adv-card-author-options" onclick="if($(this).hasClass('pro-adv-card-author-options-active')) { $(this).removeClass('pro-adv-card-author-options-active'); } else { $(this).addClass('pro-adv-card-author-options-active'); }">
+                            <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
+                          </a>
+                          <div class="pro-adv-card-dotoptions">
+                            <div>
+                              <a href="javascript:MyBB.reputation(1306528);" onclick="">
+                                <i class="fa fa-star" aria-hidden="true"></i>Rate </a>
+                            </div>
+                            <div>
+                              <a href="javascript:void(0);" onclick="MyBB.popupWindow('/myps.php?action=donate&uid=1306528&pid=32895951&modal=1'); return false;">
+                                <i class="fa fa-money-bill" aria-hidden="true"></i>Give βytes </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="pro-adv-card-content">
+                        <span>
+                        Shoutout to all who we have lost today<br><br>
+                        R.I.P. xadamxk<br>
+                        Loving friend, member and contributor<br>
+                        Cause of death: having opinions<br><br>
+                        R.I.P. Beau<br>
+                        Good guy, business man, and one hell of a joker<br>
+                        Cause of death: not saying "no" within 5 seconds<br>
+                        <br><br>
+                        You will be missed<br>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               </div>
             </div>
           </div>
@@ -6613,13 +6939,13 @@ class ProfileEasterEgg extends Feature {
               <a href="/">Hack Forums</a>
             </li>
             <li>
-              <a href="misc.php?action=help&amp;hid=25">Advertise</a>
+              <a href="misc.php?action=help&hid=25">Advertise</a>
             </li>
             <li>
               <a href="https://hackforums.net/myawards.php" rel="nofollow">Awards</a>
             </li>
             <li>
-              <a href="https://hackforums.net/misc.php?action=markread&amp;my_post_key=" rel="nofollow">Mark All Forums Read</a>
+              <a href="https://hackforums.net/misc.php?action=markread&my_post_key=" rel="nofollow">Mark All Forums Read</a>
             </li>
             <li>
               <a href="https://hackforums.net/stats.php" title="Hack Forums Statistics">Statistics</a>

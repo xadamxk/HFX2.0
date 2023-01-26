@@ -23,6 +23,7 @@ class ProfileEasterEgg extends Feature {
       $("body").append(this.profileHtml());
       this.injectCSS(this.responseCSS());
       this.injectCSS(this.ap4CSS());
+      this.injectCSS(this.awardCSS());
       this.injectCSS(this.globalCSS());
     }
   }
@@ -5170,6 +5171,17 @@ class ProfileEasterEgg extends Feature {
   }
 
   profileHtml() {
+    let now = new Date();
+    let nowHours = String(now.getHours()).padStart(2, "0");
+    let nowMinutes = String(now.getMinutes()).padStart(2, "0");
+    let nowTime = [nowHours, nowMinutes].join(":");
+    let nowPeriod = now.getHours() >= 12 ? " PM" : "AM";
+    let nowDate = [
+      [now.getMonth() + 1, now.getDate(), now.getFullYear()].join("-"),
+      [nowHours, nowMinutes].join(":"),
+      nowPeriod
+    ].join(" ");
+
     return `<div id="container">
     <a name="top" id="top"></a>
     <div id="header">
@@ -5202,10 +5214,9 @@ class ProfileEasterEgg extends Feature {
       <div id="panel">
         <div class="upper">
           <div class="wrapper">
-            <div class="oc-time">01-25-2023 1:30 PM</div>
+            <div class="oc-time">${nowDate}</div>
             <span class="welcome">
-              <strong>Welcome back, <a href="https://hackforums.net/member.php?action=profile&uid=1306528">HFX User</a>
-              </strong>. xadamxk last visited: January 25th, 2023, at 1:30 PM </span>
+              <strong>Welcome back, <a href="https://hackforums.net/member.php?action=profile&uid=1306528">HFX User</a></strong>. xadamxk last visited: January 25th, 2023, at 1:30 PM </span>
           </div>
         </div>
         <div class="modal-search" id="quick_search" style="display: none;">
@@ -5511,7 +5522,7 @@ class ProfileEasterEgg extends Feature {
               <div style="z-index: 2;background-color: #333;left: 59px;text-align: center;padding: 2px 14px;border: 2px solid #171717;border-radius: 5px;">
                 <span class="largetext">
                   <strong>
-                    <span style="color: '';text-decoration:none;">xadamxk</span>
+                    <span style="color:#9400D3;text-decoration:none;">xadamxk</span>
                   </strong>
                 </span>
                 <div style="/* padding: 0px 12px; */margin-top: -2px;font-size: 13px;font-weight: normal;padding-top: -2px;">Farewell Friends</div>
@@ -5520,95 +5531,8 @@ class ProfileEasterEgg extends Feature {
           </div>
           <div style="height: 37px;background-color: #171717;border-top: 1px solid #272727;/* border-bottom: 1px solid #0a0a0a; */font-size: 18px;">
             <div class="float_left" style="position: relative;">
-              <a href="javascript:void(0);" style="
-            display: inline-block;
-            line-height: 37px;
-            padding: 0px 15px;
-            " onclick="if($(this).hasClass('pro-adv-header-button-darken')) { $(this).removeClass('pro-adv-header-button-darken').next().hide(); } else { $('.pro-adv-header-button-darken').removeClass('pro-adv-header-button-darken').next().hide(); $(this).addClass('pro-adv-header-button-darken').next().show(); } " data-tooltip="Filter Feed">
-                <i class="fa fa-filter" aria-hidden="true"></i>
-              </a>
-              <div class="pro-adv-header-options">
-                <div>
-                  <a href="javascript:void(0);" class="pro-adv-header-options-choice " data-cardtype="comment">
-                    <i class="fa fa-check" aria-hidden="true" style="margin-right: 10px;"></i>Comments </a>
-                </div>
-                <div>
-                  <a href="javascript:void(0);" class="pro-adv-header-options-choice " data-cardtype="thread">
-                    <i class="fa fa-check" aria-hidden="true" style="margin-right: 10px;"></i>Threads </a>
-                </div>
-                <div>
-                  <a href="javascript:void(0);" class="pro-adv-header-options-choice " data-cardtype="post">
-                    <i class="fa fa-check" aria-hidden="true" style="margin-right: 10px;"></i>Posts </a>
-                </div>
-                <div>
-                  <a href="javascript:void(0);" class="pro-adv-header-options-choice " data-cardtype="reputation">
-                    <i class="fa fa-check" aria-hidden="true" style="margin-right: 10px;"></i>Popularity </a>
-                </div>
-                <div>
-                  <a href="javascript:void(0);" class="pro-adv-header-options-choice " data-cardtype="blog">
-                    <i class="fa fa-check" aria-hidden="true" style="margin-right: 10px;"></i>Blogs </a>
-                </div>
-              </div>
             </div>
             <div class="float_right">
-              <a href="member.php?action=analytics" data-tooltip="Analytics" style="display: inline-block; line-height: 37px; padding: 0px 15px;">
-                <i class="far fa-chart-line fa-lg"></i>
-              </a>
-              <a href="javascript:void(0);" style="
-            display: inline-block;
-            line-height: 37px;
-            padding: 0px 15px;
-            " onclick="return Profile.processDNPClick();">
-                <i class="fa fa-sitemap" aria-hidden="true"></i>
-              </a>
-              <a href="convo.php?action=user&amp;uid=1306528" style="
-            display: inline-block;
-            line-height: 37px;
-            padding: 0px 15px;
-            " data-tooltip="Start Convo">
-                <i class="fa fa-comments" aria-hidden="true"></i>
-              </a>
-              <a href="private.php?action=send&amp;uid=1306528" style="
-            display: inline-block;
-            line-height: 37px;
-            padding: 0px 15px;
-            " data-tooltip="Private Message">
-                <i class="fa fa-paper-plane" aria-hidden="true"></i>
-              </a>
-              <a href="marketcp.php?action=profile&amp;uid=1306528" style="
-                                      display: inline-block;
-                                      line-height: 37px;
-                                      padding: 0px 15px;
-                                      /* font-size: 18px; */
-                                      /* padding-left: 20px; */
-                                      " data-tooltip="Market Profile">
-                <i class="fa fa-shopping-basket" aria-hidden="true"></i>
-              </a>
-              <a href="gamecp.php?action=profile&amp;uid=1306528" style="
-                                      display: inline-block;
-                                      line-height: 37px;
-                                      padding: 0px 15px;
-                                      /* font-size: 18px; */
-                                      padding-right: 20px;
-                                      " data-tooltip="Game Profile" data-tooltip-left="">
-                <i class="fa fa-gamepad" aria-hidden="true"></i>
-              </a>
-              <span>|</span>
-              <a href="trustscan.php?uid=1306528" data-tooltip="Trust Scan" onclick="" style="display: inline-block; line-height: 37px; padding: 0px 15px;">
-                <i class="fa fa-user-secret" aria-hidden="true"></i>
-              </a>
-              <a href="usercp.php?action=changebanner" data-tooltip="Change Banner" onclick="" style="display: inline-block; line-height: 37px; padding: 0px 15px;">
-                <i class="fa fa-image" aria-hidden="true"></i>
-              </a>
-              <a href="usercp.php?action=avatar" data-tooltip="Change Avatar" onclick="" style="display: inline-block; line-height: 37px; padding: 0px 15px;">
-                <i class="fa fa-user-circle" aria-hidden="true"></i>
-              </a>
-              <a href="usercp.php?action=editsig" data-tooltip="Change Signature" onclick="" style="display: inline-block; line-height: 37px; padding: 0px 15px;">
-                <i class="fa fa-pencil" aria-hidden="true"></i>
-              </a>
-              <a href="javascript:void(0);" data-tooltip="Verify Secret" onclick="document.getElementById('profileVerifySecretForm').submit()" style="display: inline-block; line-height: 37px; padding: 0px 15px;">
-                <i class="fa fa-check-circle" aria-hidden="true"></i>
-              </a>
             </div>
           </div>
           <!-- end: member_profile_avatar -->
@@ -5651,11 +5575,11 @@ class ProfileEasterEgg extends Feature {
                   <div style="padding: 4px 12px; margin-top: 5px;">
                     <span class="largetext">
                       <strong>
-                        <span class="group28">xadamxk</span>
+                        <span style="color:#9400D3;text-decoration:none;">xadamxk</span>
                       </strong>
                     </span>
                   </div>
-                  <div style="padding: 0px 12px; margin-top: -6px; font-size: 13px;">Farewell Friends</div>
+                  <div style="padding: 0px 12px; margin-top: -6px; font-size: 13px;">Long Live the Empire!</div>
                   <div style="padding: 0px 12px;">
                     <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/empire.gif?raw=true" alt="Empire" title="Empire" width="136" height="42">
                     <br>
@@ -5666,13 +5590,13 @@ class ProfileEasterEgg extends Feature {
                       margin-top: 8px;
                       ">
                     <a href="online.php">
-                      <span class="online" style="font-weight: bold;">Online</span>
-                    </a> (Viewing Profile of <a href="member.php?action=profile&amp;uid=1306528">xadamxk</a> @ 11:58 PM) <br>
+                      <span class="away" style="font-weight: bold;color:#FFBF00;">Away</span>
+                    </a> (Remembering Hack Forums @ ${nowTime} ${nowPeriod}) <br>
                   </div>
                   <div style="
                   padding: 4px 12px;
                   ">
-                    <strong>Join Date:</strong> 04-24-2011
+                    <strong>Join Date:</strong> 04-23-2011
                   </div>
                   <div style="
                   padding: 4px 12px;
@@ -5748,7 +5672,7 @@ class ProfileEasterEgg extends Feature {
                   <div style="
                   padding: 4px 12px;
                   ">
-                    <strong>Game XP:</strong> <a href="https://hackforums.net/">269.732</a>
+                    <strong>Game XP:</strong> <a href="https://hackforums.net/">269,732</a>
                   </div>
                   <div style="
                   padding: 4px 12px;
@@ -5813,9 +5737,11 @@ class ProfileEasterEgg extends Feature {
                   <div style="margin: 5px 5px 10px;">
                     <hr>
                   </div>
+                  <!-- Groups start -->
                   <span style="display: inline-block;">
                     <img src="images/groupimages/ub3r.png" alt="HF Ub3r" title="HF Ub3r" width="136" height="42">
                   </span>
+                  <!-- Groups end -->
                 </div>
                 <div class="pro-adv-card pro-adv-card-p-5" style="max-height: 450px; overflow-y: scroll;">
                   <table class="tborder" border="0" cellspacing="0" cellpadding="5" style="width: 100%;">
@@ -5953,111 +5879,475 @@ class ProfileEasterEgg extends Feature {
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>Another little Brony prancing around HF.</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_30" title="Bronze Tutorial Award" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=30">Bronze Tutorial Award</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>You've written some of the best tutorials on HF.</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_75" title="OMC" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=75">OMC</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>OMC to the moon!</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_1" title="Diamond" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=1">Diamond</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>Always helpful with your great tutorials.</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_89" title="Instagrammy" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=89">Instagrammy</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>xadamxk</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_96" title="Monero" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=96">Monero</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>Make XMR your anonymous crypto.</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_86" title="Purple Clover" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=86">Purple Clover</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>For the really lucky.</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_94" title="Testified" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=94">Testified</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>RIP my posts.</strong>
                         </td>
                       </tr>
                       <tr>
                         <td class="tcat trow1">
-                          <i class="award_sprite award_" title="" style="margin: 5px; "></i>
+                          <i class="award_sprite award_99" title="ZECret" style="margin: 5px; "></i>
                         </td>
                         <td class="tcat trow1">
                           <strong>
-                            <a href="/myawards.php?awid="></a>
+                            <a href="/myawards.php?awid=99">ZECret</a>
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong></strong>
+                          <strong>Zcash technology goes zoom.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_87" title="Gold Clover" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=87">Gold Clover</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>RIP my posts.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_101" title="Rippled" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=101">Rippled</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>The ripple effect of XRP.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_85" title="Green Clover" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=85">Green Clover</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>RIP my posts.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_92" title="Ethereist" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=92">Ethereist</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>You are now an Ethereist.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_100" title="XEMplary" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=100">XEMplary</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>An example of a new market ecomony.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_32" title="Golden Upload" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=32">Golden Upload</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>HFX with hundreds of installs.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_6" title="Genius" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=6">Genius</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>An analysis worthy of an A+.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_79" title="Legalize It" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=79">Legalize It</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>Happy 4/20 Day</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_10" title="Asswipe" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=10">Asswipe</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>You can fart on command. You need the TP.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_97" title="Dicey" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=97">Dicey</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>You won 1337 Bytes.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_78" title="Green Apple" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=78">Green Apple</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>1000 Popularity</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_132" title="Cheap Skate" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=132">Cheap Skate</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>Be cheap and save. Or just spend it all on Bytes.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_117" title="Medal of Honor" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=117">Medal of Honor</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>You've proven your worth in the Hack Game.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_146" title="Quickly Loved" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=146">Quickly Loved</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>A very loved member.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_126" title="Omners" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=126">Omners</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>High windows on the mountain.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_150" title="Heart of Generosity" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=150">Heart of Generosity</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>A generous member</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_155" title="Dainamic" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=155">Dainamic</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>One Dai at a time.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_107" title="Ace of Spades" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=107">Ace of Spades</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>You hit the jackpot and won 137 Bytes.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_131" title="Everyday Ninja" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=131">Everyday Ninja</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>You're a daily ninja for checking into HF 100 days in a row.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_133" title="SportsBook" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=133">SportsBook</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>A sports betting fanatic.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_163" title="Octoberfest 2021" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=163">Octoberfest 2021</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>500 posts made in October 2021</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_164" title="Bytes Bag" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=164">Bytes Bag</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>Bytes Holder</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_76" title="Legend" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=76">Legend</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>Pro league dev.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_178" title="Octoberfest 2022" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=178">Octoberfest 2022</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>500 posts made in October 2022</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_9" title="Turkey" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=9">Turkey</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>Thanksgiving Turkey 2022</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_181" title="Xmas 2022 Ornament 3" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=181">Xmas 2022 Ornament 3</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>Xmas 2022 Ornament.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                          <i class="award_sprite award_179" title="Xmas 2022 Ornament 1" style="margin: 5px; "></i>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=179">Xmas 2022 Ornament 1</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>Xmas 2022 Ornament.</strong>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="tcat trow1">
+                        <img style="margin: 5px;" src="https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/extension/assets/images/trophy_hfx.png" title="HFX"></img>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>
+                            <a href="/myawards.php?awid=hfx">HFX</a>
+                          </strong>
+                        </td>
+                        <td class="tcat trow1">
+                          <strong>HFX Developer</strong>
                         </td>
                       </tr>
                       <!--Awards End-->
@@ -6091,101 +6381,18 @@ class ProfileEasterEgg extends Feature {
                   <strong>My Bio Box</strong>
                   <hr>
                   <div class="pro-adv-aboutme-displayarea">
-                    <span class="pro-adv-aboutme-message">Hello!</span>
+                    <span class="pro-adv-aboutme-message">
+                    Hello HFX User, you found my profile easter egg!<br><br>
+                    After 11 years, 9 months, and 2 days, my time at Hack Forums has come to an end.<br>
+                    My threads, posts, awards, and profile have been deleted but will continue to exist here.<br><br>
+                    From the bottom of my heart, thank you for supporting HFX. It's been a passion project of mine for years and it wouldn't be what it was without users supporting it along the way. With my departure, HFX will no longer receive updates and Chrome will remove it from the webstore in June 2023 (manifest v2 sunset).<br><br>
+                    Thanks for making my time on HF as memorable as it was :)<br><br>
+                    If you ever want to chat, shoot me a message on <a href="https://www.discordapp.com/users/149343435390844928"><b>Discord</b></a>.
+                    </span>
                   </div>
                   <div class="pro-adv-aboutme-editarea" style="display: none;">
                     <form method="post" action="misc.php">
                       <div class="sceditor-container ltr sourceMode" style="width: 100%;">
-                        <div class="sceditor-toolbar" unselectable="on">
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-bold" data-sceditor-command="bold" unselectable="on" title="Bold (Ctrl+B)">
-                              <div unselectable="on">Bold</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-italic" data-sceditor-command="italic" unselectable="on" title="Italic (Ctrl+I)">
-                              <div unselectable="on">Italic</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-underline" data-sceditor-command="underline" unselectable="on" title="Underline (Ctrl+U)">
-                              <div unselectable="on">Underline</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-strike" data-sceditor-command="strike" unselectable="on" title="Strikethrough">
-                              <div unselectable="on">Strikethrough</div>
-                            </a>
-                          </div>
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-left" data-sceditor-command="left" unselectable="on" title="Align left">
-                              <div unselectable="on">Align left</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-center" data-sceditor-command="center" unselectable="on" title="Center">
-                              <div unselectable="on">Center</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-right" data-sceditor-command="right" unselectable="on" title="Align right">
-                              <div unselectable="on">Align right</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-justify" data-sceditor-command="justify" unselectable="on" title="Justify">
-                              <div unselectable="on">Justify</div>
-                            </a>
-                          </div>
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-font" data-sceditor-command="font" unselectable="on" title="Font Name">
-                              <div unselectable="on">Font Name</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-size" data-sceditor-command="size" unselectable="on" title="Font Size">
-                              <div unselectable="on">Font Size</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-color" data-sceditor-command="color" unselectable="on" title="Font Color">
-                              <div unselectable="on">Font Color</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-removeformat disabled" data-sceditor-command="removeformat" unselectable="on" title="Remove Formatting">
-                              <div unselectable="on">Remove Formatting</div>
-                            </a>
-                          </div>
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-horizontalrule" data-sceditor-command="horizontalrule" unselectable="on" title="Insert a horizontal rule">
-                              <div unselectable="on">Insert a horizontal rule</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-image" data-sceditor-command="image" unselectable="on" title="Insert an image">
-                              <div unselectable="on">Insert an image</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-link" data-sceditor-command="link" unselectable="on" title="Insert a link">
-                              <div unselectable="on">Insert a link</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-unlink disabled" data-sceditor-command="unlink" unselectable="on" title="Unlink">
-                              <div unselectable="on">Unlink</div>
-                            </a>
-                          </div>
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-video" data-sceditor-command="video" unselectable="on" title="Insert a video">
-                              <div unselectable="on">Insert a video</div>
-                            </a>
-                          </div>
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-bulletlist" data-sceditor-command="bulletlist" unselectable="on" title="Bullet list">
-                              <div unselectable="on">Bullet list</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-orderedlist" data-sceditor-command="orderedlist" unselectable="on" title="Numbered list">
-                              <div unselectable="on">Numbered list</div>
-                            </a>
-                          </div>
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-code" data-sceditor-command="code" unselectable="on" title="Code">
-                              <div unselectable="on">Code</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-php" data-sceditor-command="php" unselectable="on" title="PHP">
-                              <div unselectable="on">PHP</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-quote" data-sceditor-command="quote" unselectable="on" title="Insert a Quote">
-                              <div unselectable="on">Insert a Quote</div>
-                            </a>
-                          </div>
-                          <div class="sceditor-group">
-                            <a class="sceditor-button sceditor-button-maximize" data-sceditor-command="maximize" unselectable="on" title="Maximize (Ctrl+Shift+M)">
-                              <div unselectable="on">Maximize</div>
-                            </a>
-                            <a class="sceditor-button sceditor-button-source active" data-sceditor-command="source" unselectable="on" title="View source (Ctrl+Shift+S)">
-                              <div unselectable="on">View source</div>
-                            </a>
-                          </div>
-                        </div>
                         <iframe frameborder="0" allowfullscreen="true" src="about:blank" tabindex="2"></iframe>
                         <textarea tabindex="2" dir="ltr" style=""></textarea>
                         <div class="sceditor-grip"></div>
@@ -6193,58 +6400,6 @@ class ProfileEasterEgg extends Feature {
                       </div>
                       <textarea class="pro-adv-aboutme-textarea" id="message" name="message" rows="20" cols="70" tabindex="2" style="height: 400px; display: none;">Hello!</textarea>
                       <link rel="stylesheet" href="https://hackforums.net/jscripts/sceditor/themes/mybb-dark.css" type="text/css" media="all">
-                      <div style="margin-top: 5px;">
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Facebook</span>
-                          <input type="text" class="textbox" name="facebook" value="" placeholder="Facebook ID or Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Instagram</span>
-                          <input type="text" class="textbox" name="instagram" value="" placeholder="Instagram Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Twitter</span>
-                          <input type="text" class="textbox" name="twitter" value="" placeholder="Twitter Username" ...="">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">YouTube</span>
-                          <input type="text" class="textbox" name="youtube" value="" placeholder="YouTube Channel ID...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">LinkedIn</span>
-                          <input type="text" class="textbox" name="linkedin" value="" placeholder="LinkedIn Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Reddit</span>
-                          <input type="text" class="textbox" name="reddit" value="" placeholder="Reddit Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Telegram</span>
-                          <input type="text" class="textbox" name="telegram" value="" placeholder="Telegram Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Discord</span>
-                          <input type="text" class="textbox" name="discord" value="" placeholder="Discord Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Twitch</span>
-                          <input type="text" class="textbox" name="twitch" value="" placeholder="Twitch Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Github</span>
-                          <input type="text" class="textbox" name="github" value="" placeholder="Github Username...">
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                          <span style="display: inline-block; width: 70px;">Skype</span>
-                          <input type="text" class="textbox" name="skype" value="" placeholder="Skype Username...">
-                        </div>
-                      </div>
-                      <div style="text-align: center; margin-top: 5px; margin-bottom: 3px;">
-                        <input type="submit" id="aboutme-submit" class="button pro-adv-3d-button" name="submit" value="Update" tabindex="1" accesskey="s">
-                        <input type="button" id="aboutme-cancel" class="button pro-adv-3d-button" name="cancel" value="Cancel">
-                      </div>
-                      <input type="hidden" name="my_post_key" value="">
-                      <input type="hidden" name="action" value="do_update_aboutme">
                     </form>
                   </div>
                   <hr>

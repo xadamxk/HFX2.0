@@ -85,7 +85,8 @@ class TBlockRevived extends Feature {
 
   addBlacklistBtn(settings, type) {
     if (type === this.blacklistTypes.USER) {
-      const value = document.querySelector("div.pro-adv-card > div > a[data-tooltip='Popularity']").getAttribute("href").split("uid=")[1];
+      const value = document.querySelector("div.pro-adv-card > div > a[data-tooltip='Popularity']")?.getAttribute("href").split("uid=")[1];
+      if (!value) return;
       const name = document.querySelector("div.pro-adv-card > div:nth-child(2) > span > strong > span").innerHTML;
       const blacklistTerm = this.getBlacklistTerm(type, value);
 

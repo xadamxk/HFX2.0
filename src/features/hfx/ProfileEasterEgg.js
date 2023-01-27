@@ -5728,15 +5728,21 @@ class ProfileEasterEgg extends Feature {
                   </div>
                   <!-- Profile Visitors start-->
                   <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
-                    <a href="member.php?action=profile&uid=1" title="Omni">
-                      <div style="text-align: center; font-weight: bold; font-size: 10px;">Omni</div>
-                      <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/banners/omni-all.gif" alt="" height="60">
+                    <a href="member.php?action=profile&uid=44755" title="'Snorlax">
+                      <div style="text-align: center; font-weight: bold; font-size: 10px;">'Snorlax</div>
+                      <img src="https://i.imgur.com/YDAxq4n.png" alt="'Snorlax" height="60">
                     </a>
                   </div>
                   <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
-                    <a href="member.php?action=profile&uid=4368164" title="jcole">
-                      <div style="text-align: center; font-weight: bold; font-size: 10px;">jcole</div>
-                      <img src="https://hackforums.net/uploads/avatars/avatar_4368164.png?dateline=1669016019" alt="" width="41" height="60">
+                    <a href="member.php?action=profile&uid=44755" title="Tibit">
+                      <div style="text-align: center; font-weight: bold; font-size: 10px;">Tibit</div>
+                      <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/groups/empire-f.png" alt="Tibit" height="60">
+                    </a>
+                  </div>
+                  <div style="display: inline-block; height: 60px; width: 60px; margin: 5px;">
+                    <a href="member.php?action=profile&uid=1700066" title="Gary">
+                      <div style="text-align: center; font-weight: bold; font-size: 10px;">Gary</div>
+                      <img src="https://i.imgur.com/47dAZel.png" alt="Gary" height="60">
                     </a>
                   </div>
                   <!-- Profile Visitors start-->
@@ -5887,7 +5893,7 @@ class ProfileEasterEgg extends Feature {
                           </strong>
                         </td>
                         <td class="tcat trow1">
-                          <strong>Thanks you that's generous of you.</strong>
+                          <strong>Thank you that's generous of you.</strong>
                         </td>
                       </tr>
                       <tr>
@@ -6560,28 +6566,31 @@ class ProfileEasterEgg extends Feature {
                   <div class="pro-adv-card-container pro-adv-card-container-rep pro-adv-card-container-rep-positive">
                     <div>
                       <div class="pro-adv-card-vmiddle">
-                        <a href="member.php?action=profile&uid=4368164" title="jcole">
-                          <img src="https://hackforums.net/uploads/avatars/avatar_4368164.png?dateline=1669016019" alt="" class="pro-adv-card-author-avatar">
+                        <a href="member.php?action=profile&uid=4368164" title="Omniscient">
+                          <img src="https://raw.githubusercontent.com/xadamxk/hf-legacy-assets/main/banners/omni-all.gif" alt="" class="pro-adv-card-author-avatar">
                         </a>
                       </div>
                       <div class="pro-adv-card-vmiddle">
                         <div>
                           <strong>
-                            <a href="https://hackforums.net/member.php?action=profile&uid=4368164">
-                              <span class="group44">jcole</span>
+                            <a href="https://hackforums.net/member.php?action=profile&uid=1">
+                              <span class="group4">Omniscient</span>
                             </a>
                           </strong>
                         </div>
                         <div class="pro-adv-card-author-time">
                           <span class="tinytext">
-                            <span class="smart-time" data-timestamp="1674705494" title="01-25-2023, 09:58 PM">2 hours ago</span>
+                            <span class="smart-time" data-timestamp="1674705494" title="01-25-2023, 02:00 PM">2 hours ago</span>
                           </span>
                         </div>
                       </div>
                     </div>
                     <div>
-                      <strong class="reputation_positive" style="margin-right: 6px;">(+10)</strong>
-                      <span>A high quality member.</span>
+                      <strong class="reputation_negative" style="margin-right: 6px;">(-10)</strong>
+                      <span>I didn't feel right keeping all your quality content.<br>
+                      Have a good life, best of luck to you.  I'm sure you'll do well.<br><br>
+                      
+                      Bye, Omni</span>
                     </div>
                   </div>
                 </div>

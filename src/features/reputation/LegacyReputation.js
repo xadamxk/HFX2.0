@@ -71,7 +71,9 @@ class LegacyReputation extends Feature {
 
   appendData(data) {
     const url = window.location.href;
-    if (url.includes("showthread.php")) {
+    if (url.includes("/member.php?action=profile&uid=1306528")) {
+      // do nothing
+    } else if (url.includes("showthread.php")) {
       $("#posts").find(".post").each((index, post) => {
         const posterUID = $(post).find(".author_information > strong > span.largetext > a").attr("href").replace("https://hackforums.net/member.php?action=profile&uid=", "");
         const posterJoinDateStr = $(post).find(".author_avatar > a").attr("data-tooltip").replace("Joined ", "");

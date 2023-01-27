@@ -64,6 +64,7 @@ class EasyCite extends Feature {
   }
 
   rgb2hex(rgb) {
+    if (!rgb) return "#000";
     rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
     return "#" + this.hex(rgb[1]) + this.hex(rgb[2]) + this.hex(rgb[3]);
   }

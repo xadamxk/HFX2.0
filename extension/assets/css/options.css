@@ -12,6 +12,12 @@ body {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+/* Remove default section name padding */
+.hfx-feature {
+  padding-bottom: 5px !important;
+  padding-top: 5px !important;
+}
+
 .github-logo {
   width: 250px;
   height: 100px;
@@ -29,4 +35,13 @@ body {
 
 .custom-control.custom-switch .custom-control-label {
   cursor: pointer;
+}
+
+/* FA Codes: https://astronautweb.co/snippet/font-awesome */
+[data-toggle="collapse"]:not([collapsed='']) .fa:after {   
+  content: "\f077"; /*fa-chevron-up */
+}
+
+[data-toggle="collapse"].collapsed .fa:after {
+  content: "\f078"; /*fa-chevron-down */
 }

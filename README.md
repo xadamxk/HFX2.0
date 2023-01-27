@@ -31,39 +31,22 @@ Enhance your HackForums experience - rewritten from the ground up with the commu
 
 <h2>New Features</h2>
 <ul>
-  <li><b>HFX Tours: </b>Introduces HFX features as you come across them.
-    <details>
-      <summary>Screenshot:</summary> 
-      <img src="" title="Screenshot"/>
-    </details>
-  </li>
+  <li><b>HFX Tours: </b>Introduces HFX features as you come across them.</li>
   
-  <li><b>Theme Customizer: </b>Adds additional color theme options along with previous site logos.
-  <details><summary>Screenshots:</summary>
-      <img src="" title="Screenshot"/>
-  </details></li>
+  <li><b>Theme Customizer: </b>Adds additional color theme options along with previous site logos.</li>
   
-  <li><b>Game Additions: HF Game quality of life enhancements including battery percentage, exact recharge time, and shortcuts.
-  <details><summary>Screenshots:</summary>
-      <img src="" title="Screenshot"/>
-  </details></li>
+  <li><b>Game Additions: HF Game quality of life enhancements including battery percentage, exact recharge time, and shortcuts.</li>
   
-  <li><b>Convo Enhancements: </b>Conversation features including filters, blacklists, quick reply, and more.
-  <details><summary>Screenshots:</summary>
-      <img src="" title="Screenshot"/>
-  </details></li>
+  <li><b>Convo Enhancements: </b>Conversation features including filters, blacklists, quick reply, and more.</li>
   
-  <li><b>Expanded Profile Sections: </b> Automatically expands collapsed profile cards and styles user award tables.
-  <details><summary>Screenshots:</summary>
-      <img src="" title="Screenshot"/>
-  </details></li>
+  <li><b>Expanded Profile Sections: </b> Automatically expands collapsed profile cards and styles user award tables.</li>
 </ul>
 
 <h2>Contributing to HFX</h2>
 To learn more about contributing to the development of HFX, get started <a href="contributing.md">here</a>.
 
 <h2>Reviews</h2>
-<ul><li><a href="https://chrome.google.com/webstore/detail/hf-xtension/hcfofmfmidhgbblcnnipcphhegcmdeeb/reviews">125+ Google Chrome Reviews</a></li></ul> 
+<ul><li><a href="https://chrome.google.com/webstore/detail/hf-xtension/hcfofmfmidhgbblcnnipcphhegcmdeeb/reviews">150+ Google Chrome Reviews</a></li></ul> 
 <i>It was fun helping out in the alpha phases of this extension, and I'm really happy that it is close to release. HFX has allowed me to completely uninstall Tampermonkey which makes it a win for me. With the wide variety of features here, I think most everyone will be able to find at least one thing they like.</i> -Aerodactyl<hr>
 <i>HFX is a great extension and adds many useful features to HF, many of which I didn't know I needed. I recommend everyone to check it out!</i> -Exalted<hr>
 <i>An extension like this shows the dedication, skill, and commitment to HF as a community AND as a whole just by existing. The devs have outdone themselves with the available features this extension includes!</i> - mfw<hr>

@@ -3,7 +3,8 @@ const HFX = require("../../sections/HFX");
 const Section = require("../../core/Section");
 const SectionArray = require("../../core/SectionArray");
 
-const xadamxkProfile = new Section("/member.php?action=profile&uid=1306528");
+const xadamxkProfile1 = new Section("/member.php?action=profile&uid=1306528");
+const xadamxkProfile2 = new Section("/xadamxk");
 
 class ProfileEasterEgg extends Feature {
   constructor() {
@@ -12,14 +13,14 @@ class ProfileEasterEgg extends Feature {
       name: "Profile Easter Egg",
       default: true,
       description: "Navigate to my profile to learn more.",
-      additionalSections: new SectionArray(xadamxkProfile)
+      additionalSections: new SectionArray(xadamxkProfile1, xadamxkProfile2)
     });
   }
 
   run() {
     const address = location.href;
-    if (address.includes("/member.php?action=profile&uid=1306528")) {
-      $("body > div").remove();
+    if (address.includes("/member.php?action=profile&uid=1306528") || address.includes("/xadamxk")) {
+      $("body").empty();
       document.title = "Profile of xadamxk";
       $("body").append(this.profileHtml());
       this.injectCSS(this.responseCSS());

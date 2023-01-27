@@ -23,6 +23,9 @@ class MemberManagement extends Feature {
 
   run() {
     const address = location.href;
+    if (address.includes("/member.php?action=profile&uid=1306528")) {
+      return;
+    }
     switch (address) {
       // Profiles
       case Util.isAddressMatch(address, "/member.php?action=profile"):

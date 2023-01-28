@@ -4,7 +4,7 @@
 Enhance your HackForums experience - rewritten from the ground up with the community in mind
 <h3>250+ Chrome/FireFox Users</h3>
   <br>
-  <i>HFX has been a passion project of mine for 4 year now. Rewritten entirely to accomodate site changes over the recent years — I promise this iteration of HFX will be a community favorite!</i> -xadamxk (Developer)
+  <i>HFX has been a passion project of mine for 5 years now. Rewritten entirely to accomodate site changes over the recent years — I promise this iteration of HFX will be a community favorite!</i> -xadamxk (Developer)
   <br>
   <img src="https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/banner-large.png" title="Logo"  />
 </div>

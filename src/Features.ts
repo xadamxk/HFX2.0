@@ -9,6 +9,7 @@ import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
 import SearchYourThreads from "./features/forumdisplay/SearchYourThreads";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
 import ShowRecipientCount from "./features/awards/ShowRecipientCount";
+import ThemeCustomizer from "./features/global/ThemeCustomizer";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import test from "./features/global/test";
 
@@ -24,6 +25,7 @@ export default {
   SearchYourThreads: SearchYourThreads,
   ShowPostNumbers: ShowPostNumbers,
   ShowRecipientCount: ShowRecipientCount,
+  ThemeCustomizer: ThemeCustomizer,
   TrackingLinks: TrackingLinks,
   test: test
 };

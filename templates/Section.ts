@@ -5,10 +5,13 @@ import { prompt } from "./prompt";
 import { generate as generateSections } from "./Sections";
 
 const template = `import { Section } from "../core/Section";
+// TODO: Allow this.name to have spaces (but trim them from other name uses)
 
 class {{{ name }}} extends Section {
   constructor() {
     super(["{{{ paths }}}"], ["{{{ elementSelectors }}}"]);
+    this.class = "{{{ name }}}";
+    this.name = "{{{ name }}}";
   }
 };
 

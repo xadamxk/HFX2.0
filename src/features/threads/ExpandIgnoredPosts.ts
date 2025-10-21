@@ -12,7 +12,7 @@ class ExpandIgnoredPosts extends Feature {
   }
 
   run() {
-    const ignoredPosts = this.querySelectorAll(".ignored_post");
+    const ignoredPosts = this.querySelectorAll(".ignored_post", document, true);
     if (!ignoredPosts.length) return;
 
     ignoredPosts.forEach((ignored) => {

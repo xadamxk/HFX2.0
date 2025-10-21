@@ -1,16 +1,20 @@
-import React from 'react';
-import { Feature } from '../../core/Feature';
-import { Section } from '../../core/Section';
-import { ConfigurableFactory } from './ConfigurableFactory';
-import { usePopup } from './contexts/PopupContext';
-import { RocketLaunchIcon } from '@heroicons/react/24/outline';
+import React from "react";
+import { Feature } from "../../core/Feature";
+import { Section } from "../../core/Section";
+import { ConfigurableFactory } from "./ConfigurableFactory";
+import { usePopup } from "./contexts/PopupContext";
+import { RocketLaunchIcon } from "@heroicons/react/24/outline";
 
 interface FeatureComponentProps {
   feature: Feature;
   section: Section;
   settings?: any;
   onFeatureToggle?: (featureName: string, enabled: boolean) => void;
-  onConfigurableChange?: (featureName: string, configName: string, value: any) => void;
+  onConfigurableChange?: (
+    featureName: string,
+    configName: string,
+    value: any
+  ) => void;
 }
 
 export const FeatureComponent: React.FC<FeatureComponentProps> = ({
@@ -18,7 +22,7 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
   section,
   settings,
   onFeatureToggle,
-  onConfigurableChange
+  onConfigurableChange,
 }) => {
   const featureId = `feature-${feature.class}`;
   // Get the feature-specific enabled state from settings
@@ -31,11 +35,11 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
   };
 
   return (
-    <div 
-      className={`feature-item ${!isEnabled ? 'disabled' : ''}`} 
+    <div
+      className={`feature-item ${!isEnabled ? "disabled" : ""}`}
       data-feature={feature.class}
-      style={{ 
-        padding: isPopup ? "8px" : "16px" 
+      style={{
+        padding: isPopup ? "8px" : "16px",
       }}
     >
       <div className="feature-header">
@@ -50,31 +54,44 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
           />
           <span className="toggle-slider"></span>
         </label>
-        
+
         <div className="feature-info">
           <div className="feature-name-container">
             <h3 className="feature-name">{feature.name}</h3>
             {feature.experimental && (
               <span className="experimental-badge" title="Experimental feature">
                 <RocketLaunchIcon className="experimental-icon" />
-                {!isPopup && <span className="experimental-text">EXPERIMENTAL</span>}
+                {!isPopup && (
+                  <span className="experimental-text">EXPERIMENTAL</span>
+                )}
               </span>
             )}
           </div>
           <p className="feature-description">{feature.description}</p>
           {feature.author && (
-            <span className="feature-author">by {feature.author}</span>
+            <span className="feature-author">
+              by{" "}
+              <a
+                href={feature.author.profile}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {feature.author.name}
+              </a>
+            </span>
           )}
           {feature.isDevelopmentFeature && (
             <span className="dev-badge">DEV</span>
           )}
         </div>
       </div>
-      
+
       {/* Show configurables with smooth collapse/expand animation */}
       {feature.configurables && feature.configurables.length > 0 && (
-        <div 
-          className={`feature-configurables ${isEnabled ? 'expanded' : 'collapsed'}`} 
+        <div
+          className={`feature-configurables ${
+            isEnabled ? "expanded" : "collapsed"
+          }`}
           id={`config-${featureId}`}
         >
           {feature.configurables.map((configurable: any) => (

@@ -13,11 +13,16 @@ export interface FeatureOptions {
   description: string;
   enabled?: boolean;
   subsection?: any;
-  authorUsername?: string;
+  author?: FeatureAuthor;
   isDevelopmentFeature?: boolean;
   experimental?: boolean;
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
+}
+
+interface FeatureAuthor {
+  name: string;
+  profile: string;
 }
 
 /**
@@ -29,7 +34,7 @@ export interface FeatureOptions {
  * @param {string} options.description - A description of the feature.
  * @param {boolean} [options.enabled=true] - Whether the feature is enabled by default.
  * @param {string} [options.subsection] - The subsection of the section that this feature is associated with.
- * @param {string} [options.authorUsername] - The HF username of the author of this feature.
+ * @param {FeatureAuthor} [options.author] - The author of this feature.
  * @param {Configurable[]} [options.configurables] - Configurables for this feature.
  * @param {StorageItem[]} [options.storageItems] - Storage items for this feature.
  */
@@ -40,7 +45,7 @@ export class Feature {
   enabled: boolean;
   description: string;
   subsection?: any;
-  author?: string;
+  author?: FeatureAuthor;
   isDevelopmentFeature?: boolean;
   experimental?: boolean;
   configurables?: Configurable[];
@@ -58,7 +63,7 @@ export class Feature {
     this.description = options.description;
     // Optional
     this.subsection = options.subsection;
-    this.author = options.authorUsername;
+    this.author = options.author;
     this.isDevelopmentFeature = options.isDevelopmentFeature || false;
     this.experimental = options.experimental || false;
     this.configurables = options.configurables;

@@ -1,14 +1,14 @@
 import { Feature } from "../../core/Feature";
-import Global from "../../sections/Global";
+import PrivateMessages from "../../sections/PrivateMessages";
 
 class TrackingLinks extends Feature {
   constructor() {
     super({
-      section: Global,
+      section: PrivateMessages,
       name: "Tracking Links",
       enabled: true,
       description:
-        "Turns all messages in 'Message Tracking' into clickable links.",
+        "Turns all message titles in Message Tracking into clickable links.",
     });
   }
 

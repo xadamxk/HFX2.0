@@ -135,7 +135,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
       <div className="options-content">
         <nav className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""}`}>
           <ul className="ActionListWrap">
-            {Object.entries(sections).map(([sectionName, section]) => {
+            {Object.entries(sections).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([sectionName, section]) => {
               // const sectionFeatures = getFeaturesForSection(section);
               const isActive = sectionName === activeSection;
 
@@ -146,7 +146,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
                   data-section={sectionName}
                 >
                   <button
-                    className="ActionListContent ActionListContent--visual16"
+                    className="ActionListContent"
                     data-section={sectionName}
                     onClick={() => handleSectionClick(sectionName)}
                     title={isSidebarCollapsed ? section.name : undefined}

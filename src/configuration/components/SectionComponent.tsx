@@ -39,7 +39,7 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
           gap: isPopup ? "4px" : "16px" 
         }}
       >
-        {features.map((feature) => (
+        {features.sort((a, b) => a.name.localeCompare(b.name)).map((feature) => (
           <FeatureComponent
             key={feature.class}
             feature={feature}

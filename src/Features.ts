@@ -4,6 +4,7 @@ import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
 import HFToolbar from "./features/global/HFToolbar";
 import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
+import PMFromPost from "./features/threads/PMFromPost";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
 import SearchYourThreads from "./features/forumdisplay/SearchYourThreads";
@@ -20,6 +21,7 @@ export default {
   HFToolbar: HFToolbar,
   HideAwardRows: HideAwardRows,
   InteractivePostStats: InteractivePostStats,
+  PMFromPost: PMFromPost,
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,
   SearchYourThreads: SearchYourThreads,

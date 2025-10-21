@@ -4,6 +4,7 @@ import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
 import HFToolbar from "./features/global/HFToolbar";
 import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
+import JoindateOnPosts from "./features/threads/JoindateOnPosts";
 import PMFromPost from "./features/threads/PMFromPost";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
@@ -22,6 +23,7 @@ export default {
   HFToolbar: HFToolbar,
   HideAwardRows: HideAwardRows,
   InteractivePostStats: InteractivePostStats,
+  JoindateOnPosts: JoindateOnPosts,
   PMFromPost: PMFromPost,
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,

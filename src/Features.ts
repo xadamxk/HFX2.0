@@ -1,4 +1,5 @@
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
+import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import HFToolbar from "./features/global/HFToolbar";
 import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
@@ -12,6 +13,7 @@ import test from "./features/global/test";
 
 export default {
   ExpandIgnoredPosts: ExpandIgnoredPosts,
+  ExpandProfileSections: ExpandProfileSections,
   HFToolbar: HFToolbar,
   HideAwardRows: HideAwardRows,
   InteractivePostStats: InteractivePostStats,

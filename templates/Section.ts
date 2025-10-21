@@ -4,12 +4,12 @@ import { writer } from "./CRLFWriter";
 import { prompt } from "./prompt";
 import { generate as generateSections } from "./Sections";
 
-const template = `import { Section } from "../core/Section";
 // TODO: Allow this.name to have spaces (but trim them from other name uses)
+const template = `import { Section } from "../core/Section";
 
 class {{{ name }}} extends Section {
   constructor() {
-    super(["{{{ paths }}}"], ["{{{ elementSelectors }}}"]);
+    super(["{{{ paths }}}"], [{{{ elementSelectors }}}]);
     this.class = "{{{ name }}}";
     this.name = "{{{ name }}}";
   }
@@ -49,7 +49,8 @@ const questions = [
   {
     question:
       "Section element selectors [ex. '#element-id'] (optional, comma-separated)?",
-    parser: (answer: string) => answer && answer.split(",").join('", "'),
+    parser: (answer: string) =>
+      answer && answer.trim() ? `"${answer.split(",").join('", "')}"` : "",
     // validation: {
     //   validator: (answer: string) => answer.length !== 0,
     //   failed: (answer: string) =>

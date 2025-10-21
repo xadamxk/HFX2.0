@@ -5,6 +5,7 @@ import InteractivePostStats from "./features/threads/InteractivePostStats";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
+import ShowRecipientCount from "./features/awards/ShowRecipientCount";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import test from "./features/global/test";
 
@@ -16,6 +17,7 @@ export default {
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,
   ShowPostNumbers: ShowPostNumbers,
+  ShowRecipientCount: ShowRecipientCount,
   TrackingLinks: TrackingLinks,
   test: test
 };

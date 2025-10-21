@@ -4,6 +4,7 @@ import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
+import SearchYourThreads from "./features/forumdisplay/SearchYourThreads";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
 import ShowRecipientCount from "./features/awards/ShowRecipientCount";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
@@ -16,6 +17,7 @@ export default {
   InteractivePostStats: InteractivePostStats,
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,
+  SearchYourThreads: SearchYourThreads,
   ShowPostNumbers: ShowPostNumbers,
   ShowRecipientCount: ShowRecipientCount,
   TrackingLinks: TrackingLinks,

@@ -3,6 +3,7 @@ import HFToolbar from "./features/global/HFToolbar";
 import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
 import PostsOnThread from "./features/threads/PostsOnThread";
+import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import test from "./features/global/test";
@@ -13,6 +14,7 @@ export default {
   HideAwardRows: HideAwardRows,
   InteractivePostStats: InteractivePostStats,
   PostsOnThread: PostsOnThread,
+  QuickUnsubscribe: QuickUnsubscribe,
   ShowPostNumbers: ShowPostNumbers,
   TrackingLinks: TrackingLinks,
   test: test

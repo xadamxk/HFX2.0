@@ -1,0 +1,36 @@
+{
+    "manifest_version": 3,
+    "name": "HF Xtension",
+    "short_name": "HFX",
+    "version": "3.0.0",
+    "description": "Enhance your HF Experience!",
+    "incognito": "spanning",
+    "author": "xadamxk",
+    "offline_enabled": false,
+    "content_scripts": [
+        {
+            "run_at": "document_idle",
+            "matches": [
+                "https://hackforums.net/*"
+            ],
+            "js": [
+                "main.js"
+            ]
+        }
+    ],
+    "background": {
+        "service_worker": "serviceWorker.js"
+    },
+    "action": {
+        "default_popup": "options.html?popup=true",
+        "default_title": "HFX Settings"
+    },
+    "options_page": "options.html",
+    "permissions": [
+        "storage",
+        "webNavigation"
+    ],
+    "host_permissions": [
+        "https://hackforums.net/*"
+    ]
+}

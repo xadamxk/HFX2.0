@@ -3,6 +3,7 @@ import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
 import GivePopularityButton from "./features/threads/GivePopularityButton";
 import HFToolbar from "./features/global/HFToolbar";
+import HFXAlerts from "./features/hfx/HFXAlerts";
 import HFXBadges from "./features/hfx/HFXBadges";
 import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
@@ -24,6 +25,7 @@ export default {
   ExpandProfileShortcuts: ExpandProfileShortcuts,
   GivePopularityButton: GivePopularityButton,
   HFToolbar: HFToolbar,
+  HFXAlerts: HFXAlerts,
   HFXBadges: HFXBadges,
   HideAwardRows: HideAwardRows,
   InteractivePostStats: InteractivePostStats,

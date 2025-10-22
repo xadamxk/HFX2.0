@@ -101,7 +101,7 @@ class HFXBadges extends Feature {
     }
   }
 
-  appendBadges(badges: any) {
+  private appendBadges(badges: any) {
     // Copy badge object to prevent issues with settings above
     // Remove hidden property since it isn't needed here
     const badgeList = Object.assign({}, badges);

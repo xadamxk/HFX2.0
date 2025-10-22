@@ -12,9 +12,7 @@ export interface FeatureOptions {
   name: string;
   description: string;
   enabled?: boolean;
-  subsection?: any;
   author?: FeatureAuthor;
-  isDevelopmentFeature?: boolean;
   experimental?: boolean;
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
@@ -33,7 +31,6 @@ interface FeatureAuthor {
  * @param {string} options.name - The name of the feature.
  * @param {string} options.description - A description of the feature.
  * @param {boolean} [options.enabled=true] - Whether the feature is enabled by default.
- * @param {string} [options.subsection] - The subsection of the section that this feature is associated with.
  * @param {FeatureAuthor} [options.author] - The author of this feature.
  * @param {Configurable[]} [options.configurables] - Configurables for this feature.
  * @param {StorageItem[]} [options.storageItems] - Storage items for this feature.
@@ -44,9 +41,7 @@ export class Feature {
   name: string;
   enabled: boolean;
   description: string;
-  subsection?: any;
   author?: FeatureAuthor;
-  isDevelopmentFeature?: boolean;
   experimental?: boolean;
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
@@ -62,9 +57,7 @@ export class Feature {
     this.enabled = options.enabled ?? true;
     this.description = options.description;
     // Optional
-    this.subsection = options.subsection;
     this.author = options.author;
-    this.isDevelopmentFeature = options.isDevelopmentFeature || false;
     this.experimental = options.experimental || false;
     this.configurables = options.configurables;
     this.storageItems = options.storageItems;
@@ -101,12 +94,7 @@ export class Feature {
   }
 
   runnable(): boolean {
-    const isRunnableSection = this.section.runnable();
-    // If development feature and we're in development and the feature is runnable
-    // Otherwise, is runnable section
-    return this.isDevelopmentFeature
-      ? Util.isDevelopment() && isRunnableSection
-      : isRunnableSection;
+    return this.section.runnable();
   }
 
   /**

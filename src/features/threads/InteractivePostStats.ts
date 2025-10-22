@@ -71,7 +71,10 @@ class InteractivePostStats extends Feature {
             if (!existingDonateLink) {
               break;
             }
-            const donateLink = existingDonateLink.cloneNode(true);
+            const donateLink = existingDonateLink.cloneNode(
+              true
+            ) as HTMLAnchorElement;
+            donateLink.style.paddingRight = "5px";
 
             const historyLink = document.createElement("a");
             historyLink.href = `https://hackforums.net/myps.php?action=history&uid=${userId}`;

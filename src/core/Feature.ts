@@ -2,7 +2,6 @@ import { Logger } from "./Logger";
 import { Section } from "./Section";
 import { SettingsService } from "./SettingsService";
 import { StorageService } from "./StorageService";
-import { Util } from "./Util";
 import SelectorManager from "./SelectorManager";
 import { Configurable } from "./Configurable";
 import { StorageItemOption } from "./constants";
@@ -13,6 +12,7 @@ export interface FeatureOptions {
   description: string;
   enabled?: boolean;
   author?: FeatureAuthor;
+  readonly?: boolean;
   experimental?: boolean;
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
@@ -32,6 +32,7 @@ interface FeatureAuthor {
  * @param {string} options.description - A description of the feature.
  * @param {boolean} [options.enabled=true] - Whether the feature is enabled by default.
  * @param {FeatureAuthor} [options.author] - The author of this feature.
+ * @param {boolean} [options.readonly=false] - Whether the feature is readonly.
  * @param {Configurable[]} [options.configurables] - Configurables for this feature.
  * @param {StorageItem[]} [options.storageItems] - Storage items for this feature.
  */
@@ -42,6 +43,7 @@ export class Feature {
   enabled: boolean;
   description: string;
   author?: FeatureAuthor;
+  readonly?: boolean;
   experimental?: boolean;
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
@@ -58,6 +60,7 @@ export class Feature {
     this.description = options.description;
     // Optional
     this.author = options.author;
+    this.readonly = options.readonly || false;
     this.experimental = options.experimental || false;
     this.configurables = options.configurables;
     this.storageItems = options.storageItems;

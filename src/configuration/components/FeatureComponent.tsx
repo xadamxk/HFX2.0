@@ -47,6 +47,7 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
           <input
             type="checkbox"
             id={featureId}
+            disabled={feature.readonly || false}
             className="feature-checkbox"
             data-feature={feature.class}
             checked={isEnabled}
@@ -79,9 +80,6 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
                 {feature.author.name}
               </a>
             </span>
-          )}
-          {feature.isDevelopmentFeature && (
-            <span className="dev-badge">DEV</span>
           )}
         </div>
       </div>

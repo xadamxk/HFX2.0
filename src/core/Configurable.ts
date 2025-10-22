@@ -7,6 +7,7 @@ export interface ConfigurableOptions {
   label: string;
   default: any;
   description: string;
+  readonly?: boolean;
   type?: string;
 }
 
@@ -24,6 +25,7 @@ export class Configurable {
   label: string;
   default: any;
   description: string;
+  readonly?: boolean;
   type?: string;
 
   constructor(options: ConfigurableOptions) {
@@ -34,6 +36,7 @@ export class Configurable {
     this.description = options.description;
     this.type = options.type;
     this.default = options.default;
+    this.readonly = options.readonly || false;
   }
 
   render(section: Section, feature: Feature, settings: unknown): string {

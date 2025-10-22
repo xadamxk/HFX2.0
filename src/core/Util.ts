@@ -37,11 +37,26 @@ export class Util {
   }
 
   static getVersion() {
-    return chrome.runtime.getManifest().version;
+    if (
+      typeof chrome !== "undefined" &&
+      chrome.runtime !== undefined &&
+      typeof chrome.runtime.getManifest === "function"
+    ) {
+      const manifest = chrome.runtime.getManifest();
+      return manifest?.version ?? "3.0";
+    }
+    return "";
   }
 
   static getURL(resource: string) {
-    return chrome.extension.getURL(resource);
+    if (
+      typeof chrome !== "undefined" &&
+      chrome.runtime !== undefined &&
+      typeof chrome.runtime.getURL === "function"
+    ) {
+      return chrome.runtime.getURL(resource);
+    }
+    return resource.startsWith("/") ? resource : `/${resource}`;
   }
 
   static getLocalStorage(callBack: Function, key: string = null) {

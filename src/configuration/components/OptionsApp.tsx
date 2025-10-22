@@ -3,7 +3,10 @@ import { OptionsData } from "../OptionsData";
 import { Section } from "../../core/Section";
 import { Feature } from "../../core/Feature";
 import { SectionComponent } from "./SectionComponent";
-import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon,
+} from "@heroicons/react/24/outline";
 import { PopupProvider, usePopup } from "./contexts/PopupContext";
 
 interface OptionsAppProps {
@@ -13,7 +16,7 @@ interface OptionsAppProps {
 const OptionsAppContent: React.FC<OptionsAppProps> = ({
   title = "HFX Settings",
 }) => {
-  const [activeSection, setActiveSection] = useState<string>("");
+  const [activeSection, setActiveSection] = useState<string>("HFX");
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -71,7 +74,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
         ...settings[featureName],
         enabled: enabled,
       };
-      
+
       chrome.storage.local.set({
         [featureName]: featureSettings,
       });
@@ -99,7 +102,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
         ...settings[featureName],
         [configName]: value,
       };
-      
+
       chrome.storage.local.set({
         [featureName]: featureSettings,
       });
@@ -126,6 +129,17 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     );
   }
 
+  const sortedSections = Object.entries(sections).sort((a, b) => {
+    const [aName, aSection] = a;
+    const [bName, bSection] = b;
+    const aIsHfx = aName.toLowerCase() === "hfx";
+    const bIsHfx = bName.toLowerCase() === "hfx";
+    // HFX should be the first section
+    if (aIsHfx && !bIsHfx) return -1;
+    if (bIsHfx && !aIsHfx) return 1;
+    return aName.localeCompare(bName);
+  });
+
   return (
     <div className="options-container">
       <header className="options-header">
@@ -135,14 +149,16 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
       <div className="options-content">
         <nav className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""}`}>
           <ul className="ActionListWrap">
-            {Object.entries(sections).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([sectionName, section]) => {
+            {sortedSections.map(([sectionName, section]) => {
               // const sectionFeatures = getFeaturesForSection(section);
               const isActive = sectionName === activeSection;
 
               return (
                 <li
                   key={sectionName}
-                  className={`ActionListItem ${isActive ? "ActionListItem--navActive" : ""}`}
+                  className={`ActionListItem ${
+                    isActive ? "ActionListItem--navActive" : ""
+                  }`}
                   data-section={sectionName}
                 >
                   <button
@@ -160,33 +176,31 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
                         </span>
                       )}
                     </span>
-                    <span className="ActionListItem-label">
-                      {section.name}
-                    </span>
+                    <span className="ActionListItem-label">{section.name}</span>
                   </button>
                 </li>
               );
             })}
           </ul>
-            <button
-              className="sidebar-toggle"
-              onClick={() => {
-                setIsSidebarCollapsed(!isSidebarCollapsed);
-              }}
-              title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {isSidebarCollapsed ? (
-                <ChevronDoubleRightIcon />
-              ) : (
-                <ChevronDoubleLeftIcon />
-              )}
-            </button>
+          <button
+            className="sidebar-toggle"
+            onClick={() => {
+              setIsSidebarCollapsed(!isSidebarCollapsed);
+            }}
+            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isSidebarCollapsed ? (
+              <ChevronDoubleRightIcon />
+            ) : (
+              <ChevronDoubleLeftIcon />
+            )}
+          </button>
         </nav>
 
-        <main 
+        <main
           className="main-content"
-          style={{ 
-            padding: isPopup ? "4px" : "20px" 
+          style={{
+            padding: isPopup ? "4px" : "20px",
           }}
         >
           {Object.entries(sections).map(([sectionName, section]) => {

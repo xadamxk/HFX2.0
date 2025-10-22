@@ -10,7 +10,7 @@ export class Checkbox extends Configurable {
 
   render(section: Section, feature: Feature, settings: unknown): string {
     const configurableId = `config-${feature.class}-${this.id}`;
-    
+
     return `
       <div class="configurable-item configurable-checkbox">
           <label for="${configurableId}">
@@ -18,7 +18,7 @@ export class Checkbox extends Configurable {
                      id="${configurableId}" 
                      data-feature="${feature.class}" 
                      data-config="${this.id}"
-                     ${this.default ? 'checked' : ''}>
+                     ${this.default ? "checked" : ""}>
               <span class="configurable-label">${this.label}</span>
           </label>
           <p class="configurable-description">${this.description}</p>
@@ -26,14 +26,13 @@ export class Checkbox extends Configurable {
   }
 
   renderReact(
-    feature: Feature, 
-    section: Section, 
-    settings: unknown, 
+    feature: Feature,
+    section: Section,
+    settings: unknown,
     onChange?: (featureName: string, configName: string, value: any) => void
   ): React.ReactElement {
     const configurableId = `config-${feature.class}-${this.id}`;
     const currentValue = this.getCurrentValue(feature, settings);
-  
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const isChecked = e.target.checked;
@@ -49,6 +48,7 @@ export class Checkbox extends Configurable {
             data-feature={feature.class}
             data-config={this.id}
             checked={currentValue}
+            disabled={this.readonly}
             onChange={handleChange}
           />
           <span className="configurable-label">{this.label}</span>

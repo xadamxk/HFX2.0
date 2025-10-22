@@ -35,7 +35,7 @@ const baseConfig: Configuration = {
       patterns: [
         { from: "./src/manifest.json" },
         { from: "./src/configuration/options.css", to: "options.css" },
-        // TODO: assets and other dependencies used throughout features
+        { from: "./src/assets", to: "assets" },
       ],
     }),
     // Build options HTML

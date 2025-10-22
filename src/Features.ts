@@ -1,6 +1,7 @@
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
+import GivePopularityButton from "./features/threads/GivePopularityButton";
 import HFToolbar from "./features/global/HFToolbar";
 import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
@@ -20,6 +21,7 @@ export default {
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,
+  GivePopularityButton: GivePopularityButton,
   HFToolbar: HFToolbar,
   HideAwardRows: HideAwardRows,
   InteractivePostStats: InteractivePostStats,

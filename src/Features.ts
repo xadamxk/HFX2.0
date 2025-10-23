@@ -1,4 +1,3 @@
-import HackGame from "./features/games/HackGame";
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
@@ -6,9 +5,11 @@ import GivePopularityButton from "./features/threads/GivePopularityButton";
 import HFToolbar from "./features/global/HFToolbar";
 import HFXAlerts from "./features/hfx/HFXAlerts";
 import HFXBadges from "./features/hfx/HFXBadges";
+import HackGame from "./features/games/HackGame";
 import HideAwardRows from "./features/threads/HideAwardRows";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
 import JoindateOnPosts from "./features/threads/JoindateOnPosts";
+import MessageTimestamps from "./features/convo/MessageTimestamps";
 import PMFromPost from "./features/threads/PMFromPost";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
@@ -21,7 +22,6 @@ import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import test from "./features/global/test";
 
 export default {
-  HackGame: HackGame,
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,
@@ -29,9 +29,11 @@ export default {
   HFToolbar: HFToolbar,
   HFXAlerts: HFXAlerts,
   HFXBadges: HFXBadges,
+  HackGame: HackGame,
   HideAwardRows: HideAwardRows,
   InteractivePostStats: InteractivePostStats,
   JoindateOnPosts: JoindateOnPosts,
+  MessageTimestamps: MessageTimestamps,
   PMFromPost: PMFromPost,
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,
@@ -41,5 +43,5 @@ export default {
   ThemeCustomizer: ThemeCustomizer,
   ThreadMentions: ThreadMentions,
   TrackingLinks: TrackingLinks,
-  test: test,
+  test: test
 };

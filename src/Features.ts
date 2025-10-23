@@ -1,4 +1,4 @@
-import BatteryPercent from "./features/games/BatteryPercent";
+import HackGame from "./features/games/HackGame";
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
@@ -21,7 +21,7 @@ import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import test from "./features/global/test";
 
 export default {
-  BatteryPercent: BatteryPercent,
+  HackGame: HackGame,
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,
@@ -41,5 +41,5 @@ export default {
   ThemeCustomizer: ThemeCustomizer,
   ThreadMentions: ThreadMentions,
   TrackingLinks: TrackingLinks,
-  test: test
+  test: test,
 };

@@ -12,12 +12,13 @@ class ThreadMentions extends Feature {
   }
 
   run() {
+    const selfUID = this.getCurrentUserId();
     document.querySelectorAll(".post").forEach((post, index) => {
       const profileLink = post.querySelector(".author_information a");
       const posterURL = profileLink?.getAttribute("href") || "";
       const posterUID = posterURL.split("?action=profile&uid=")[1] || "";
       const buttons = post.querySelector(".post_management_buttons");
-      if (!buttons || !posterUID) return;
+      if (!buttons || !posterUID || posterUID === selfUID) return;
 
       const a = document.createElement("a");
       a.className = "hfx-user-mention postbit_quote";
@@ -48,6 +49,22 @@ class ThreadMentions extends Feature {
     if (!input) return;
     const current = input.value || "";
     input.value = `${current}[mention=${userId}] `;
+  }
+
+  private getCurrentUserId(): string {
+    try {
+      const anchor = this.querySelector(
+        ".welcome a"
+      ) as HTMLAnchorElement | null;
+      const href = anchor?.href || ""; // anchor.href gives absolute URL with decoded query
+      if (!href) return "";
+
+      // Fallbacks for unexpected formats
+      const uid = href.split("?action=profile&uid=")[1];
+      return uid;
+    } catch (_) {
+      return "";
+    }
   }
 }
 

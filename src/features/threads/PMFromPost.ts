@@ -12,7 +12,6 @@ class PMFromPost extends Feature {
   }
 
   run() {
-    // TODO: Fix this - PM From Post button isn't appended and the form is displaying by default
     const crumbs = document.querySelectorAll(".breadcrumb a");
     const threadTitle = (
       crumbs[crumbs.length - 1]?.textContent || ""
@@ -87,7 +86,7 @@ class PMFromPost extends Feature {
             <span><strong>Notice: This is an HFX Feature!</strong></span>
           </div>
           <div class="text-center my-3">
-            <div class="mb-3">
+            <div class="mb-3" style="margin-bottom: 10px;">
               <span>
                 <strong>Recipients:</strong>
                 <input type="text" class="textbox" name="to" value="${postUser}" readonly />
@@ -99,20 +98,40 @@ class PMFromPost extends Feature {
             </div>
             <textarea class="hfxPMFromPostInput" name="message" rows="7" cols="90">${postQuote}</textarea>
           </div>
-          <div class="text-center my-3">
+          <div class="text-center my-3" style="margin-bottom: 10px;">
             <span><input type="checkbox" class="checkbox" name="options[signature]" value="1" checked /> Signature</span>
             -
             <span><input type="checkbox" class="checkbox" name="options[savecopy]" value="1" checked /> Save a Copy</span>
             -
             <span><input type="checkbox" class="checkbox" name="options[readreceipt]" value="1" checked /> Request Read Receipt</span>
           </div>
-          <div class="text-center my-3">
+          <div class="text-center my-3" style="padding-bottom: 10px;">
             <input type="submit" class="button pm-from-post-button send" name="submit" value="Send Message" />
             <input type="submit" class="button pm-from-post-button" name="saveasdraft" value="Save as Draft" />
             <input type="submit" class="button pm-from-post-button" name="preview" value="Preview" />
           </div>
         </form>
       `;
+      // Apply inline styles to appended elements
+      (wrapper as HTMLElement).style.display = "none";
+      (wrapper as HTMLElement).style.backgroundColor = "#3f3e3e";
+      (wrapper as HTMLElement).style.textAlign = "center";
+
+      const textArea = wrapper.querySelector(
+        "textarea"
+      ) as HTMLTextAreaElement | null;
+      if (textArea) {
+        textArea.style.overflow = "auto";
+        textArea.style.resize = "vertical";
+      }
+
+      const checkboxes = wrapper.querySelectorAll(".checkbox");
+      checkboxes.forEach((cb) => {
+        const el = cb as HTMLElement;
+        el.style.top = "0";
+        el.style.verticalAlign = "middle";
+      });
+
       post.appendChild(wrapper);
     });
   }

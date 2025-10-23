@@ -1,3 +1,4 @@
+import BatteryPercent from "./features/games/BatteryPercent";
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
@@ -20,6 +21,7 @@ import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import test from "./features/global/test";
 
 export default {
+  BatteryPercent: BatteryPercent,
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,

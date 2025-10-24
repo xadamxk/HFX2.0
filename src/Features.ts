@@ -21,7 +21,6 @@ import ThemeCustomizer from "./features/global/ThemeCustomizer";
 import ThreadMentions from "./features/threads/ThreadMentions";
 import ThreadPrefixLinks from "./features/forumdisplay/ThreadPrefixLinks";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
-import test from "./features/global/test";
 
 export default {
   ExpandIgnoredPosts: ExpandIgnoredPosts,
@@ -47,5 +46,4 @@ export default {
   ThreadMentions: ThreadMentions,
   ThreadPrefixLinks: ThreadPrefixLinks,
   TrackingLinks: TrackingLinks,
-  test: test
 };

@@ -7,6 +7,7 @@ import HFXAlerts from "./features/hfx/HFXAlerts";
 import HFXBadges from "./features/hfx/HFXBadges";
 import HackGame from "./features/games/HackGame";
 import HideAwardRows from "./features/threads/HideAwardRows";
+import HideClosedThreads from "./features/forumdisplay/HideClosedThreads";
 import InteractivePostStats from "./features/threads/InteractivePostStats";
 import JoindateOnPosts from "./features/threads/JoindateOnPosts";
 import MessageTimestamps from "./features/convo/MessageTimestamps";
@@ -31,6 +32,7 @@ export default {
   HFXBadges: HFXBadges,
   HackGame: HackGame,
   HideAwardRows: HideAwardRows,
+  HideClosedThreads: HideClosedThreads,
   InteractivePostStats: InteractivePostStats,
   JoindateOnPosts: JoindateOnPosts,
   MessageTimestamps: MessageTimestamps,

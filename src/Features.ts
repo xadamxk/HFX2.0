@@ -19,6 +19,7 @@ import ShowRecipientCount from "./features/awards/ShowRecipientCount";
 import ThemeCustomizer from "./features/global/ThemeCustomizer";
 import ThreadMentions from "./features/threads/ThreadMentions";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
+import UserTagging from "./features/global/UserTagging";
 import test from "./features/global/test";
 
 export default {
@@ -43,5 +44,6 @@ export default {
   ThemeCustomizer: ThemeCustomizer,
   ThreadMentions: ThreadMentions,
   TrackingLinks: TrackingLinks,
+  UserTagging: UserTagging,
   test: test
 };

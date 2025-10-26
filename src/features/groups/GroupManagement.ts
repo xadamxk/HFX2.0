@@ -15,6 +15,7 @@ interface ManagedGroup {
 }
 
 class GroupManagement extends Feature {
+  fetchDelay = 24 * 60 * 60 * 1000; // 24 hours
   constructor() {
     super({
       section: Groups,
@@ -22,7 +23,7 @@ class GroupManagement extends Feature {
       enabled: false,
       description:
         "GROUP LEADERS ONLY: Easily add, remove, and blacklist group members directly from their profile.",
-      additionalSections: new SectionArray(new Section(["/member.php"], [])),
+      additionalSections: new SectionArray(new Section(["/member.php"], [])), // Profiles
       storageItems: [
         {
           id: GroupManagementStorageKeys.MANAGED_GROUPS,
@@ -39,7 +40,7 @@ class GroupManagement extends Feature {
     };
 
     const lastFetchTime = settings[STORAGE_KEYS.MANAGED_GROUPS]?.lastFetchTime;
-    if (!lastFetchTime || lastFetchTime < Date.now() - 24 * 60 * 60 * 1000) {
+    if (!lastFetchTime || lastFetchTime < Date.now() - this.fetchDelay) {
       Logger.debug("Fetching managed groups again");
       const newManagedGroups = await this.fetchManagedGroups();
       this.settingsService.setStorageItem(
@@ -54,7 +55,7 @@ class GroupManagement extends Feature {
     } else {
       Logger.debug(
         `No need to fetch managed groups again until ${new Date(
-          lastFetchTime + 24 * 60 * 60 * 1000
+          lastFetchTime + this.fetchDelay
         ).toLocaleString()}`
       );
     }

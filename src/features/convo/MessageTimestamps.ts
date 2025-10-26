@@ -34,6 +34,8 @@ class MessageTimestamps extends Feature {
       timestampEl.style.fontSize = "12px";
       timestampEl.style.color = "#9e9e9e";
       timestampEl.style.margin = "2px 0 2px 6px";
+      // Ensure the timestamp always renders beneath floated message bubbles
+      timestampEl.style.clear = "both";
 
       const parent = bubble.parentElement;
       if (parent) {

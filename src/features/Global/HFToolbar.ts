@@ -7,7 +7,7 @@ class HFToolbar extends Feature {
   constructor() {
     super({
       section: Global,
-      name: "HF Toolbar",
+      name: "Toolbar",
       enabled: true,
       description:
         "Adds a toolbar with various options to the navigation header.",

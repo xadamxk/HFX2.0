@@ -19,6 +19,7 @@ import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
 import SearchYourThreads from "./features/forumdisplay/SearchYourThreads";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
 import ShowRecipientCount from "./features/awards/ShowRecipientCount";
+import ThemeCustomizer from "./features/global/ThemeCustomizer";
 import ThreadMentions from "./features/threads/ThreadMentions";
 import ThreadPrefixLinks from "./features/forumdisplay/ThreadPrefixLinks";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
@@ -45,6 +46,7 @@ export default {
   SearchYourThreads: SearchYourThreads,
   ShowPostNumbers: ShowPostNumbers,
   ShowRecipientCount: ShowRecipientCount,
+  ThemeCustomizer: ThemeCustomizer,
   ThreadMentions: ThreadMentions,
   ThreadPrefixLinks: ThreadPrefixLinks,
   TrackingLinks: TrackingLinks,

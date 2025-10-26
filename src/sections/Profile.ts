@@ -5,7 +5,7 @@ class Profile extends Section {
   constructor() {
     super(["/member.php"], [], UserIcon);
     this.class = "Profile";
-    this.name = "Profile";
+    this.name = "Profiles";
   }
 }
 

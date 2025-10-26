@@ -29,7 +29,8 @@ class BanReason extends Feature {
       section: Profile,
       name: "Ban Reason",
       enabled: true,
-      description: "Shows ban reasons on profiles banned in the last month.",
+      description:
+        "Shows ban reasons on profiles. Only shows on profiles banned in the last month. Ban reasons are cached to avoid excessive background requests.",
       storageItems: [
         {
           id: "banReasons",

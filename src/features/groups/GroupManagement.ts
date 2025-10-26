@@ -222,7 +222,7 @@ class GroupManagement extends Feature {
           alert(
             "HFX: User is already a member of the group. Please remove them before blacklisting."
           );
-        else this.blacklistUser(group.groupId);
+        else this.blacklistGroupUser(group.groupId);
       });
       row.appendChild(blacklistButton);
 
@@ -250,29 +250,9 @@ class GroupManagement extends Feature {
     return false;
   }
 
-  private getProfileUsername() {
-    const container = document.querySelector(
-      ".pro-adv-content-info"
-    ) as HTMLElement | null;
-    if (!container) return null;
-
-    const firstCard = container.querySelector(
-      ":scope > .pro-adv-card"
-    ) as HTMLElement | null;
-    if (!firstCard) return null;
-
-    const nameEl = firstCard.querySelector(".largetext") as HTMLElement | null;
-    const text = nameEl?.textContent?.trim() || "";
-    return text || null;
-  }
-
-  private getProfileUserId() {
-    return window.location.href.replace(/[^0-9]/g, "") || 0;
-  }
-
   private addGroupMember(groupId: number) {
     const postKey = Util.getUserPostKey();
-    const profileUsername = this.getProfileUsername();
+    const profileUsername = Util.getProfileUsername();
     const body = new URLSearchParams({
       my_post_key: postKey,
       action: "do_add",
@@ -295,7 +275,7 @@ class GroupManagement extends Feature {
   }
 
   private removeGroupMember(groupId: number) {
-    const profileUserId = this.getProfileUserId();
+    const profileUserId = Util.getProfileUserId();
     const postKey = Util.getUserPostKey();
     const body = new URLSearchParams();
     body.set("my_post_key", postKey);
@@ -317,9 +297,9 @@ class GroupManagement extends Feature {
       .catch(console.error);
   }
 
-  private blacklistUser(groupId: number) {
+  private blacklistGroupUser(groupId: number) {
     const postKey = Util.getUserPostKey();
-    const profileUsername = this.getProfileUsername();
+    const profileUsername = Util.getProfileUsername();
 
     const body = new URLSearchParams({
       my_post_key: postKey,

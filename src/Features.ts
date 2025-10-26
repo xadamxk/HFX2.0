@@ -1,3 +1,4 @@
+import BanReason from "./features/profile/BanReason";
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
@@ -25,6 +26,7 @@ import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import WhosOnlineSorting from "./features/global/WhosOnlineSorting";
 
 export default {
+  BanReason: BanReason,
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,

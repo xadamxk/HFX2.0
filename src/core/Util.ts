@@ -71,4 +71,28 @@ export class Util {
       null
     );
   }
+
+  static getProfileUsername() {
+    const container = document.querySelector(
+      ".pro-adv-content-info"
+    ) as HTMLElement | null;
+    if (!container) return null;
+
+    const firstCard = container.querySelector(
+      ":scope > .pro-adv-card"
+    ) as HTMLElement | null;
+    if (!firstCard) return null;
+
+    const nameEl = firstCard.querySelector(".largetext") as HTMLElement | null;
+    const text = nameEl?.textContent?.trim() || "";
+    return text || null;
+  }
+  static getProfileUserId() {
+    return (
+      parseInt(
+        new URL(window.location.href).searchParams.get("uid") || "0",
+        10
+      ) || 0
+    );
+  }
 }

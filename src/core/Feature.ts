@@ -5,6 +5,7 @@ import { StorageService } from "./StorageService";
 import SelectorManager from "./SelectorManager";
 import { Configurable } from "./Configurable";
 import { StorageItemOption } from "./constants";
+import { SectionArray } from "./SectionArray";
 
 export interface FeatureOptions {
   section: Section;
@@ -16,6 +17,7 @@ export interface FeatureOptions {
   experimental?: boolean;
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
+  additionalSections?: SectionArray;
 }
 
 interface FeatureAuthor {
@@ -35,6 +37,7 @@ interface FeatureAuthor {
  * @param {boolean} [options.readonly=false] - Whether the feature is readonly.
  * @param {Configurable[]} [options.configurables] - Configurables for this feature.
  * @param {StorageItem[]} [options.storageItems] - Storage items for this feature.
+ * @param {SectionArray} [options.additionalSections] - Additional sections for this feature.
  */
 export class Feature {
   class: string;
@@ -47,6 +50,7 @@ export class Feature {
   experimental?: boolean;
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
+  additionalSections?: SectionArray;
 
   protected settingsService: SettingsService;
   protected selectorManager: SelectorManager;
@@ -66,6 +70,7 @@ export class Feature {
     this.storageItems = options.storageItems;
     this.selectorManager = SelectorManager.getInstance();
     this.settingsService = new SettingsService(new StorageService());
+    this.additionalSections = options.additionalSections;
   }
 
   async start() {
@@ -93,11 +98,16 @@ export class Feature {
   }
 
   runnableSection(): Section {
-    return this.section.runnable() ? this.section : null;
+    return this.section.runnable()
+      ? this.section
+      : this.additionalSections && this.additionalSections.runnableSection();
   }
 
   runnable(): boolean {
-    return this.section.runnable();
+    return (
+      this.section.runnable() ||
+      (this.additionalSections && this.additionalSections.runnable())
+    );
   }
 
   /**

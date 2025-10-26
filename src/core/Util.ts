@@ -62,4 +62,13 @@ export class Util {
   static getLocalStorage(callBack: Function, key: string = null) {
     return chrome.storage.local.get(key, (result: any) => callBack(result));
   }
+
+  /** Common functions for content scripts */
+  static getUserPostKey() {
+    return (
+      (Util.isContentScript() &&
+        document.head.innerHTML.match(/my_post_key = "([a-f0-9]+)"/)?.pop()) ||
+      null
+    );
+  }
 }

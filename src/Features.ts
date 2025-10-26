@@ -2,6 +2,7 @@ import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
 import GivePopularityButton from "./features/threads/GivePopularityButton";
+import GroupManagement from "./features/groups/GroupManagement";
 import HFToolbar from "./features/global/HFToolbar";
 import HFXAlerts from "./features/hfx/HFXAlerts";
 import HFXBadges from "./features/hfx/HFXBadges";
@@ -28,6 +29,7 @@ export default {
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,
   GivePopularityButton: GivePopularityButton,
+  GroupManagement: GroupManagement,
   HFToolbar: HFToolbar,
   HFXAlerts: HFXAlerts,
   HFXBadges: HFXBadges,

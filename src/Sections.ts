@@ -4,6 +4,7 @@ export default {
   ForumDisplay: require("./sections/ForumDisplay"),
   Games: require("./sections/Games"),
   Global: require("./sections/Global"),
+  Groups: require("./sections/Groups"),
   HFX: require("./sections/HFX"),
   PrivateMessages: require("./sections/PrivateMessages"),
   Profile: require("./sections/Profile"),

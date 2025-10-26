@@ -8,6 +8,12 @@ enum HFXAlertsStorageKeys {
   LAST_FETCH_TIME = "lastFetchTime",
 }
 
+interface HFXAlert {
+  AlertKey: number;
+  AlertValue: string;
+  AlertTitle: string;
+}
+
 class HFXAlerts extends Feature {
   constructor() {
     super({
@@ -20,7 +26,7 @@ class HFXAlerts extends Feature {
         {
           id: HFXAlertsStorageKeys.ALERT_MAP,
           description: "Map of the most recent alert.",
-          defaultValue: {},
+          defaultValue: { alerts: null, hidden: false },
         },
       ],
     });
@@ -32,28 +38,26 @@ class HFXAlerts extends Feature {
     this.now;
 
   run(settings: any) {
-    // TODO: Alert behavior is broken
     const STORAGE_KEYS = {
       ALERT_MAP: `storage_${HFXAlertsStorageKeys.ALERT_MAP}`,
       LAST_FETCH_TIME: `storage_${HFXAlertsStorageKeys.LAST_FETCH_TIME}`,
     };
     const alertMap = settings[STORAGE_KEYS.ALERT_MAP];
     const lastFetchTime = settings[STORAGE_KEYS.LAST_FETCH_TIME];
-    const timePassed =
+    const timePassedMinutes =
       lastFetchTime !== undefined
-        ? (new Date().getTime() - lastFetchTime) / (1 * 60 * 1000)
+        ? (new Date().getTime() - lastFetchTime) / (60 * 1000)
         : Infinity;
 
-    if (timePassed <= this.fetchDelay * 60 * 1000) {
+    if (timePassedMinutes <= this.fetchDelay) {
       Logger.debug(
-        `Alerts: ${timePassed} - needs ${
-          this.fetchDelay * 60 * 1000
-        } minutes. Skipping.`
+        `HFX Alerts: ${timePassedMinutes} minutes passed - threshold ${this.fetchDelay} minutes. Skipping fetch.`
       );
       if (alertMap !== undefined && alertMap?.hidden !== true) {
-        this.showAlert(alertMap?.alerts);
+        this.showAlert(alertMap?.alerts as HFXAlert);
       }
     } else {
+      Logger.debug("Fetching HFX alert data...");
       fetch(this.fetchLocation)
         .then((response) => {
           if (!response.ok) {
@@ -61,11 +65,20 @@ class HFXAlerts extends Feature {
           }
           return response.json();
         })
-        .then((fetchedAlert) => {
+        .then((fetchedAlert: HFXAlert) => {
+          Logger.debug("Fetched alert data:", fetchedAlert);
           const newLastFetchTime = new Date().getTime();
-          console.log(alertMap?.alerts?.AlertKey);
-          console.log(fetchedAlert?.AlertKey);
-          if (alertMap?.alerts?.AlertKey !== fetchedAlert?.AlertKey) {
+          // Always update the last fetch time on successful fetch
+          this.settingsService.setStorageItem(
+            this,
+            HFXAlertsStorageKeys.LAST_FETCH_TIME,
+            newLastFetchTime
+          );
+
+          const storedKey = alertMap?.alerts?.AlertKey;
+          const fetchedKey = fetchedAlert?.AlertKey;
+
+          if (storedKey !== fetchedKey) {
             const newAlertMap = {
               alerts: fetchedAlert,
               hidden: false,
@@ -75,12 +88,10 @@ class HFXAlerts extends Feature {
               HFXAlertsStorageKeys.ALERT_MAP,
               newAlertMap
             );
-            this.settingsService.setStorageItem(
-              this,
-              HFXAlertsStorageKeys.LAST_FETCH_TIME,
-              newLastFetchTime
-            );
             this.showAlert(fetchedAlert);
+          } else if (alertMap?.hidden !== true) {
+            // Same alert still active; keep showing until user dismisses
+            this.showAlert(alertMap?.alerts ?? fetchedAlert);
           }
         })
         .catch(() => {
@@ -89,7 +100,7 @@ class HFXAlerts extends Feature {
     }
   }
 
-  private showAlert(fetchedAlert: any) {
+  private showAlert(fetchedAlert: HFXAlert) {
     const content = document.getElementById("content");
     if (!content) return;
 
@@ -103,7 +114,8 @@ class HFXAlerts extends Feature {
         </a>
       </div>
       <div>
-        <b>${fetchedAlert?.AlertValue}</b>
+        <div><b>${fetchedAlert?.AlertTitle || ""}</b></div>
+        <div>${fetchedAlert?.AlertValue || ""}</div>
       </div>
     </div>
     `
@@ -128,7 +140,7 @@ class HFXAlerts extends Feature {
       this.settingsService.setStorageItem(
         self,
         HFXAlertsStorageKeys.ALERT_MAP,
-        { ...fetchedAlert, hidden: true }
+        { alerts: fetchedAlert, hidden: true }
       );
       const alertEl = document.getElementById("HFXAlert");
       if (alertEl) {

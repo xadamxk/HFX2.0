@@ -20,19 +20,19 @@ class ExpandProfileSections extends Feature {
         new Checkbox({
           id: "showVisitorNames",
           label: "Show Visitor Names",
-          description: "Show the names of the visitors to the profile.",
+          description: "Show the names of profile visitors.",
           default: true,
         }),
         new Checkbox({
           id: "showVisitorTimes",
           label: "Show Visitor Times",
-          description: "Show the times of the visitors to the profile.",
+          description: "Show the times of profile visitors.",
           default: true,
         }),
         new Checkbox({
           id: "showComradeNames",
           label: "Show Comrade Names",
-          description: "Show the names of the comrades to the profile.",
+          description: "Show the names of profile comrades.",
           default: true,
         }),
       ],

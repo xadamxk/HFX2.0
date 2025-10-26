@@ -37,8 +37,7 @@
     },
     "options_page": "options.html",
     "permissions": [
-        "storage",
-        "webNavigation"
+        "storage"
     ],
     "host_permissions": [
         "https://hackforums.net/*"

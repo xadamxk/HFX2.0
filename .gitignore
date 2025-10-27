@@ -1,7 +1,7 @@
 node_modules/
-extension/release/
-extension/assets/lib/
+dist/
 coverage/
+*.log
 .DS_Store
 .vscode/
 .idea/

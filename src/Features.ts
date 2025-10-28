@@ -23,6 +23,7 @@ import ThemeCustomizer from "./features/global/ThemeCustomizer";
 import ThreadMentions from "./features/threads/ThreadMentions";
 import ThreadPrefixLinks from "./features/forumdisplay/ThreadPrefixLinks";
 import TrackingLinks from "./features/privatemessages/TrackingLinks";
+import WhosOnlineSorting from "./features/global/WhosOnlineSorting";
 
 export default {
   BanReason: BanReason,
@@ -50,4 +51,5 @@ export default {
   ThreadMentions: ThreadMentions,
   ThreadPrefixLinks: ThreadPrefixLinks,
   TrackingLinks: TrackingLinks,
+  WhosOnlineSorting: WhosOnlineSorting,
 };

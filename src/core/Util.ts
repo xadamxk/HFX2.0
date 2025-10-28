@@ -95,4 +95,10 @@ export class Util {
       ) || 0
     );
   }
+
+  static addCssToPage(css: string) {
+    const cssElement = document.createElement("style");
+    cssElement.textContent = css;
+    (document.head || document.documentElement).appendChild(cssElement);
+  }
 }

@@ -17,6 +17,7 @@ import MessageTimestamps from "./features/convo/MessageTimestamps";
 import PMFromPost from "./features/threads/PMFromPost";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
+import RestoreCursor from "./features/global/RestoreCursor";
 import SearchYourThreads from "./features/forumdisplay/SearchYourThreads";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
 import ShowRecipientCount from "./features/awards/ShowRecipientCount";
@@ -46,6 +47,7 @@ export default {
   PMFromPost: PMFromPost,
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,
+  RestoreCursor: RestoreCursor,
   SearchYourThreads: SearchYourThreads,
   ShowPostNumbers: ShowPostNumbers,
   ShowRecipientCount: ShowRecipientCount,

@@ -1,3 +1,4 @@
+import AwardGoalAdditions from "./features/awards/AwardGoalAdditions";
 import BanReason from "./features/profile/BanReason";
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
@@ -26,6 +27,7 @@ import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import WhosOnlineSorting from "./features/global/WhosOnlineSorting";
 
 export default {
+  AwardGoalAdditions: AwardGoalAdditions,
   BanReason: BanReason,
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
@@ -51,5 +53,5 @@ export default {
   ThreadMentions: ThreadMentions,
   ThreadPrefixLinks: ThreadPrefixLinks,
   TrackingLinks: TrackingLinks,
-  WhosOnlineSorting: WhosOnlineSorting,
+  WhosOnlineSorting: WhosOnlineSorting
 };

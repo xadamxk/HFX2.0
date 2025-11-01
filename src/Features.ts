@@ -4,6 +4,7 @@ import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
 import GivePopularityButton from "./features/threads/GivePopularityButton";
+import GroupAssetCustomizer from "./features/global/GroupAssetCustomizer";
 import GroupManagement from "./features/groups/GroupManagement";
 import HFToolbar from "./features/global/HFToolbar";
 import HFXAlerts from "./features/hfx/HFXAlerts";
@@ -33,6 +34,7 @@ export default {
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,
   GivePopularityButton: GivePopularityButton,
+  GroupAssetCustomizer: GroupAssetCustomizer,
   GroupManagement: GroupManagement,
   HFToolbar: HFToolbar,
   HFXAlerts: HFXAlerts,

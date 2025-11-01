@@ -3,14 +3,12 @@ import { generate as generateSection } from "./Section";
 import { generate as generateFeatures } from "./Section";
 import { generate as generateSections } from "./Sections";
 import { generate as generateFeature } from "./Feature";
-import { generate as generateConfigurables } from "./Configurables";
 
 const templates: { [key: string]: any } = {
   feature: generateFeature,
   features: generateFeatures,
   section: generateSection,
   sections: generateSections,
-  configurables: generateConfigurables,
 };
 
 function capitalize(word: string) {

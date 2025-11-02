@@ -34,6 +34,31 @@ class PostAuthorIndicators extends Feature {
     const posts = this.querySelectorAll(".post");
     if (!posts.length) return;
 
+    // Collect UIDs of users currently viewing this thread
+    const usersViewing: number[] = [];
+    try {
+      const viewingSpan = (document.querySelector(
+        "#content > div.wrapper-content > span.smalltext"
+      ) ||
+        Array.from(
+          document.querySelectorAll(".wrapper-content span.smalltext")
+        ).find((el) =>
+          (el.textContent || "").toLowerCase().includes("users viewing")
+        )) as HTMLSpanElement | undefined;
+
+      if (viewingSpan) {
+        const viewerLinks = viewingSpan.querySelectorAll(
+          'a[href*="member.php?action=profile&uid="]'
+        );
+        viewerLinks.forEach((a) => {
+          const href = a.getAttribute("href") || "";
+          const uidStr = href.split("&uid=")[1] || "";
+          const uid = parseInt(uidStr, 10);
+          if (!Number.isNaN(uid)) usersViewing.push(uid);
+        });
+      }
+    } catch (_) {}
+
     posts.forEach((post) => {
       const authorInfo = post.querySelector(
         ".author_information"
@@ -52,6 +77,20 @@ class PostAuthorIndicators extends Feature {
 
       if (!avatarImage || (!buddyImg && !titledEl)) return;
 
+      // Determine the UID for this post's author
+      let userId = 0;
+      try {
+        const profileLink =
+          (post.querySelector(
+            ".author_information .largetext > a"
+          ) as HTMLAnchorElement | null) ||
+          (post.querySelector(
+            ".author_avatar > a"
+          ) as HTMLAnchorElement | null);
+        const href = profileLink?.getAttribute("href") || "";
+        userId = parseInt(href.split("&uid=")[1] || "", 10) || 0;
+      } catch (_) {}
+
       let statusTitle = "";
       if (buddyImg) {
         statusTitle = (
@@ -69,19 +108,19 @@ class PostAuthorIndicators extends Feature {
           .toLowerCase();
       }
 
-      // TODO: If viewing thread - Possible colors (Blue: #4c79af, Red: #af504c, Light Blue: #4cabaf, Purple: #504caf, Violet: #814caf)
+      // Possible colors (Blue: #4c79af, Red: #af504c, Light Blue: #4cabaf, Purple: #504caf, Violet: #814caf)
       // Get colors from color-wheel tool so the shades match: https://colordesigner.io/color-wheel
-      if (statusTitle === "online") {
+      if (userId && usersViewing.includes(userId)) {
+        avatarImage.style.border = "3px solid #4c79af"; // blue
+      } else if (statusTitle === "online") {
         avatarImage.style.border = "3px solid #4caf50"; // green
       } else if (statusTitle === "offline") {
-        avatarImage.style.border = "3px solid #ffffff"; // white
+        avatarImage.style.border = "3px solid #ffffff"; // red or white?
       } else if (statusTitle === "away") {
         avatarImage.style.border = "3px solid #abaf4c"; // yellow
-      } else if (statusTitle.includes("viewing")) {
-        avatarImage.style.border = "3px solid #2196f3"; // blue for viewing thread/page
       } else {
-        // Unknown/unsupported: clear any previous styling applied by this feature
-        avatarImage.style.border = "";
+        // Unknown/unsupported
+        avatarImage.style.border = "3px solid #ffffff"; // white
       }
 
       roundProfileIcons

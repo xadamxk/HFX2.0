@@ -6,40 +6,68 @@ Enhance your HackForums experience - rewritten from the ground up with the commu
   <br>
   <i>HFX has been a passion project of mine for 5 years now. Rewritten entirely to accomodate site changes over the recent years — I promise this iteration of HFX will be a community favorite!</i> -xadamxk (Developer)
   <br>
-  <img src="https://github.com/xadamxk/HFX2.0/blob/develop/extension/assets/images/banner-large.png" title="Logo"  />
+  <img src="https://github.com/xadamxk/HFX2.0/blob/develop/assets/banner-large.png?raw=true" title="Logo"  />
 </div>
 
 <details> 
-  <summary>Theme Changer:</summary>
-  <img src="https://github.com/xadamxk/HFX2.0/blob/develop/webstore-assets/HFX2-promo1.png?raw=true" title="Theme Changer"  />
+  <summary>New Settings UI:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/hfx_settings.png?raw=true" title="New Settings UI"  />
+</details>
+
+<details> 
+  <summary>Theme Customizer:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/theme_customizer.png?raw=true" title="Theme Customizer"  />
+</details>
+
+<details> 
+  <summary>Convo Message Timestamps:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/convo_timestamps.png?raw=true" title="Convo Message Timestamps"  />
 </details>
 
 <details> 
   <summary>Game Additions:</summary>
-  <img src="https://github.com/xadamxk/HFX2.0/blob/develop/webstore-assets/HFX2-promo2.png?raw=true" title="Game Additions"  />
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/hack_game.png?raw=true" title="Game Additions"  />
 </details>
 
 <details> 
-  <summary>Popularity Charts:</summary>
-  <img src="https://github.com/xadamxk/HFX2.0/blob/develop/webstore-assets/HFX2-promo3.png?raw=true" title="Popularity Charts"  />
+  <summary>Ban Reason on Profile:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/ban_reason.png?raw=true" title="Ban Reason on Profile"  />
+</details>
+
+<details> 
+  <summary>Extended Profile Sections:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/expanded_profile_sections.png?raw=true" title="Extended Profile Sections"  />
+</details>
+
+<details> 
+  <summary>Whos Online User Sorting:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/WhosOnlineSorting.png?raw=true" title="Whos Online Sorting"  />
+</details>
+
+<details> 
+  <summary>HF Toolbar:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/hf_toolbar.png?raw=true" title="HF Toolbar"  />
+</details>
+
+<details> 
+  <summary>Group Management:</summary>
+  <img src="https://github.com/xadamxk/hf-legacy-assets/blob/main/threads/hfx/features/group_management.png?raw=true" title="Group Management"  />
 </details>
 
 <details> 
   <summary>Complete Feature List:</summary> 
-  <img src="https://github.com/xadamxk/HFX2.0/blob/develop/webstore-assets/HFX2-promo4.png?raw=true" title="Complete Feature List"  />
+  <img src="https://github.com/xadamxk/HFX2.0/blob/develop/assets/webstore/HFX2-promo4.png?raw=true" title="Complete Feature List"  />
 </details>
 
 <h2>New Features</h2>
 <ul>
-  <li><b>HFX Tours: </b>Introduces HFX features as you come across them.</li>
+  <li><b>Whos Online User Sorting: </b>Sorts online users by their group.</li>
   
-  <li><b>Theme Customizer: </b>Adds additional color theme options along with previous site logos.</li>
+  <li><b>Post Author Indicators: </b>Formats post avatars to indicate online presence.</li>
   
-  <li><b>Game Additions: HF Game quality of life enhancements including battery percentage, exact recharge time, and shortcuts.</li>
+  <li><b>Group Asset Customizer: Change group assets (userbars, stars, username styles) to older assets.</li>
   
-  <li><b>Convo Enhancements: </b>Conversation features including filters, blacklists, quick reply, and more.</li>
-  
-  <li><b>Expanded Profile Sections: </b> Automatically expands collapsed profile cards and styles user award tables.</li>
+  <li><b>Award Goal Additions: </b>Adds additional information to award goal cards.</li>
 </ul>
 
 <h2>Contributing to HFX</h2>

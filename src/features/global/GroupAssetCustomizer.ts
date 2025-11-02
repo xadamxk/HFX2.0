@@ -22,8 +22,9 @@ class GroupAssetCustomizer extends Feature {
     super({
       section: Global,
       name: "Group Asset Customizer",
-      enabled: false,
-      description: "Change group assets (userbars, stars, username styles) to older themes.",
+      enabled: true,
+      description:
+        "Change group assets (userbars, stars, username styles) to older themes.",
       configurables: [
         new Dropdown({
           id: "theme",
@@ -34,7 +35,7 @@ class GroupAssetCustomizer extends Feature {
             { label: "Default (Current)", value: THEMES.DEFAULT },
             { label: "Classic / Old School (OG)", value: THEMES.CLASSIC },
             { label: "Modern (2015)", value: THEMES.MODERN },
-          ]
+          ],
         }),
         new Checkbox({
           id: "resizeUserbars",
@@ -45,7 +46,15 @@ class GroupAssetCustomizer extends Feature {
         new Checkbox({
           id: "revertCustomStars",
           label: "Revert Custom Group Stars",
-          description: "Revert all custom group stars to the original style (yellow stars).",
+          description:
+            "Revert all custom group stars to the original style (yellow stars).",
+          default: false,
+        }),
+        new Checkbox({
+          id: "revertCustomGroupStyles",
+          label: "Remove Custom Group Username Styles",
+          description:
+            "Remove the custom group username styles (colors, shadows, etc.) and revert to the original style.",
           default: false,
         }),
       ],
@@ -70,48 +79,50 @@ class GroupAssetCustomizer extends Feature {
 
   // Class map
   private customGroupStars = {
-    "group78": "https://hackforums.net/images/mobale/star-78.gif", // Casino
-    "group59": "https://hackforums.net/images/mobale/star-59b.gif", // Olympians
-    "group52":"https://hackforums.net/images/mobale/star-52.gif", // Pink LSZ
-    "group54":"https://hackforums.net/images/mobale/star-d2.png", // Succubus
-    "group48":"https://hackforums.net/images/mobale/star-48c.gif", // Quantum
-    "group50":"https://hackforums.net/images/mobale/star.gif", // Legends
-    "group71":"https://hackforums.net/images/mobale/star-71.gif", // Warriors
-    "group77":"https://hackforums.net/images/mobale/star-77.gif", // The Academy
-    "group56":"https://hackforums.net/images/mobale/star-56.gif", // Blacklisted
-    "group46":"https://hackforums.net/images/mobale/star-46e.gif", // H4ack3r$
-    "group57":"https://hackforums.net/images/mobale/star-57.png", // Lions League
-    "group53":"https://hackforums.net/images/mobale/star-53d.gif", // Eden
-    "group69":"https://hackforums.net/images/mobale/star-allegiance.gif", // Allegiance
-    "group70":"https://hackforums.net/images/mobale/star_Fv9.gif", // Gamblers
-    "group0":" https://hackforums.net/images/mobale/star.gif", // Equilibrium
-    "gradient-silver":"https://hackforums.net/images/star.png", // Brotherhood
-    "group49":"https://hackforums.net/images/mobale/star-red2.png", // Sociopaths
+    group78: "https://hackforums.net/images/mobale/star-78.gif", // Casino
+    group59: "https://hackforums.net/images/mobale/star-59b.gif", // Olympians
+    group52: "https://hackforums.net/images/mobale/star-52.gif", // Pink LSZ
+    group54: "https://hackforums.net/images/mobale/star-d2.png", // Succubus
+    group48: "https://hackforums.net/images/mobale/star-48c.gif", // Quantum
+    group50: "https://hackforums.net/images/mobale/star.gif", // Legends
+    group71: "https://hackforums.net/images/mobale/star-71.gif", // Warriors
+    group77: "https://hackforums.net/images/mobale/star-77.gif", // The Academy
+    group56: "https://hackforums.net/images/mobale/star-56.gif", // Blacklisted
+    group46: "https://hackforums.net/images/mobale/star-46e.gif", // H4ack3r$
+    group57: "https://hackforums.net/images/mobale/star-57.png", // Lions League
+    group53: "https://hackforums.net/images/mobale/star-53d.gif", // Eden
+    group69: "https://hackforums.net/images/mobale/star-allegiance.gif", // Allegiance
+    group70: "https://hackforums.net/images/mobale/star_Fv9.gif", // Gamblers
+    group0: " https://hackforums.net/images/mobale/star.gif", // Equilibrium
+    "gradient-silver": "https://hackforums.net/images/star.png", // Brotherhood
+    group49: "https://hackforums.net/images/mobale/star-red2.png", // Sociopaths
     // "":"https://hackforums.net/images/star.png", // Terminal (has no class value)
-    "group23":"https://hackforums.net/images/mobale/star-mob.gif", // Mob
-    "group12":"https://hackforums.net/images/mobale/star-12.gif", // Benevolence
-    "group63":"https://hackforums.net/images/mobale/star-orange.png", // Infamous
-  }
+    group23: "https://hackforums.net/images/mobale/star-mob.gif", // Mob
+    group12: "https://hackforums.net/images/mobale/star-12.gif", // Benevolence
+    group63: "https://hackforums.net/images/mobale/star-orange.png", // Infamous
+  };
 
   run(settings: any) {
     const theme = settings.theme;
     const resizeUserbars = settings.resizeUserbars;
     const revertCustomStars = settings.revertCustomStars;
+    const revertCustomGroupStyles = settings.revertCustomGroupStyles;
 
-    if(resizeUserbars) {
+    if (resizeUserbars) {
       // Resize all current userbars to 136x42
       // Default group images are in images/groupimages/
       // Custom group images are in images/groupimages/custom/
-      const existingUserbars = document.querySelectorAll('img[src^="images/groupimages/"]');
+      const existingUserbars = document.querySelectorAll(
+        'img[src^="images/groupimages/"]'
+      );
       existingUserbars.forEach((img: HTMLImageElement) => {
         img.style.width = "136px";
         img.style.height = "42px";
       });
     }
 
-    if(revertCustomStars) {
-      console.log("Reverting custom stars");
-      this.replaceStar();
+    if (revertCustomStars) {
+      this.checkPosts(revertCustomStars, revertCustomGroupStyles);
     }
 
     switch (theme) {
@@ -126,32 +137,38 @@ class GroupAssetCustomizer extends Feature {
 
   private applyClassicTheme() {
     const classicUserbars: AssetGroup = {
-      admin: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/admin.jpg?raw=true",
-      staff: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/staff.png?raw=true",
+      admin:
+        "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/admin.jpg?raw=true",
+      staff:
+        "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/staff.png?raw=true",
       uber: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/ub3r.png?raw=true",
       leet: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/l33t.png?raw=true",
-      vender: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/v3ndor.png?raw=true",
+      vender:
+        "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/v3ndor.png?raw=true",
     };
 
     this.replaceUserbar(classicUserbars);
-  };
+  }
 
   private applyModernTheme() {
     const modernUserbars: AssetGroup = {
-      admin: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/admin-1.png?raw=true",
-      staff: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/staff-1.png?raw=true",
+      admin:
+        "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/admin-1.png?raw=true",
+      staff:
+        "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/staff-1.png?raw=true",
       uber: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/ub3r-1.png?raw=true",
       leet: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/l33t-1.png?raw=true",
-      vender: "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/v3ndor-fake.png?raw=true",
+      vender:
+        "https://github.com/xadamxk/hf-legacy-assets/blob/main/groups/v3ndor-fake.png?raw=true",
     };
     this.replaceUserbar(modernUserbars);
-  };
+  }
 
-  private replaceUserbar(userbarGroup: AssetGroup){
+  private replaceUserbar(userbarGroup: AssetGroup) {
     Object.entries(this.currentUserbars).forEach(([group, image]) => {
       const currentImages = document.querySelectorAll(`img[src*="${image}"]`);
       currentImages.forEach((img: HTMLImageElement) => {
-        if(group in userbarGroup) {
+        if (group in userbarGroup) {
           img.src = userbarGroup[group as keyof AssetGroup];
           img.style.width = "auto";
           img.style.height = "auto";
@@ -160,26 +177,41 @@ class GroupAssetCustomizer extends Feature {
     });
   }
 
-  private replaceStar(){
+  private checkPosts(
+    revertCustomStars: boolean,
+    revertCustomGroupStyles: boolean
+  ) {
     // Only replace stars on showthreads.php
     const currentUrl = window.location.pathname;
-    if(currentUrl.includes("/showthread.php")) {
+    if (currentUrl.includes("/showthread.php")) {
       // Replace stars
       const posts = this.querySelectorAll(".post");
       posts.forEach((post) => {
         const authorInfo = post.querySelector(".author_information");
-        const userSpan = authorInfo?.querySelector("strong > span.largetext > a > span");
+        const userSpan = authorInfo?.querySelector(
+          "strong > span.largetext > a > span"
+        );
         const groupClass = userSpan?.getAttribute("class");
 
         // Replace stars if custom group match
-        if(groupClass && groupClass in this.customGroupStars) {
-          const starContainer = authorInfo?.querySelector("span.smalltext");
-          const stars = starContainer?.querySelectorAll("img");
-          stars?.forEach((star: HTMLImageElement) => {
-            if(star.src.includes("https://hackforums.net/images/mobale/")) {
-              star.src = this.currentDefaultStars.leet;
-            }
-          });
+        if (groupClass && groupClass in this.customGroupStars) {
+          if (revertCustomStars) {
+            const starContainer = authorInfo?.querySelector("span.smalltext");
+            const stars = starContainer?.querySelectorAll("img");
+            stars?.forEach((star: HTMLImageElement) => {
+              if (star.src.includes("https://hackforums.net/images/mobale/")) {
+                star.src = this.currentDefaultStars.leet;
+              }
+            });
+          }
+          if (revertCustomGroupStyles) {
+            userSpan.setAttribute(
+              "style",
+              `color: #fff !important; 
+              font-weight: 700 !important;`
+            );
+            userSpan.classList.remove(groupClass);
+          }
         }
       });
     }

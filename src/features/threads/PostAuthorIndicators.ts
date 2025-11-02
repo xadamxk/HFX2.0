@@ -15,13 +15,13 @@ class PostAuthorIndicators extends Feature {
           id: "roundProfileIcons",
           label: "Round Profile Icons",
           description: "Round the profile icons to a circle.",
-          default: false,
+          default: true,
         }),
         new Checkbox({
           id: "standardizeAvatarSize",
           label: "Standardize Avatar Size",
           description: "Standardize the avatar size to 100x100.",
-          default: false,
+          default: true,
         }),
       ],
     });

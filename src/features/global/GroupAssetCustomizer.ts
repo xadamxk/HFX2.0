@@ -41,7 +41,7 @@ class GroupAssetCustomizer extends Feature {
           id: "resizeUserbars",
           label: "Resize Userbars",
           description: "Resize all userbars to the original size (136x42).",
-          default: false,
+          default: true,
         }),
         new Checkbox({
           id: "revertCustomStars",

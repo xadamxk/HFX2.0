@@ -169,8 +169,18 @@ class HFToolbar extends Feature {
 
         const updateFixedMetrics = () => {
           const rect = placeholder.getBoundingClientRect();
+
+          const computedStyle = window.getComputedStyle(header);
+          const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+          const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+          const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+          const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+
+          const totalHorizontalExtra =
+            paddingLeft + paddingRight + borderLeft + borderRight;
+
           header.style.left = `${rect.left}px`;
-          header.style.width = `${rect.width}px`;
+          header.style.width = `${rect.width - totalHorizontalExtra}px`;
         };
 
         const onScrollOrResize = () => {
@@ -198,103 +208,6 @@ class HFToolbar extends Feature {
           onScrollOrResize();
         });
         onScrollOrResize();
-      }
-    }
-
-    // If sticky header is enabled, ensure the HF notify container opens within viewport
-    if (settings.stickyHeader) {
-      const getNotifyEl = (): HTMLElement | null =>
-        document.getElementById("notify-container") as HTMLElement | null;
-
-      const getHeader = (): HTMLElement | null =>
-        this.querySelector<HTMLElement>(".panel-nav-lower", document);
-
-      const isVisible = (el: HTMLElement): boolean => {
-        const style = window.getComputedStyle(el);
-        return style.display !== "none" && style.visibility !== "hidden";
-      };
-
-      const clamp = (value: number, min: number, max: number) =>
-        Math.min(Math.max(value, min), max);
-
-      const repositionNotifyIntoView = () => {
-        const notify = getNotifyEl();
-        if (!notify || !isVisible(notify)) return;
-
-        const headerEl = getHeader();
-        const headerHeight = headerEl?.classList.contains("hfx-fixed-header")
-          ? headerEl.offsetHeight
-          : 0;
-
-        // Calculate desired top offset so the container sits just below the header
-        const topOffset = headerHeight + 8; // 8px gap below header
-
-        // Ensure vertical visibility by setting absolute top relative to page scroll
-        const targetTop = window.scrollY + topOffset;
-        notify.style.top = `${targetTop}px`;
-
-        // Horizontally clamp within viewport while respecting page scroll
-        const rect = notify.getBoundingClientRect();
-        const viewportWidth = document.documentElement.clientWidth;
-        const desiredLeftViewport = clamp(
-          rect.left,
-          8,
-          Math.max(8, viewportWidth - rect.width - 8)
-        );
-        const targetLeft = window.scrollX + desiredLeftViewport;
-        notify.style.left = `${targetLeft}px`;
-
-        // Optional: cap height so it doesn't run off-screen
-        const maxHeight = Math.max(120, window.innerHeight - topOffset - 16);
-        notify.style.maxHeight = `${maxHeight}px`;
-        notify.style.overflowY = "auto";
-        // Ensure it layers above header
-        notify.style.zIndex = "101";
-      };
-
-      // Observe when notify container is added to DOM
-      const bodyObserver = new MutationObserver(() => {
-        const notify = getNotifyEl();
-        if (!notify) return;
-
-        // Once present, watch for visibility/style changes
-        const attributeObserver = new MutationObserver(
-          repositionNotifyIntoView
-        );
-        attributeObserver.observe(notify, {
-          attributes: true,
-          attributeFilter: ["style", "class"],
-        });
-
-        // Also reposition on scroll/resize to keep alignment with fixed header metrics
-        const onScrollOrResize = () => repositionNotifyIntoView();
-        window.addEventListener("scroll", onScrollOrResize, { passive: true });
-        window.addEventListener("resize", onScrollOrResize);
-
-        // Initial pass if it's already visible
-        repositionNotifyIntoView();
-
-        // We found it; no longer need to watch the body for its creation
-        bodyObserver.disconnect();
-      });
-
-      bodyObserver.observe(document.body, { childList: true, subtree: true });
-
-      // If it's already on the page at run, set up immediately
-      const existing = getNotifyEl();
-      if (existing) {
-        const attributeObserver = new MutationObserver(
-          repositionNotifyIntoView
-        );
-        attributeObserver.observe(existing, {
-          attributes: true,
-          attributeFilter: ["style", "class"],
-        });
-        window.addEventListener("scroll", repositionNotifyIntoView, {
-          passive: true,
-        });
-        window.addEventListener("resize", repositionNotifyIntoView);
-        repositionNotifyIntoView();
       }
     }
 

@@ -72,6 +72,21 @@ class ThemeCustomizer extends Feature {
     });
   }
 
+  private restoreDefaultCursor() {
+    for (const sheet of document.styleSheets) {
+      try {
+        for (const rule of sheet.cssRules || []) {
+          if (rule instanceof CSSStyleRule && rule.style.cursor?.includes('url(')) {
+            const match = rule.style.cursor.match(/,\s*(\w+)\s*;?$/);
+            rule.style.cursor = match ? match[1] : 'auto';
+          }
+        }
+      } catch {
+        // Ignore cross-origin stylesheets
+      }
+    }
+  }
+
   run(settings: any) {
     const removeBackGroundOpacity = settings.removeBackGroundOpacity;
     if (removeBackGroundOpacity) {
@@ -81,11 +96,7 @@ class ThemeCustomizer extends Feature {
 
     const removeStyledCursor = settings.removeStyledCursor;
     if (removeStyledCursor) {
-      document.head.appendChild(
-        document.createElement("style")
-      ).textContent = `body { cursor: default !important; }
-        [data-tooltip] { cursor: pointer !important; }
-        `;
+      this.restoreDefaultCursor();
     }
 
     const theme = settings.theme;

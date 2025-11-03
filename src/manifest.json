@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "HF Xtension",
     "short_name": "HFX",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "description": "Enhance your HF Experience!",
     "incognito": "spanning",
     "author": "xadamxk",

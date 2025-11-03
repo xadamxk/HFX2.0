@@ -169,8 +169,15 @@ class HFToolbar extends Feature {
 
         const updateFixedMetrics = () => {
           const rect = placeholder.getBoundingClientRect();
+          const computedStyle = window.getComputedStyle(header);
+          const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+          const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+          const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+          const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+          const totalHorizontalExtra = paddingLeft + paddingRight + borderLeft + borderRight;
+
           header.style.left = `${rect.left}px`;
-          header.style.width = `${rect.width}px`;
+          header.style.width = `${rect.width - totalHorizontalExtra}px`;
         };
 
         const onScrollOrResize = () => {

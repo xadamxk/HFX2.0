@@ -1,6 +1,6 @@
 import { Feature } from "../../core/Feature";
-import Global from "../../sections/Global";
 import { Logger } from "../../core/Logger";
+import Threads from "../../sections/Threads";
 
 interface User {
   id: string;
@@ -18,7 +18,7 @@ class UserMentions extends Feature {
 
   constructor() {
     super({
-      section: Global,
+      section: Threads,
       name: "User Mentions",
       enabled: true,
       description:

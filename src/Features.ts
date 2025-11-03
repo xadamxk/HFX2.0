@@ -1,8 +1,10 @@
+import AwardGoalAdditions from "./features/awards/AwardGoalAdditions";
 import BanReason from "./features/profile/BanReason";
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
 import GivePopularityButton from "./features/threads/GivePopularityButton";
+import GroupAssetCustomizer from "./features/global/GroupAssetCustomizer";
 import GroupManagement from "./features/groups/GroupManagement";
 import HFToolbar from "./features/global/HFToolbar";
 import HFXAlerts from "./features/hfx/HFXAlerts";
@@ -14,11 +16,13 @@ import InteractivePostStats from "./features/threads/InteractivePostStats";
 import JoindateOnPosts from "./features/threads/JoindateOnPosts";
 import MessageTimestamps from "./features/convo/MessageTimestamps";
 import PMFromPost from "./features/threads/PMFromPost";
+import PostAuthorIndicators from "./features/threads/PostAuthorIndicators";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
 import SearchYourThreads from "./features/forumdisplay/SearchYourThreads";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
 import ShowRecipientCount from "./features/awards/ShowRecipientCount";
+import StickyPostTitle from "./features/threads/StickyPostTitle";
 import ThemeCustomizer from "./features/global/ThemeCustomizer";
 import ThreadMentions from "./features/threads/ThreadMentions";
 import ThreadPrefixLinks from "./features/forumdisplay/ThreadPrefixLinks";
@@ -26,11 +30,13 @@ import TrackingLinks from "./features/privatemessages/TrackingLinks";
 import WhosOnlineSorting from "./features/global/WhosOnlineSorting";
 
 export default {
+  AwardGoalAdditions: AwardGoalAdditions,
   BanReason: BanReason,
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,
   GivePopularityButton: GivePopularityButton,
+  GroupAssetCustomizer: GroupAssetCustomizer,
   GroupManagement: GroupManagement,
   HFToolbar: HFToolbar,
   HFXAlerts: HFXAlerts,
@@ -42,14 +48,16 @@ export default {
   JoindateOnPosts: JoindateOnPosts,
   MessageTimestamps: MessageTimestamps,
   PMFromPost: PMFromPost,
+  PostAuthorIndicators: PostAuthorIndicators,
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,
   SearchYourThreads: SearchYourThreads,
   ShowPostNumbers: ShowPostNumbers,
   ShowRecipientCount: ShowRecipientCount,
+  StickyPostTitle: StickyPostTitle,
   ThemeCustomizer: ThemeCustomizer,
   ThreadMentions: ThreadMentions,
   ThreadPrefixLinks: ThreadPrefixLinks,
   TrackingLinks: TrackingLinks,
-  WhosOnlineSorting: WhosOnlineSorting,
+  WhosOnlineSorting: WhosOnlineSorting
 };

@@ -169,19 +169,18 @@ class HFToolbar extends Feature {
 
         const updateFixedMetrics = () => {
           const rect = placeholder.getBoundingClientRect();
-<<<<<<< Updated upstream
-=======
+
           const computedStyle = window.getComputedStyle(header);
           const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
           const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
           const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
           const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+
           const totalHorizontalExtra =
             paddingLeft + paddingRight + borderLeft + borderRight;
 
->>>>>>> Stashed changes
           header.style.left = `${rect.left}px`;
-          header.style.width = `${rect.width}px`;
+          header.style.width = `${rect.width - totalHorizontalExtra}px`;
         };
 
         const onScrollOrResize = () => {

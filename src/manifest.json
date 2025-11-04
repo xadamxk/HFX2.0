@@ -59,7 +59,7 @@
     ],
     "browser_specific_settings": {
         "gecko": {
-            "id": "@example-data-collection-with-fallback",
+            "id": "{27b02acc-5fe4-4dfd-8893-536f9f667461}",
             "data_collection_permissions": {
                 "required": [
                     "none"

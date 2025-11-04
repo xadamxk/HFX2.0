@@ -11,38 +11,135 @@ class MessageTimestamps extends Feature {
     });
   }
 
-  run(_settings?: any, _section?: any) {
+  private findNearestSameSenderBubble(
+    wrapper: HTMLElement | null,
+    uid: string | null,
+    direction: "prev" | "next"
+  ): HTMLElement | null {
+    if (!wrapper || !uid) return null;
+    let el: Element | null =
+      direction === "prev"
+        ? wrapper.previousElementSibling
+        : wrapper.nextElementSibling;
+    while (el) {
+      if (el instanceof HTMLElement) {
+        if (el.matches(".message-convo-left, .message-convo-right")) {
+          const elUid = el.getAttribute("data-uid");
+          if (elUid === uid) {
+            const bubbles = el.querySelectorAll(".message-bubble-message");
+            if (bubbles.length > 0) {
+              return direction === "prev"
+                ? (bubbles[bubbles.length - 1] as HTMLElement)
+                : (bubbles[0] as HTMLElement);
+            }
+            // continue scanning if no bubbles found
+          } else {
+            // Different sender encountered; stop scanning
+            break;
+          }
+        }
+      }
+      el =
+        direction === "prev"
+          ? (el as HTMLElement).previousElementSibling
+          : (el as HTMLElement).nextElementSibling;
+    }
+    return null;
+  }
+
+  run() {
     const container = document.getElementById("message-convo");
     if (!container) return;
 
     const processedAttr = "data-hfx-timestamp";
 
-    const processBubble = (bubble: Element) => {
-      if (!(bubble instanceof HTMLElement)) return;
-      if (bubble.getAttribute(processedAttr) === "1") return;
+    const getWrapperAndUid = (bubble: HTMLElement) => {
+      const wrapper = bubble.closest(
+        ".message-convo-left, .message-convo-right"
+      ) as HTMLElement | null;
+      const uid = wrapper?.getAttribute("data-uid") || null;
+      return { wrapper, uid };
+    };
 
-      const tooltip = bubble.getAttribute("data-convotooltip");
-      // Mark processed regardless to avoid repeated attempts
-      bubble.setAttribute(processedAttr, "1");
-      if (!tooltip) return;
+    const getMinuteKey = (tooltip: string | null): string | null =>
+      tooltip ? tooltip.trim() : null;
 
+    const removeTimestampAfter = (b: HTMLElement) => {
+      const sibling = b.nextSibling;
+      if (
+        sibling &&
+        sibling instanceof HTMLElement &&
+        sibling.classList.contains("message-bubble-timestamp")
+      ) {
+        sibling.remove();
+      }
+    };
+
+    const addTimestampAfter = (b: HTMLElement, text: string) => {
+      removeTimestampAfter(b);
       const timestampEl = document.createElement("div");
       timestampEl.className = "message-bubble-timestamp";
-      timestampEl.textContent = tooltip;
-      // Simple, subtle styling to match convo UI
+      timestampEl.textContent = text;
       timestampEl.style.display = "block";
       timestampEl.style.fontSize = "12px";
       timestampEl.style.color = "#9e9e9e";
       timestampEl.style.margin = "2px 0 2px 6px";
-      // Ensure the timestamp always renders beneath floated message bubbles
       timestampEl.style.clear = "both";
-
-      const parent = bubble.parentElement;
+      const parent = b.parentElement;
       if (parent) {
-        if (bubble.nextSibling)
-          parent.insertBefore(timestampEl, bubble.nextSibling);
+        if (b.nextSibling) parent.insertBefore(timestampEl, b.nextSibling);
         else parent.appendChild(timestampEl);
       }
+    };
+
+    const processBubble = (bubble: Element) => {
+      if (!(bubble instanceof HTMLElement)) return;
+
+      const tooltip = bubble.getAttribute("data-convotooltip");
+      if (!tooltip) return;
+
+      // Mark as seen to indicate we've evaluated this bubble at least once
+      if (!bubble.getAttribute(processedAttr)) {
+        bubble.setAttribute(processedAttr, "1");
+      }
+
+      const { wrapper, uid } = getWrapperAndUid(bubble);
+      const currentKey = getMinuteKey(tooltip);
+      if (!currentKey) return;
+
+      const prevSameSenderBubble = this.findNearestSameSenderBubble(
+        wrapper,
+        uid,
+        "prev"
+      );
+      const prevKey = getMinuteKey(
+        prevSameSenderBubble?.getAttribute("data-convotooltip") || null
+      );
+      const sameMinuteAsPrev = Boolean(prevKey && prevKey === currentKey);
+
+      // If previous same-sender message is in the same minute, ensure its timestamp is removed
+      if (sameMinuteAsPrev && prevSameSenderBubble) {
+        removeTimestampAfter(prevSameSenderBubble);
+      }
+
+      // If a next same-sender message in the same minute exists, don't add now (it will belong to the last message)
+      const nextSameSenderBubble = this.findNearestSameSenderBubble(
+        wrapper,
+        uid,
+        "next"
+      );
+      const nextKey = getMinuteKey(
+        nextSameSenderBubble?.getAttribute("data-convotooltip") || null
+      );
+      const sameMinuteAsNext = Boolean(nextKey && nextKey === currentKey);
+
+      if (sameMinuteAsNext) {
+        // If we somehow already have a timestamp under this bubble (from a prior run), remove it
+        removeTimestampAfter(bubble);
+        return;
+      }
+
+      addTimestampAfter(bubble, tooltip);
     };
 
     const processAll = () => {

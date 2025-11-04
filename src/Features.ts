@@ -22,6 +22,7 @@ import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
 import SearchYourThreads from "./features/forumdisplay/SearchYourThreads";
 import ShowPostNumbers from "./features/threads/ShowPostNumbers";
 import ShowRecipientCount from "./features/awards/ShowRecipientCount";
+import SmartQuote from "./features/threads/SmartQuote";
 import StickyPostTitle from "./features/threads/StickyPostTitle";
 import ThemeCustomizer from "./features/global/ThemeCustomizer";
 import ThreadMentions from "./features/threads/ThreadMentions";
@@ -54,6 +55,7 @@ export default {
   SearchYourThreads: SearchYourThreads,
   ShowPostNumbers: ShowPostNumbers,
   ShowRecipientCount: ShowRecipientCount,
+  SmartQuote: SmartQuote,
   StickyPostTitle: StickyPostTitle,
   ThemeCustomizer: ThemeCustomizer,
   ThreadMentions: ThreadMentions,

@@ -12,8 +12,8 @@ class SmartQuote extends Feature {
       description: "Customize quote styles.",
       configurables: [
         new ColorPicker({
-          id: "quoteHeaderColor",
-          label: "Quote Header Text Color",
+          id: "quoteTextColor",
+          label: "Quote Text Color",
           description: "The color of the quote header text.",
           default: "#000",
         }),
@@ -25,7 +25,7 @@ class SmartQuote extends Feature {
         }),
         new ColorPicker({
           id: "quoteMentionColor",
-          label: "Quote Header MentionBackground Color",
+          label: "Quote Header Mention Background Color",
           description:
             "The color of quote header background when you are mentioned in the quote.",
           default: "#CD5C5C",
@@ -34,7 +34,7 @@ class SmartQuote extends Feature {
           id: "quoteBackground",
           label: "Quote Background Color",
           description: "The color of the quote background.",
-          default: "#ADB1A1",
+          default: "#444444",
         }),
       ],
     });
@@ -52,7 +52,7 @@ class SmartQuote extends Feature {
       display: none !important;
       }`);
 
-    const quoteHeaderColor = settings.quoteHeaderColor;
+    const quoteTextColor = settings.quoteTextColor;
     const quoteHeaderBackground = settings.quoteHeaderBackground;
     const quoteMentionColor = settings.quoteMentionColor;
     const quoteBackground = settings.quoteBackground;
@@ -64,9 +64,30 @@ class SmartQuote extends Feature {
       blockquote.style.padding = "2px 6px";
       blockquote.style.marginTop = "10px";
       blockquote.style.backgroundColor = quoteBackground;
-      blockquote.style.color = quoteHeaderColor;
+      // blockquote.style.color = quoteTextColor;
 
-      const citeElement = blockquote.querySelector("cite");
+      const citeElement = blockquote.querySelector(
+        "cite"
+      ) as HTMLElement | null;
+
+      // Remove classes from quoted username spans and apply bold/white styling
+      const quoteUsername = citeElement?.querySelector(
+        ".formatted_quote_username > a > span"
+      ) as HTMLElement | null;
+      if (quoteUsername) {
+        quoteUsername.removeAttribute("class");
+        quoteUsername.style.fontWeight = "bold";
+        quoteUsername.style.color = quoteTextColor;
+      }
+
+      // Remove the literal "Wrote:" text from the cite
+      // if (citeElement) {
+      //   Array.from(citeElement.childNodes).forEach((node) => {
+      //     if (node.nodeType === Node.TEXT_NODE && node.textContent) {
+      //       node.textContent = node.textContent.replace(/\s*Wrote:\s*/i, " ");
+      //     }
+      //   });
+      // }
 
       const isMentioned = citeElement?.textContent?.includes(currentUserName);
       if (isMentioned) {
@@ -77,19 +98,19 @@ class SmartQuote extends Feature {
 
       citeElement.style.borderRadius = "5px";
       citeElement.style.border = "1px solid black";
-      citeElement.style.color = quoteHeaderColor;
+      citeElement.style.color = quoteTextColor;
       citeElement.style.fontWeight = "bold";
       // Remove the ::after element (underline)
       citeElement.className = "without-after-element";
 
       // Color the quote header timestamp color
       const quoteHeaderTimestamp = citeElement.querySelector("span");
-      quoteHeaderTimestamp.style.color = quoteHeaderColor;
+      quoteHeaderTimestamp.style.color = quoteTextColor;
 
       const quoteHeaderTimestampText =
         quoteHeaderTimestamp.querySelector("span");
       if (quoteHeaderTimestampText) {
-        quoteHeaderTimestampText.style.color = quoteHeaderColor;
+        quoteHeaderTimestampText.style.color = quoteTextColor;
       }
     });
   }

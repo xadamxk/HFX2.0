@@ -16,6 +16,7 @@ import InteractivePostStats from "./features/threads/InteractivePostStats";
 import JoindateOnPosts from "./features/threads/JoindateOnPosts";
 import MessageTimestamps from "./features/convo/MessageTimestamps";
 import PMFromPost from "./features/threads/PMFromPost";
+import PopularityPresets from "./features/popularity/PopularityPresets";
 import PostAuthorIndicators from "./features/threads/PostAuthorIndicators";
 import PostsOnThread from "./features/threads/PostsOnThread";
 import QuickUnsubscribe from "./features/threads/QuickUnsubscribe";
@@ -49,6 +50,7 @@ export default {
   JoindateOnPosts: JoindateOnPosts,
   MessageTimestamps: MessageTimestamps,
   PMFromPost: PMFromPost,
+  PopularityPresets: PopularityPresets,
   PostAuthorIndicators: PostAuthorIndicators,
   PostsOnThread: PostsOnThread,
   QuickUnsubscribe: QuickUnsubscribe,

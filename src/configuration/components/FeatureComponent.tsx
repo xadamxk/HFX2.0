@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Feature } from "../../core/Feature";
 import { Section } from "../../core/Section";
 import { ConfigurableFactory } from "./ConfigurableFactory";
 import { usePopup } from "./contexts/PopupContext";
-import { RocketLaunchIcon } from "@heroicons/react/24/outline";
+import { RocketLaunchIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface FeatureComponentProps {
   feature: Feature;
@@ -15,6 +15,7 @@ interface FeatureComponentProps {
     configName: string,
     value: any
   ) => void;
+  onStorageReset?: (feature: Feature) => void;
 }
 
 export const FeatureComponent: React.FC<FeatureComponentProps> = ({
@@ -23,11 +24,24 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
   settings,
   onFeatureToggle,
   onConfigurableChange,
+  onStorageReset,
 }) => {
   const featureId = `feature-${feature.class}`;
   // Get the feature-specific enabled state from settings
   const isEnabled = settings?.[feature.class]?.enabled ?? feature.enabled;
   const { isPopup } = usePopup();
+  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
+
+  const hasConfigurables = (feature.configurables?.length ?? 0) > 0;
+  const storageItems = feature.storageItems ?? [];
+  const hasStorageItems = storageItems.length > 0;
+  // Storage item descriptions are optional, so identify them by id
+  const storageItemIds = storageItems.map((storageItem) => storageItem.id);
+
+  const handleStorageReset = () => {
+    setIsConfirmingReset(false);
+    onStorageReset?.(feature);
+  };
 
   const handleFeatureToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const enabled = e.target.checked;
@@ -85,14 +99,14 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
       </div>
 
       {/* Show configurables with smooth collapse/expand animation */}
-      {feature.configurables && feature.configurables.length > 0 && (
+      {(hasConfigurables || hasStorageItems) && (
         <div
           className={`feature-configurables ${
             isEnabled ? "expanded" : "collapsed"
           }`}
           id={`config-${featureId}`}
         >
-          {feature.configurables.map((configurable: any) => (
+          {feature.configurables?.map((configurable: any) => (
             <ConfigurableFactory
               key={configurable.id}
               configurable={configurable}
@@ -102,6 +116,44 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
               onChange={onConfigurableChange}
             />
           ))}
+
+          {hasStorageItems && (
+            <div className="feature-storage-reset">
+              {isConfirmingReset ? (
+                <div className="storage-reset-confirm">
+                  <span className="storage-reset-prompt">Clear cached data?</span>
+                  <button
+                    type="button"
+                    className="storage-reset-btn storage-reset-btn--confirm"
+                    onClick={handleStorageReset}
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    type="button"
+                    className="storage-reset-btn"
+                    onClick={() => setIsConfirmingReset(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="storage-reset-btn"
+                  title={`Resets to defaults: ${storageItemIds.join(", ")}`}
+                  onClick={() => setIsConfirmingReset(true)}
+                >
+                  <TrashIcon className="storage-reset-icon" />
+                  Clear cached data
+                </button>
+              )}
+              <p className="configurable-description">
+                Resets this feature&apos;s stored data ({storageItemIds.join(", ")}) to
+                its defaults. Reload any open HF tabs for it to take effect.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

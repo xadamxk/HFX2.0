@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { OptionsData } from "../OptionsData";
 import { Section } from "../../core/Section";
 import { Feature } from "../../core/Feature";
+import { SettingsService } from "../../core/SettingsService";
+import { StorageService } from "../../core/StorageService";
 import { SectionComponent } from "./SectionComponent";
 import {
   ChevronDoubleLeftIcon,
@@ -21,6 +23,9 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { isPopup } = usePopup();
+
+  // Created lazily; StorageService reaches for chrome.storage on construction
+  const settingsServiceRef = useRef<SettingsService | null>(null);
 
   const sections = OptionsData.getSections();
   // const features = OptionsData.getFeatures();
@@ -107,6 +112,30 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
         [featureName]: featureSettings,
       });
     }
+  };
+
+  const getSettingsService = (): SettingsService | null => {
+    if (typeof chrome === "undefined" || !chrome.storage) {
+      return null;
+    }
+    if (!settingsServiceRef.current) {
+      settingsServiceRef.current = new SettingsService(new StorageService());
+    }
+    return settingsServiceRef.current;
+  };
+
+  const handleStorageReset = async (feature: Feature) => {
+    const settingsService = getSettingsService();
+    if (!settingsService) return;
+
+    const updatedFeatureSettings = await settingsService.resetStorageItems(
+      feature
+    );
+
+    setSettings((previousSettings) => ({
+      ...previousSettings,
+      [feature.class]: updatedFeatureSettings,
+    }));
   };
 
   const getFeaturesForSection = (section: Section): Feature[] => {
@@ -215,6 +244,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
                 settings={settings}
                 onFeatureToggle={handleFeatureToggle}
                 onConfigurableChange={handleConfigurableChange}
+                onStorageReset={handleStorageReset}
                 style={{ display: isActive ? "block" : "none" }}
               />
             );

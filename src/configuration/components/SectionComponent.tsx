@@ -15,6 +15,7 @@ interface SectionComponentProps {
     configName: string,
     value: any
   ) => void;
+  onStorageReset?: (feature: Feature) => void;
   style?: React.CSSProperties;
 }
 
@@ -24,6 +25,7 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
   settings,
   onFeatureToggle,
   onConfigurableChange,
+  onStorageReset,
   style,
 }) => {
   const { isPopup } = usePopup();
@@ -59,6 +61,7 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
               settings={settings}
               onFeatureToggle={onFeatureToggle}
               onConfigurableChange={onConfigurableChange}
+              onStorageReset={onStorageReset}
             />
           ))}
       </div>

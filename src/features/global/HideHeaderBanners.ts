@@ -24,7 +24,7 @@ class HideHeaderBanners extends Feature {
         new Checkbox({
           id: "hideGlobalBanners",
           label: "Dismiss Global Banners",
-          description: "Allows you to hide the global banners from the header.",
+          description: "Allows you to hide the global banners from the header. Reappears if the banner changes.",
           default: true,
         }),
       ],

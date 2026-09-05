@@ -504,6 +504,66 @@ body {
     background: #e1e4e8;
 }
 
+.feature-storage-reset {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #d1d9e0;
+}
+
+.storage-reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid #d1d5da;
+    background: #ffffff;
+    border-radius: 4px;
+    color: #59636e;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.storage-reset-btn:hover {
+    background: #f6f8fa;
+    border-color: #cf222e;
+    color: #cf222e;
+}
+
+.storage-reset-btn:active {
+    background: #e1e4e8;
+}
+
+.storage-reset-btn--confirm {
+    border-color: #cf222e;
+    color: #cf222e;
+}
+
+.storage-reset-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.storage-reset-confirm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.storage-reset-status {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1a7f37;
+}
+
+.storage-reset-prompt {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1f2328;
+}
+
 .configurable-stepper input[type="number"] {
     width: 80px;
     text-align: center;

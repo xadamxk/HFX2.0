@@ -4,6 +4,7 @@ import { Feature } from "../../core/Feature";
 import { FeatureComponent } from "./FeatureComponent";
 import { usePopup } from "./contexts/PopupContext";
 import { HFXHeader } from "./HFXHeader";
+import { StorageResetCard } from "./StorageResetCard";
 
 interface SectionComponentProps {
   section: Section;
@@ -16,6 +17,8 @@ interface SectionComponentProps {
     value: any
   ) => void;
   onStorageReset?: (feature: Feature) => void;
+  featuresWithStorage?: Feature[];
+  onStorageResetAll?: () => void | Promise<void>;
   style?: React.CSSProperties;
 }
 
@@ -26,6 +29,8 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
   onFeatureToggle,
   onConfigurableChange,
   onStorageReset,
+  featuresWithStorage,
+  onStorageResetAll,
   style,
 }) => {
   const { isPopup } = usePopup();
@@ -64,6 +69,12 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
               onStorageReset={onStorageReset}
             />
           ))}
+        {section.name === "HFX" && (
+          <StorageResetCard
+            features={featuresWithStorage ?? []}
+            onResetAll={onStorageResetAll}
+          />
+        )}
       </div>
     </div>
   );

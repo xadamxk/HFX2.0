@@ -28,6 +28,9 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
   const settingsServiceRef = useRef<SettingsService | null>(null);
 
   const sections = OptionsData.getSections();
+  const featuresWithStorage = Object.values(OptionsData.getFeatures())
+    .filter((feature) => (feature.storageItems?.length ?? 0) > 0)
+    .sort((a, b) => a.name.localeCompare(b.name));
   // const features = OptionsData.getFeatures();
 
   // Initialize active section to first section
@@ -138,6 +141,20 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     }));
   };
 
+  const handleStorageResetAll = async () => {
+    const settingsService = getSettingsService();
+    if (!settingsService) return;
+
+    const updatedSettings = await settingsService.resetAllStorageItems(
+      featuresWithStorage
+    );
+
+    setSettings((previousSettings) => ({
+      ...previousSettings,
+      ...updatedSettings,
+    }));
+  };
+
   const getFeaturesForSection = (section: Section): Feature[] => {
     return OptionsData.getFeaturesForSection(section);
   };
@@ -245,6 +262,8 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
                 onFeatureToggle={handleFeatureToggle}
                 onConfigurableChange={handleConfigurableChange}
                 onStorageReset={handleStorageReset}
+                featuresWithStorage={featuresWithStorage}
+                onStorageResetAll={handleStorageResetAll}
                 style={{ display: isActive ? "block" : "none" }}
               />
             );

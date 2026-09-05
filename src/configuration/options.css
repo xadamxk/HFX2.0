@@ -552,6 +552,12 @@ body {
     flex-wrap: wrap;
 }
 
+.storage-reset-status {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1a7f37;
+}
+
 .storage-reset-prompt {
     font-size: 12px;
     font-weight: 600;

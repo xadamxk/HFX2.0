@@ -1,6 +1,7 @@
 import { Feature } from "../../core/Feature";
 import { Logger } from "../../core/Logger";
 import { Util } from "../../core/Util";
+import { el } from "../../core/Dom";
 import HFX from "../../sections/HFX";
 
 enum HFXAlertsStorageKeys {
@@ -104,21 +105,32 @@ class HFXAlerts extends Feature {
     const content = document.getElementById("content");
     if (!content) return;
 
-    content.insertAdjacentHTML(
-      "afterbegin",
-      `
-    <div class="HFXAlert" id="HFXAlert">
-      <div class="float-right" id="DismissHFXAlert">
-        <a href="javascript:void(0);" title="Dismiss HFX Alert">
-          <img src="${Util.getURL("/assets/dismiss_notice.png")}" />
-        </a>
-      </div>
-      <div>
-        <div><b>${fetchedAlert?.AlertTitle || ""}</b></div>
-        <div>${fetchedAlert?.AlertValue || ""}</div>
-      </div>
-    </div>
-    `
+    // Alert text is remote data: render it as text. `<br>` is the only markup
+    // honored, and it is turned into real line breaks rather than parsed.
+    const valueChildren: (string | HTMLElement)[] = [];
+    String(fetchedAlert?.AlertValue || "")
+      .split(/<br\s*\/?>/i)
+      .forEach((line, i) => {
+        if (i > 0) valueChildren.push(el("br"));
+        valueChildren.push(line);
+      });
+
+    content.prepend(
+      el("div", { class: "HFXAlert", id: "HFXAlert" }, [
+        el(
+          "div",
+          { class: "float-right", id: "DismissHFXAlert" },
+          el(
+            "a",
+            { href: "javascript:void(0);", title: "Dismiss HFX Alert" },
+            el("img", { src: Util.getURL("/assets/dismiss_notice.png") })
+          )
+        ),
+        el("div", null, [
+          el("div", null, el("b", null, String(fetchedAlert?.AlertTitle || ""))),
+          el("div", null, valueChildren),
+        ]),
+      ])
     );
 
     const alertEl = document.getElementById("HFXAlert") as HTMLElement | null;

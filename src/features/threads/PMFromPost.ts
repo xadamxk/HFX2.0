@@ -1,4 +1,6 @@
 import { Feature } from "../../core/Feature";
+import { Util } from "../../core/Util";
+import { el } from "../../core/Dom";
 import Threads from "../../sections/Threads";
 
 class PMFromPost extends Feature {
@@ -16,44 +18,11 @@ class PMFromPost extends Feature {
     const threadTitle = (
       crumbs[crumbs.length - 1]?.textContent || ""
     ).substring(0, 50);
+    const myPostKey = Util.getUserPostKey() || "";
 
-    this.startDynamicListeners();
+    this.startDynamicListeners(threadTitle, myPostKey);
 
     document.querySelectorAll(".post").forEach((post, index) => {
-      const headHtml = document.head.innerHTML;
-      const keyMatch = headHtml.match(/my_post_key = "([a-f0-9]+)"/);
-      const myPostKey = keyMatch ? keyMatch[1] : "";
-
-      const postId = (post.id || "").split("_").pop() || "";
-      const postLink =
-        post.querySelector(`#post_url_${postId}`)?.getAttribute("href") || "";
-      const postUser = (
-        post.querySelector(".author_information a")?.textContent || ""
-      ).trim();
-
-      const body = post.querySelector(".post_body");
-      let postQuote = "";
-      if (body) {
-        const clone = body.cloneNode(true);
-        (clone as HTMLElement)
-          .querySelectorAll?.("blockquote")
-          ?.forEach((el) => el.remove());
-        (clone as HTMLElement)
-          .querySelectorAll?.(".codeblock")
-          ?.forEach((el) => {
-            const codeText = el.querySelector("code")?.textContent || "";
-            const span = document.createElement("span");
-            span.textContent = `[code]\n${codeText}\n[/code]`;
-            el.replaceWith(span);
-          });
-        postQuote = (clone.textContent || "")
-          .replace(/\t+/g, "")
-          .replace(/\n\s*\n/g, "\n");
-      }
-
-      postQuote = `[quote="${postUser}" pid="${postId}"]${postQuote}[/quote]`;
-      postQuote = `[size=x-small]Sent from [url=${postLink}]your post[/url].[/size]\n${postQuote}\n`;
-
       const buttons = post.querySelector(".author_buttons");
       if (buttons) {
         const a = document.createElement("a");
@@ -71,72 +40,148 @@ class PMFromPost extends Feature {
 
         buttons.insertBefore(a, buttons.firstChild);
       }
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "pm-from-post-container py-3";
-      wrapper.innerHTML = `
-        <form action="private.php" method="post" name="input" target="_blank">
-          <input type="hidden" name="action" value="do_send" />
-          <input type="hidden" name="pmid" value="" />
-          <input type="hidden" name="do" value="" />
-          <input type="hidden" name="icon" value="" />
-          <input type="hidden" name="my_post_key" value="${myPostKey}" />
-          <input type="hidden" name="uid" value="${postUser}" />
-          <div class="text-center my-3">
-            <span><strong>Notice: This is an HFX Feature!</strong></span>
-          </div>
-          <div class="text-center my-3">
-            <div class="mb-3" style="margin-bottom: 10px;">
-              <span>
-                <strong>Recipients:</strong>
-                <input type="text" class="textbox" name="to" value="${postUser}" readonly />
-              </span>
-              <span class="ml-5">
-                <strong>Subject:</strong>
-                <input type="text" class="textbox" name="subject" size="40" maxlength="85" value="Regarding Your Post: ${threadTitle}" />
-              </span>
-            </div>
-            <textarea class="hfxPMFromPostInput" name="message" rows="7" cols="90">${postQuote}</textarea>
-          </div>
-          <div class="text-center my-3" style="margin-bottom: 10px;">
-            <span><input type="checkbox" class="checkbox" name="options[signature]" value="1" checked /> Signature</span>
-            -
-            <span><input type="checkbox" class="checkbox" name="options[savecopy]" value="1" checked /> Save a Copy</span>
-            -
-            <span><input type="checkbox" class="checkbox" name="options[readreceipt]" value="1" checked /> Request Read Receipt</span>
-          </div>
-          <div class="text-center my-3" style="padding-bottom: 10px;">
-            <input type="submit" class="button pm-from-post-button send" name="submit" value="Send Message" />
-            <input type="submit" class="button pm-from-post-button" name="saveasdraft" value="Save as Draft" />
-            <input type="submit" class="button pm-from-post-button" name="preview" value="Preview" />
-          </div>
-        </form>
-      `;
-      // Apply inline styles to appended elements
-      (wrapper as HTMLElement).style.display = "none";
-      (wrapper as HTMLElement).style.backgroundColor = "#3f3e3e";
-      (wrapper as HTMLElement).style.textAlign = "center";
-
-      const textArea = wrapper.querySelector(
-        "textarea"
-      ) as HTMLTextAreaElement | null;
-      if (textArea) {
-        textArea.style.overflow = "auto";
-        textArea.style.resize = "vertical";
-      }
-
-      const checkboxes = wrapper.querySelectorAll(".checkbox");
-      checkboxes.forEach((cb) => {
-        const el = cb as HTMLElement;
-        el.style.top = "0";
-        el.style.verticalAlign = "middle";
-      });
-
-      post.appendChild(wrapper);
     });
   }
 
-  private startDynamicListeners() {
+  private getPostQuote(post: Element, postId: string, postUser: string) {
+    const postLink =
+      post.querySelector(`#post_url_${postId}`)?.getAttribute("href") || "";
+
+    const body = post.querySelector(".post_body");
+    let postQuote = "";
+    if (body) {
+      const clone = body.cloneNode(true);
+      (clone as HTMLElement)
+        .querySelectorAll?.("blockquote")
+        ?.forEach((el) => el.remove());
+      (clone as HTMLElement)
+        .querySelectorAll?.(".codeblock")
+        ?.forEach((el) => {
+          const codeText = el.querySelector("code")?.textContent || "";
+          const span = document.createElement("span");
+          span.textContent = `[code]\n${codeText}\n[/code]`;
+          el.replaceWith(span);
+        });
+      postQuote = (clone.textContent || "")
+        .replace(/\t+/g, "")
+        .replace(/\n\s*\n/g, "\n");
+    }
+
+    postQuote = `[quote="${postUser}" pid="${postId}"]${postQuote}[/quote]`;
+    return `[size=x-small]Sent from [url=${postLink}]your post[/url].[/size]\n${postQuote}\n`;
+  }
+
+  private buildForm(post: Element, threadTitle: string, myPostKey: string) {
+    const postId = (post.id || "").split("_").pop() || "";
+    const postUser = (
+      post.querySelector(".author_information a")?.textContent || ""
+    ).trim();
+
+    const hidden = (name: string, value: string) =>
+      el("input", { type: "hidden", name, value });
+    const checkbox = (name: string, label: string) =>
+      el("span", null, [
+        el("input", {
+          type: "checkbox",
+          class: "checkbox",
+          name,
+          value: "1",
+          checked: true,
+        }),
+        ` ${label}`,
+      ]);
+    const submit = (name: string, value: string, extraClass = "") =>
+      el("input", {
+        type: "submit",
+        class: `button pm-from-post-button${extraClass}`,
+        name,
+        value,
+      });
+
+    const textArea = el(
+      "textarea",
+      {
+        class: "hfxPMFromPostInput",
+        name: "message",
+        rows: 7,
+        cols: 90,
+      },
+      this.getPostQuote(post, postId, postUser)
+    );
+    textArea.style.overflow = "auto";
+    textArea.style.resize = "vertical";
+
+    const form = el(
+      "form",
+      { action: "private.php", method: "post", name: "input", target: "_blank" },
+      [
+        hidden("action", "do_send"),
+        hidden("pmid", ""),
+        hidden("do", ""),
+        hidden("icon", ""),
+        hidden("my_post_key", myPostKey),
+        hidden("uid", postUser),
+        el("div", { class: "text-center my-3" }, [
+          el("span", null, el("strong", null, "Notice: This is an HFX Feature!")),
+        ]),
+        el("div", { class: "text-center my-3" }, [
+          el("div", { class: "mb-3", style: "margin-bottom: 10px;" }, [
+            el("span", null, [
+              el("strong", null, "Recipients:"),
+              " ",
+              el("input", {
+                type: "text",
+                class: "textbox",
+                name: "to",
+                value: postUser,
+                readonly: true,
+              }),
+            ]),
+            " ",
+            el("span", { class: "ml-5" }, [
+              el("strong", null, "Subject:"),
+              " ",
+              el("input", {
+                type: "text",
+                class: "textbox",
+                name: "subject",
+                size: 40,
+                maxlength: 85,
+                value: `Regarding Your Post: ${threadTitle}`,
+              }),
+            ]),
+          ]),
+          textArea,
+        ]),
+        el("div", { class: "text-center my-3", style: "margin-bottom: 10px;" }, [
+          checkbox("options[signature]", "Signature"),
+          " - ",
+          checkbox("options[savecopy]", "Save a Copy"),
+          " - ",
+          checkbox("options[readreceipt]", "Request Read Receipt"),
+        ]),
+        el("div", { class: "text-center my-3", style: "padding-bottom: 10px;" }, [
+          submit("submit", "Send Message", " send"),
+          " ",
+          submit("saveasdraft", "Save as Draft"),
+          " ",
+          submit("preview", "Preview"),
+        ]),
+      ]
+    );
+
+    form.querySelectorAll<HTMLElement>(".checkbox").forEach((cb) => {
+      cb.style.top = "0";
+      cb.style.verticalAlign = "middle";
+    });
+
+    const wrapper = el("div", { class: "pm-from-post-container py-3" }, form);
+    wrapper.style.backgroundColor = "#3f3e3e";
+    wrapper.style.textAlign = "center";
+    return wrapper;
+  }
+
+  private startDynamicListeners(threadTitle: string, myPostKey: string) {
     document.addEventListener("click", (e) => {
       const target = e.target;
       if (!(target instanceof Element)) return;
@@ -145,10 +190,14 @@ class PMFromPost extends Feature {
       if (toggle) {
         e.preventDefault();
         const post = toggle.closest(".post");
-        const container = post?.querySelector(".pm-from-post-container");
+        if (!post) return;
+        const container = post.querySelector(".pm-from-post-container");
         if (container instanceof HTMLElement) {
           const isHidden = getComputedStyle(container).display === "none";
           container.style.display = isHidden ? "" : "none";
+        } else {
+          // Build the form lazily on first open
+          post.appendChild(this.buildForm(post, threadTitle, myPostKey));
         }
         return;
       }

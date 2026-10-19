@@ -21,12 +21,12 @@ const mockChrome = {
     getManifest: jest.fn(() => ({
       name: "Test Extension",
       version: "1.0.0",
-      update_url: undefined,
+      update_url: undefined as string | undefined,
     })),
   },
   extension: {
     getURL: jest.fn((path: string) => `chrome-extension://test-id/${path}`),
-    getBackgroundPage: jest.fn(() => null),
+    getBackgroundPage: jest.fn((): Window | null => null),
   },
 };
 

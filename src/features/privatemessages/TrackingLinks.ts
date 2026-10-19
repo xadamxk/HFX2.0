@@ -1,4 +1,5 @@
 import { Feature } from "../../core/Feature";
+import { el } from "../../core/Dom";
 import PrivateMessages from "../../sections/PrivateMessages";
 
 class TrackingLinks extends Feature {
@@ -58,8 +59,15 @@ class TrackingLinks extends Feature {
       const cell = row.querySelectorAll("td")[1];
       if (!cell) return;
 
-      const text = cell.textContent || "";
-      cell.innerHTML = `<a href="https://hackforums.net/private.php?action=read&pmid=${pmid}">${text}</a>`;
+      cell.replaceChildren(
+        el(
+          "a",
+          {
+            href: `https://hackforums.net/private.php?action=read&pmid=${pmid}`,
+          },
+          cell.textContent || ""
+        )
+      );
     });
   }
 }

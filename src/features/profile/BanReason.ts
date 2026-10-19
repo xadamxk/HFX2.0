@@ -1,4 +1,5 @@
 import { Feature } from "../../core/Feature";
+import { appendChildren, el, ElChild } from "../../core/Dom";
 import { Logger } from "../../core/Logger";
 import { Util } from "../../core/Util";
 import Profile from "../../sections/Profile";
@@ -192,36 +193,28 @@ class BanReason extends Feature {
     hr.setAttribute("style", "margin: 6px 0;");
     wrapper.appendChild(hr);
 
-    const title = document.createElement("div");
-    title.innerHTML = "<strong>Ban Information</strong>";
-    wrapper.appendChild(title);
+    const row = (label: string, value: ElChild) =>
+      el("div", null, [el("strong", null, label), " ", value]);
 
-    const reasonEl = document.createElement("div");
-    reasonEl.innerHTML = `<strong>Reason:</strong> ${this.escapeHtml(
-      banReason.banReason
-    )}`;
-    wrapper.appendChild(reasonEl);
+    const bannedBy = banReason.bannedByUID
+      ? el(
+          "a",
+          {
+            href: `https://hackforums.net/member.php?action=profile&uid=${Number(
+              banReason.bannedByUID
+            )}`,
+          },
+          banReason.bannedByUsername || ""
+        )
+      : banReason.bannedByUsername || "";
 
-    const bannedByEl = document.createElement("div");
-    const bannedByLink = banReason.bannedByUID
-      ? `<a href="https://hackforums.net/member.php?action=profile&uid=${
-          banReason.bannedByUID
-        }">${this.escapeHtml(banReason.bannedByUsername)}</a>`
-      : this.escapeHtml(banReason.bannedByUsername || "");
-    bannedByEl.innerHTML = `<strong>Banned By:</strong> ${bannedByLink}`;
-    wrapper.appendChild(bannedByEl);
-
-    const bannedAtEl = document.createElement("div");
-    bannedAtEl.innerHTML = `<strong>Ban Date:</strong> ${this.escapeHtml(
-      banReason.bannedAt || ""
-    )}`;
-    wrapper.appendChild(bannedAtEl);
-
-    const unbanEl = document.createElement("div");
-    unbanEl.innerHTML = `<strong>Unban Date:</strong> ${this.escapeHtml(
-      banReason.expiresAt || ""
-    )}`;
-    wrapper.appendChild(unbanEl);
+    appendChildren(wrapper, [
+      el("div", null, el("strong", null, "Ban Information")),
+      row("Reason:", banReason.banReason || ""),
+      row("Banned By:", bannedBy),
+      row("Ban Date:", banReason.bannedAt || ""),
+      row("Unban Date:", banReason.expiresAt || ""),
+    ]);
 
     block.appendChild(wrapper);
     firstCard.appendChild(block);
@@ -277,12 +270,6 @@ class BanReason extends Feature {
     if (!trimmed) return "";
     if (trimmed.toLowerCase() === "never") return "Never";
     return this.formatBanDateString(trimmed);
-  }
-
-  private escapeHtml(text: string): string {
-    const div = document.createElement("div");
-    div.textContent = text || "";
-    return div.innerHTML;
   }
 
   private isUserBanned() {

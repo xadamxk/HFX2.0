@@ -1,5 +1,6 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
+import { Logger } from "../../core/Logger";
 import Games from "../../sections/Games";
 
 class HackGame extends Feature {
@@ -54,11 +55,20 @@ class HackGame extends Feature {
     if (settings?.showMedalofHonorTracker) {
       this.showMedalofHonorTracker();
     }
+    // Each shortcut is inserted first, so the last one added appears leftmost
     if (settings?.showLeaderboardShortcut) {
-      this.showLeaderboardShortcut();
+      this.addHeaderShortcut(
+        "gamecp.php?action=leaderboard&type=1",
+        "hficon-medal-empty",
+        "Leaderboard"
+      );
     }
     if (settings?.showLogsShortcut) {
-      this.showLogsShortcut();
+      this.addHeaderShortcut(
+        "gamecp.php?action=logs",
+        "hficon-drawer-paper2",
+        "Logs"
+      );
     }
   }
 
@@ -110,7 +120,6 @@ class HackGame extends Feature {
     if (!gameContentElement) return;
 
     const rechargeTimeElement = gameContentElement.querySelector(".smart-time");
-    console.log(rechargeTimeElement);
     if (
       rechargeTimeElement &&
       gameContentElement.textContent.includes("Full Charge:")
@@ -138,23 +147,32 @@ class HackGame extends Feature {
     if (document.getElementById("progress-bar-percentage")) {
       const goal = 250000;
 
-      const levelEl = document.querySelector(
+      // Use the SelectorManager-backed lookups so markup changes are reported
+      const levelEl = this.querySelector(
         "#game_content_currentpage > tr:nth-child(2) > td > div.gtable > div:nth-child(2) > div.gtd.tcenter"
       );
-      const currentlevel = (levelEl?.textContent || "")
-        .replace("Level: ", "")
-        .trim();
+      const currentlevel = parseInt(
+        (levelEl?.textContent || "").replace("Level: ", "").trim(),
+        10
+      );
 
-      const xpEl = document.querySelector(
+      const xpEl = this.querySelector(
         "#game_content_currentpage > tr:nth-child(2) > td > div.game-profile-player.gboxshadow > div:nth-child(2) > div:nth-child(2) > span"
       );
-      const currentlevelXP = (xpEl?.textContent || "")
-        .replace(/\s.*/, "")
-        .replace(/,/g, "");
+      const currentlevelXP = parseInt(
+        (xpEl?.textContent || "").replace(/\s.*/, "").replace(/,/g, ""),
+        10
+      );
 
-      const totalXP =
-        determineLevelXp(parseInt(currentlevel, 10)) +
-        parseInt(currentlevelXP || "0", 10);
+      // Don't show a broken tracker ("NaN / 250,000 xp") if the values can't be read
+      if (!Number.isFinite(currentlevel) || !Number.isFinite(currentlevelXP)) {
+        Logger.warn(
+          `${this.name}: could not read level or XP for the Medal of Honor tracker.`
+        );
+        return;
+      }
+
+      const totalXP = determineLevelXp(currentlevel) + currentlevelXP;
 
       let wholePercent = getWholePercent(totalXP, goal);
       if (wholePercent >= 100) wholePercent = 100;
@@ -201,39 +219,14 @@ class HackGame extends Feature {
     }
   }
 
-  private showLeaderboardShortcut() {
+  private addHeaderShortcut(href: string, iconClass: string, title: string) {
     document.querySelectorAll(".game-top-right-icons").forEach((container) => {
       const a = document.createElement("a");
-      a.href = "gamecp.php?action=leaderboard&type=1";
+      a.href = href;
 
       const i = document.createElement("i");
-      i.className = "hficon-medal-empty";
-      i.setAttribute("title", "Leaderboard");
-      Object.assign(i.style, {
-        // marginLeft: "6px",
-        fontSize: "24px",
-        color: "#ababab",
-      });
-      i.addEventListener("mouseenter", () => {
-        i.style.color = "#4d2f5d";
-      });
-      i.addEventListener("mouseleave", () => {
-        i.style.color = "#ababab";
-      });
-
-      a.appendChild(i);
-      container.insertBefore(a, container.firstChild);
-    });
-  }
-
-  private showLogsShortcut() {
-    document.querySelectorAll(".game-top-right-icons").forEach((container) => {
-      const a = document.createElement("a");
-      a.href = "gamecp.php?action=logs";
-
-      const i = document.createElement("i");
-      i.className = "hficon-drawer-paper2";
-      i.setAttribute("title", "Logs");
+      i.className = iconClass;
+      i.setAttribute("title", title);
       Object.assign(i.style, {
         // marginLeft: "6px",
         fontSize: "24px",

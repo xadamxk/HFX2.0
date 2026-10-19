@@ -1,5 +1,4 @@
 import { Feature } from "../../core/Feature";
-import { Logger } from "../../core/Logger";
 import { Section } from "../../core/Section";
 import { SectionArray } from "../../core/SectionArray";
 import { Util } from "../../core/Util";
@@ -41,7 +40,7 @@ class GroupManagement extends Feature {
 
     const lastFetchTime = settings[STORAGE_KEYS.MANAGED_GROUPS]?.lastFetchTime;
     if (!lastFetchTime || lastFetchTime < Date.now() - this.fetchDelay) {
-      Logger.debug("Fetching managed groups again");
+      this.logger.debug("Fetching managed groups again");
       const newManagedGroups = await this.fetchManagedGroups();
       this.settingsService.setStorageItem(
         this,
@@ -53,7 +52,7 @@ class GroupManagement extends Feature {
         lastFetchTime: Date.now(),
       };
     } else {
-      Logger.debug(
+      this.logger.debug(
         `No need to fetch managed groups again until ${new Date(
           lastFetchTime + this.fetchDelay
         ).toLocaleString()}`

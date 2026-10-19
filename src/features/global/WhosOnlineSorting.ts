@@ -1,6 +1,5 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
-import { Logger } from "../../core/Logger";
 import Global from "../../sections/Global";
 
 enum STORAGE_KEYS {
@@ -70,7 +69,7 @@ class WhosOnlineSorting extends Feature {
     >;
 
     if (!groupMap || Object.keys(groupMap).length === 0) {
-      Logger.debug("No group map or unknown group found, fetching...");
+      this.logger.debug("No group map or unknown group found, fetching...");
       const newGroupMap = await this.fetchGroupMap();
       this.appendSortedMembers(
         sortedGroupOrder,
@@ -81,7 +80,7 @@ class WhosOnlineSorting extends Feature {
         summaryHtml
       );
     } else {
-      Logger.debug("Group map found, appending sorted members...");
+      this.logger.debug("Group map found, appending sorted members...");
       this.appendSortedMembers(
         sortedGroupOrder,
         membersByGroup,

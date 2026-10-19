@@ -17,6 +17,8 @@ Mustache.parse(template);
 
 export function generate() {
   const features = sync("./src/features/**/*.ts")
+    // Tests live next to features but aren't features
+    .filter((feature) => !feature.endsWith(".test.ts"))
     .map((feature) => {
       const featureParts = feature.split("/");
       const name = featureParts && featureParts.pop()?.split(".ts").shift();

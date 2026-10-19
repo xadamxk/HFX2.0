@@ -1,6 +1,5 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
-import { Logger } from "../../core/Logger";
 import Games from "../../sections/Games";
 
 class HackGame extends Feature {
@@ -144,7 +143,11 @@ class HackGame extends Feature {
       return Math.round((percentFor / percentOf) * 100);
     };
 
-    if (document.getElementById("progress-bar-percentage")) {
+    // The battery page also has a progress bar; only the game profile has the player card
+    if (
+      document.getElementById("progress-bar-percentage") &&
+      document.querySelector(".game-profile-player")
+    ) {
       const goal = 250000;
 
       // Use the SelectorManager-backed lookups so markup changes are reported
@@ -166,8 +169,8 @@ class HackGame extends Feature {
 
       // Don't show a broken tracker ("NaN / 250,000 xp") if the values can't be read
       if (!Number.isFinite(currentlevel) || !Number.isFinite(currentlevelXP)) {
-        Logger.warn(
-          `${this.name}: could not read level or XP for the Medal of Honor tracker.`
+        this.logger.warn(
+          "Could not read level or XP for the Medal of Honor tracker."
         );
         return;
       }

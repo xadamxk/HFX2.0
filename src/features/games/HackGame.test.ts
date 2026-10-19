@@ -70,6 +70,27 @@ describe("HackGame", () => {
     expect(document.getElementById("HFXProgressBar")).toBeNull();
   });
 
+  it("ignores the battery page's progress bar without reporting selector errors", () => {
+    // The battery page has a progress bar but no player card or level/XP
+    document.body.innerHTML = `
+      <table><tbody id="game_content_currentpage">
+        <tr><td></td></tr>
+        <tr><td>
+          <div class="gtable"></div>
+          <div>
+            <div id="progress-bar"><div id="progress-bar-percentage"></div></div>
+            <span class="tinytext">Power Capacity: 100 / 100 kWh</span>
+          </div>
+        </td></tr>
+      </tbody></table>`;
+    const errorsBefore = SelectorManager.getInstance().getErrors().length;
+
+    HackGame.run(trackerOnly);
+
+    expect(document.getElementById("HFXProgressBar")).toBeNull();
+    expect(SelectorManager.getInstance().getErrors()).toHaveLength(errorsBefore);
+  });
+
   it("adds the logs and leaderboard shortcuts in the original order", () => {
     document.body.innerHTML = `<div class="game-top-right-icons"><a href="existing"></a></div>`;
 

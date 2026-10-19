@@ -1,5 +1,4 @@
 import { Feature } from "../../core/Feature";
-import { Logger } from "../../core/Logger";
 import { Util } from "../../core/Util";
 import Profile from "../../sections/Profile";
 
@@ -56,10 +55,10 @@ class BanReason extends Feature {
     if (!isBanned) return;
 
     if (storedBanReasons[profileUserId]) {
-      Logger.debug(`Ban reason found in cache for user ${profileUserId}`);
+      this.logger.debug(`Ban reason found in cache for user ${profileUserId}`);
       this.appendBanReason(storedBanReasons[profileUserId]);
     } else {
-      Logger.debug(
+      this.logger.debug(
         `Ban reason not found in cache for user ${profileUserId}, querying...`
       );
       this.queryBanReason()
@@ -167,7 +166,7 @@ class BanReason extends Feature {
 
       return banMap;
     } catch (e) {
-      Logger.error("Failed to parse ban reasons");
+      this.logger.error("Failed to parse ban reasons");
       return {};
     }
   }

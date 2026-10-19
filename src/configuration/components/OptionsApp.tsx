@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { OptionsData } from "../OptionsData";
+import { sectionIcons } from "../sectionIcons";
 import { Section } from "../../core/Section";
 import { Feature } from "../../core/Feature";
 import { SettingsService } from "../../core/SettingsService";
@@ -198,6 +199,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
             {sortedSections.map(([sectionName, section]) => {
               // const sectionFeatures = getFeaturesForSection(section);
               const isActive = sectionName === activeSection;
+              const SectionIcon = sectionIcons[section.class];
 
               return (
                 <li
@@ -214,8 +216,8 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
                     title={isSidebarCollapsed ? section.name : undefined}
                   >
                     <span className="ActionListItem-visual ActionListItem-visual--leading">
-                      {section.icon ? (
-                        <section.icon className="section-icon" />
+                      {SectionIcon ? (
+                        <SectionIcon className="section-icon" />
                       ) : (
                         <span className="section-initial">
                           {section.name.charAt(0)}

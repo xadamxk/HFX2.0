@@ -1,13 +1,7 @@
 const path = require("path");
-import { Configuration as WebpackConfiguration } from "webpack";
-import { Configuration as WebpackDevServerConfiguration } from "webpack-dev-server";
+import { Configuration } from "webpack";
 const CopyPlugin = require("copy-webpack-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 import { OptionsBuilderPlugin } from "./OptionsBuilderPlugin";
-
-interface Configuration extends WebpackConfiguration {
-  devServer?: WebpackDevServerConfiguration & { progress?: boolean };
-}
 
 const baseConfig: Configuration = {
   entry: {
@@ -18,6 +12,8 @@ const baseConfig: Configuration = {
   output: {
     filename: "[name].js",
     path: path.resolve(__dirname, "../dist"),
+    // delete old build files
+    clean: true,
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx"],
@@ -29,8 +25,6 @@ const baseConfig: Configuration = {
     ],
   },
   plugins: [
-    // delete old build files
-    new CleanWebpackPlugin(),
     new CopyPlugin({
       patterns: [
         { from: "./src/manifest.json" },

@@ -1,9 +1,8 @@
-import { TrophyIcon } from "@heroicons/react/24/outline";
 import { Section } from "../core/Section";
 
 class Awards extends Section {
   constructor() {
-    super(["/myawards.php"], [], TrophyIcon);
+    super(["/myawards.php"], []);
     this.class = "Awards";
     this.name = "Awards";
   }

@@ -2,7 +2,6 @@ import { sync } from "globby";
 import Mustache from "mustache";
 import { writer } from "./CRLFWriter";
 import { prompt } from "./prompt";
-import { generate as generateSections } from "./Sections";
 
 // TODO: Allow this.name to have spaces (but trim them from other name uses)
 const template = `import { Section } from "../core/Section";
@@ -72,6 +71,5 @@ export function generate() {
     });
 
     writer(`./src/sections/${name}.ts`, section);
-    generateSections();
   });
 }

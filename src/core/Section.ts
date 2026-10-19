@@ -1,5 +1,4 @@
 import { Util } from "./Util";
-import React from "react";
 
 /**
  * A section is a collection of features that are enabled on a specific page.
@@ -11,16 +10,10 @@ export class Section {
   name: string;
   paths: string[];
   elementSelectors?: string[];
-  icon?: React.ComponentType<{ className?: string }>; // Heroicon component
-  constructor(
-    paths: string[] = [],
-    elementSelectors: string[] = [],
-    icon?: React.ComponentType<{ className?: string }>
-  ) {
+  constructor(paths: string[] = [], elementSelectors: string[] = []) {
     this.paths = [...paths];
     this.elementSelectors =
       elementSelectors.length === 0 ? [] : [...elementSelectors];
-    this.icon = icon;
   }
 
   runnable() {

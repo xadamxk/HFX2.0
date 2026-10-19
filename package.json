@@ -24,15 +24,14 @@
   "devDependencies": {
     "@reorx/webpack-ext-reloader": "^1.3.0",
     "@types/chrome": "^0.0.237",
-    "@types/jest": "^29.5.8",
+    "@types/jest": "^30.0.0",
     "@types/mustache": "^4.2.2",
     "@types/node": "^22.20.5",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
-    "copy-webpack-plugin": "^11.0.0",
-    "globby": "^10.0.1",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "copy-webpack-plugin": "^14.0.0",
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
     "mustache": "^3.1.0",
     "ts-jest": "^29.1.1",
     "ts-loader": "^9.4.3",
@@ -46,5 +45,12 @@
     "@heroicons/react": "^2.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "overrides": {
+    "@kingyue/useragent": {
+      "axios": "^0.34.0",
+      "semver": "^5.7.2",
+      "tmp": "^0.2.7"
+    }
   }
 }

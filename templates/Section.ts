@@ -1,4 +1,4 @@
-import { sync } from "globby";
+import { sync } from "./glob";
 import Mustache from "mustache";
 import { writer } from "./CRLFWriter";
 import { prompt } from "./prompt";

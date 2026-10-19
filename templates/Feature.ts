@@ -1,4 +1,4 @@
-import { sync } from "globby";
+import { sync } from "./glob";
 import Mustache from "mustache";
 import { writer } from "./CRLFWriter";
 import { prompt } from "./prompt";
@@ -30,10 +30,12 @@ const sections = sync("./src/sections/*.ts").map((sectionPath) => {
   const filename = sectionPath.split("/").pop() ?? "";
   return filename.replace(/\.ts$/, "");
 });
-const features = sync("./src/features/**/*.ts").map((featurePath) => {
-  const filename = featurePath.split("/").pop() ?? "";
-  return filename.replace(/\.ts$/, "");
-});
+const features = sync("./src/features/**/*.ts")
+  .filter((featurePath) => !featurePath.endsWith(".test.ts"))
+  .map((featurePath) => {
+    const filename = featurePath.split("/").pop() ?? "";
+    return filename.replace(/\.ts$/, "");
+  });
 
 const questions = [
   {

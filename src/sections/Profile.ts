@@ -1,9 +1,8 @@
-import { UserIcon } from "@heroicons/react/24/outline";
 import { Section } from "../core/Section";
 
 class Profile extends Section {
   constructor() {
-    super(["/member.php"], [], UserIcon);
+    super(["/member.php"], []);
     this.class = "Profile";
     this.name = "Profiles";
   }

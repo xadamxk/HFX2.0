@@ -1,5 +1,4 @@
 import { Feature } from "../../core/Feature";
-import { Logger } from "../../core/Logger";
 import { Util } from "../../core/Util";
 import { el } from "../../core/Dom";
 import HFX from "../../sections/HFX";
@@ -51,14 +50,14 @@ class HFXAlerts extends Feature {
         : Infinity;
 
     if (timePassedMinutes <= this.fetchDelay) {
-      Logger.debug(
+      this.logger.debug(
         `HFX Alerts: ${timePassedMinutes} minutes passed - threshold ${this.fetchDelay} minutes. Skipping fetch.`
       );
       if (alertMap !== undefined && alertMap?.hidden !== true) {
         this.showAlert(alertMap?.alerts as HFXAlert);
       }
     } else {
-      Logger.debug("Fetching HFX alert data...");
+      this.logger.debug("Fetching HFX alert data...");
       fetch(this.fetchLocation)
         .then((response) => {
           if (!response.ok) {
@@ -67,7 +66,7 @@ class HFXAlerts extends Feature {
           return response.json();
         })
         .then((fetchedAlert: HFXAlert) => {
-          Logger.debug("Fetched alert data:", fetchedAlert);
+          this.logger.debug("Fetched alert data:", fetchedAlert);
           const newLastFetchTime = new Date().getTime();
           // Always update the last fetch time on successful fetch
           this.settingsService.setStorageItem(
@@ -96,7 +95,7 @@ class HFXAlerts extends Feature {
           }
         })
         .catch(() => {
-          Logger.error("Failed to fetch alert data.");
+          this.logger.error("Failed to fetch alert data.");
         });
     }
   }

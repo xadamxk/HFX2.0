@@ -1,9 +1,8 @@
-import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import { Section } from "../core/Section";
 
 class PrivateMessages extends Section {
   constructor() {
-    super(["/private.php"], [], EnvelopeIcon);
+    super(["/private.php"], []);
     this.class = "PrivateMessages";
     this.name = "Private Messages";
   }

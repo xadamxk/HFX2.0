@@ -1,9 +1,10 @@
 import { Feature } from "../core/Feature";
 import { Section } from "../core/Section";
+import Features from "../Features";
 
 /**
  * Central registry for options data
- * Automatically discovers and registers all sections and features using webpack's require.context
+ * Discovers sections via webpack's require.context and features from Features.ts
  */
 export class OptionsData {
   private static sections: { [key: string]: Section } = {};
@@ -19,7 +20,7 @@ export class OptionsData {
     // Auto-discover and register all sections
     this.discoverSections();
     
-    // Auto-discover and register all features
+    // Register all features
     this.discoverFeatures();
 
     this.initialized = true;
@@ -56,29 +57,12 @@ export class OptionsData {
    * Discover all features from the features folder
    */
   private static discoverFeatures(): void {
-    // Use webpack's require.context to dynamically import all features
-    const featuresContext = (require as any).context('../features', true, /\.ts$/);
-    
-    console.log('Features context keys:', featuresContext.keys());
-    
-    featuresContext.keys().forEach((key: string) => {
-      // console.log('Loading feature from key:', key);
-      const featureModule = featuresContext(key);
-      const feature = featureModule.default;
-      
-      // console.log('Feature module:', feature);
-      // console.log('Feature class:', feature?.class);
-      // console.log('Feature name:', feature?.name);
-      // console.log('Feature section:', feature?.section?.class);
-      // console.log('Is Feature instance:', feature instanceof Feature);
-      
-      if (feature && feature instanceof Feature) {
-        this.features[feature.class] = feature;
-        // console.log('Registered feature:', feature.class, 'in section:', feature.section?.class);
-      }
+    // Features.ts is the single feature registry (shared with the content script).
+    // TODO: split feature metadata from run() implementations so the options
+    // page doesn't bundle every feature's content-script code.
+    Object.values(Features).forEach((feature: Feature) => {
+      this.features[feature.class] = feature;
     });
-    
-    // console.log('Final features registry:', Object.keys(this.features));
   }
 
   /**

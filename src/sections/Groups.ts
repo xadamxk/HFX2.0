@@ -1,9 +1,8 @@
-import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { Section } from "../core/Section";
 
 class Groups extends Section {
   constructor() {
-    super(["/showgroups.php"], [], UserGroupIcon);
+    super(["/showgroups.php"], []);
     this.class = "Groups";
     this.name = "Groups";
   }

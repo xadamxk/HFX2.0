@@ -1,9 +1,8 @@
-import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { Section } from "../core/Section";
 
 class Convo extends Section {
   constructor() {
-    super(["/convo.php"], [], ChatBubbleLeftRightIcon);
+    super(["/convo.php"], []);
     this.class = "Convo";
     this.name = "Convo";
   }

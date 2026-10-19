@@ -1,5 +1,6 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
+import { appendChildren, el, ElChild } from "../../core/Dom";
 import Global from "../../sections/Global";
 
 enum STORAGE_KEYS {
@@ -57,7 +58,7 @@ class WhosOnlineSorting extends Feature {
     ) as HTMLElement | null;
     if (!targetCell) return;
 
-    const { groupOrder, membersByGroup, summaryHtml } =
+    const { groupOrder, membersByGroup, summaryNodes } =
       this.sortOnlineMembers(boardStats);
     if (groupOrder.length === 0) return;
 
@@ -77,7 +78,7 @@ class WhosOnlineSorting extends Feature {
         { ...newGroupMap, ...KNOWN_GROUPS },
         targetCell,
         labelByGroup,
-        summaryHtml
+        summaryNodes
       );
     } else {
       this.logger.debug("Group map found, appending sorted members...");
@@ -87,7 +88,7 @@ class WhosOnlineSorting extends Feature {
         { ...groupMap, ...KNOWN_GROUPS },
         targetCell,
         labelByGroup,
-        summaryHtml
+        summaryNodes
       );
     }
   }
@@ -128,7 +129,7 @@ class WhosOnlineSorting extends Feature {
   private sortOnlineMembers(boardStats: HTMLElement): {
     groupOrder: string[];
     membersByGroup: Record<string, GroupItem[]>;
-    summaryHtml: string;
+    summaryNodes: Node[];
   } {
     const rows = boardStats.querySelectorAll("tr");
     if (!rows || rows.length < 2) return;
@@ -145,15 +146,13 @@ class WhosOnlineSorting extends Feature {
     if (brIndex === -1) return;
 
     // Capture the summary (everything before the first <br>)
-    let summaryHtml = "";
-    for (let k = 0; k < brIndex; k++) {
-      const node = allChildNodes[k];
-      if (node.nodeType === Node.TEXT_NODE) {
-        summaryHtml += node.textContent || "";
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        summaryHtml += (node as HTMLElement).outerHTML;
-      }
-    }
+    const summaryNodes = allChildNodes
+      .slice(0, brIndex)
+      .filter(
+        (node) =>
+          node.nodeType === Node.TEXT_NODE ||
+          node.nodeType === Node.ELEMENT_NODE
+      );
 
     // Build grouped items while preserving star markers following a name
 
@@ -207,7 +206,7 @@ class WhosOnlineSorting extends Feature {
       targetCell.removeChild(br.nextSibling);
     }
 
-    return { groupOrder, membersByGroup, summaryHtml };
+    return { groupOrder, membersByGroup, summaryNodes };
   }
 
   private sortGroupOrder(groupOrder: string[]): string[] {
@@ -262,38 +261,43 @@ class WhosOnlineSorting extends Feature {
     groupMap: Record<string, string>,
     targetCell: HTMLElement,
     labelByGroup: boolean,
-    summaryHtml: string
+    summaryNodes: Node[]
   ) {
+    // Member elements are moved (not re-serialized) so HF's markup is never re-parsed
+    const memberList = (items: GroupItem[]) => {
+      const nodes: ElChild[] = [];
+      items.forEach((item, index) => {
+        if (index > 0) nodes.push(", ");
+        nodes.push(item.el, item.hasStar && "*");
+      });
+      return nodes;
+    };
+
+    const content: ElChild[] = [];
     if (labelByGroup) {
-      let html = "";
       groupOrder.forEach((key, groupIndex) => {
         const groupName = groupMap[key] || "Unknown";
-        html += `<div class='whosonline-sorting-group'><span style='color:#fff;font-weight:bold;'>${groupName}</span> (${membersByGroup[key].length}): `;
-        membersByGroup[key].forEach((item, memberIndex) => {
-          html += (item.el as HTMLElement).outerHTML;
-          html += item.hasStar ? "*" : "";
-          if (memberIndex !== membersByGroup[key].length - 1) {
-            html += ", ";
-          }
-        });
-        html += "</div>";
-        if (groupIndex !== groupOrder.length - 1) {
-          html += "<br>";
-        }
+        if (groupIndex > 0) content.push(el("br"));
+        content.push(
+          el("div", { class: "whosonline-sorting-group" }, [
+            el("span", { style: "color:#fff;font-weight:bold;" }, groupName),
+            ` (${membersByGroup[key].length}): `,
+            ...memberList(membersByGroup[key]),
+          ])
+        );
       });
-      targetCell.innerHTML = `${summaryHtml}<br>${html}`;
     } else {
-      // Build sorted HTML and replace entire contents of span.smalltext
+      // Flatten sorted members into a single comma-separated list
       const items: GroupItem[] = [];
       for (const key of groupOrder) {
         for (const item of membersByGroup[key]) items.push(item);
       }
-      const htmlParts = items.map((item) => {
-        const html = (item.el as HTMLElement).outerHTML;
-        return item.hasStar ? `${html}*` : html;
-      });
-      targetCell.innerHTML = `${summaryHtml}<br>${htmlParts.join(", ")}`;
+      content.push(...memberList(items));
     }
+
+    // Replace entire contents of span.smalltext
+    targetCell.replaceChildren(...summaryNodes);
+    appendChildren(targetCell, [el("br"), ...content]);
   }
 }
 

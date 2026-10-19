@@ -1,6 +1,7 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { TextInput } from "../../configuration/configurables/TextInput";
 import { Feature } from "../../core/Feature";
+import { el, safeHttpUrl } from "../../core/Dom";
 import Global from "../../sections/Global";
 
 class HFToolbar extends Feature {
@@ -232,10 +233,14 @@ class HFToolbar extends Feature {
 
   private appendFavorite(label: string, url: string) {
     const panelLinks = this.querySelector(".panel_links", document);
-    if (panelLinks) {
-      panelLinks.insertAdjacentHTML(
-        "beforeend",
-        `<li><a href="${url}" data-tooltip="${label}"><span>${label}</span></a></li>`
+    const href = safeHttpUrl(url);
+    if (panelLinks && href) {
+      panelLinks.appendChild(
+        el(
+          "li",
+          null,
+          el("a", { href, "data-tooltip": label }, el("span", null, label))
+        )
       );
     }
   }

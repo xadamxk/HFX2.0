@@ -22,11 +22,29 @@ export class SettingsService {
   }
 
   /**
+   * Get stored settings for many features in a single storage read, keyed by feature class.
+   * Features that have never been initialized are absent from the result.
+   */
+  async getFeatureSettingsBatch(
+    features: Feature[]
+  ): Promise<{ [featureClass: string]: any }> {
+    return await this.storage.getMany(features.map((feature) => feature.class));
+  }
+
+  /**
+   * Cache settings that were read elsewhere (e.g. via getFeatureSettingsBatch)
+   * so later reads for this feature skip storage.
+   */
+  primeFeatureSettings(feature: Feature, settings: any): void {
+    this.storage.prime(feature.class, settings);
+  }
+
+  /**
    * Set all settings (configurables and storage items) for a feature.
    */
   async setFeatureSettings(feature: Feature, settings: any): Promise<void> {
     await this.storage.set(feature.class, settings);
-    Logger.debug(`Updated settings for ${feature.class}.`);
+    feature.logger.debug("Updated settings.");
   }
 
   /**
@@ -148,7 +166,7 @@ export class SettingsService {
 
     const updatedSettings = { ...settings, ...defaults };
     await this.setFeatureSettings(feature, updatedSettings);
-    Logger.debug(`Reset storage items for ${feature.class}.`);
+    feature.logger.debug("Reset storage items.");
     return updatedSettings;
   }
 

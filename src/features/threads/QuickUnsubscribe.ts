@@ -1,5 +1,4 @@
 import { Feature } from "../../core/Feature";
-import { Logger } from "../../core/Logger";
 import Threads from "../../sections/Threads";
 
 class QuickUnsubscribe extends Feature {
@@ -73,7 +72,7 @@ class QuickUnsubscribe extends Feature {
             location.reload();
           })
           .catch((err) => {
-            Logger.error(`Error quick unsubscribing: ${err}`);
+            this.logger.error(`Error quick unsubscribing: ${err}`);
           });
       });
     }

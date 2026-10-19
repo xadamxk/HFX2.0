@@ -3,14 +3,22 @@ import { SettingsService } from "./core/SettingsService";
 import { StorageSyncService } from "./core/StorageSyncService";
 import { StorageService } from "./core/StorageService";
 
-chrome.runtime.onInstalled.addListener(() => {
+const storageService = new StorageService();
+const syncService = new StorageSyncService(storageService);
+
+// MV3 service workers are stopped when idle and re-run this script when woken.
+// Listeners must be registered synchronously at the top level so they exist
+// (and can wake the worker) after every restart, not only after install.
+syncService.listen();
+
+chrome.runtime.onInstalled.addListener(async () => {
   Logger.debug("HFX Installed");
 
-  // Initialize storage and services
-  const storageService = new StorageService();
-  const syncService = new StorageSyncService(storageService);
-  const settingsService = new SettingsService(storageService);
+  try {
+    await syncService.reconcile();
+  } catch (error) {
+    Logger.error("Failed to reconcile local and sync storage:", error);
+  }
 
-  syncService.start();
-  settingsService.printSettings();
+  new SettingsService(storageService).printSettings();
 });

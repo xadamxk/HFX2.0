@@ -95,11 +95,17 @@ export class Feature {
   /**
    * Fill in missing defaults for this feature's settings, persisting them if needed.
    * @param storedSettings - Settings already read from storage (undefined if never saved)
+   * @param storedStorage - Storage items already read from storage (undefined if never saved)
    */
   async initializeSettings(
-    storedSettings: { [key: string]: any } | undefined
+    storedSettings: { [key: string]: any } | undefined,
+    storedStorage?: { [key: string]: any }
   ): Promise<{ [key: string]: any }> {
-    this.settingsService.primeFeatureSettings(this, storedSettings);
+    this.settingsService.primeFeatureSettings(
+      this,
+      storedSettings,
+      storedStorage
+    );
     return await this.settingsService.initializeFeatureSettings(
       this,
       storedSettings

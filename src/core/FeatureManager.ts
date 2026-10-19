@@ -3,6 +3,7 @@ import { Logger } from "./Logger";
 import SelectorManager from "./SelectorManager";
 import { SettingsService } from "./SettingsService";
 import { StorageService } from "./StorageService";
+import { getFeatureStorageKey } from "./constants";
 
 export interface LoadedFeature {
   feature: string;
@@ -36,7 +37,11 @@ export class FeatureManager {
 
     this.featureLoadingResults = await Promise.all(
       features.map((feature) =>
-        this.loadFeature(feature, storedSettings[feature.class])
+        this.loadFeature(
+          feature,
+          storedSettings[feature.class],
+          storedSettings[getFeatureStorageKey(feature.class)]
+        )
       )
     );
     const loadDuration = performance.now() - loadStart;
@@ -78,11 +83,15 @@ export class FeatureManager {
    */
   private async loadFeature(
     feature: Feature,
-    storedSettings: { [key: string]: any } | undefined
+    storedSettings: { [key: string]: any } | undefined,
+    storedStorage: { [key: string]: any } | undefined
   ): Promise<LoadedFeature> {
     let runStart: number | undefined;
     try {
-      const settings = await feature.initializeSettings(storedSettings);
+      const settings = await feature.initializeSettings(
+        storedSettings,
+        storedStorage
+      );
       runStart = performance.now();
       const running = feature.start(settings);
       return {

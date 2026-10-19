@@ -32,11 +32,15 @@ export class SelectorManager {
   /** Append a record to persisted storage (bounded to last 500). */
   private async logSelectorError(record: SelectorErrorRecord): Promise<void> {
     try {
-      const existing: SelectorErrorRecord[] =
-        (await this.storage.get(this.storedKey)) || [];
-      existing.push(record);
-      if (existing.length > 500) existing.splice(0, existing.length - 500);
-      await this.storage.set(this.storedKey, existing);
+      await this.storage.update<SelectorErrorRecord[]>(
+        this.storedKey,
+        (current) => {
+          const existing = Array.isArray(current) ? [...current] : [];
+          existing.push(record);
+          if (existing.length > 500) existing.splice(0, existing.length - 500);
+          return existing;
+        }
+      );
     } catch {}
   }
 

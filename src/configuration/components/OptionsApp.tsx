@@ -4,6 +4,7 @@ import { Section } from "../../core/Section";
 import { Feature } from "../../core/Feature";
 import { SettingsService } from "../../core/SettingsService";
 import { StorageService } from "../../core/StorageService";
+import { Logger } from "../../core/Logger";
 import { SectionComponent } from "./SectionComponent";
 import {
   ChevronDoubleLeftIcon,
@@ -48,45 +49,73 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     }
   }, [isPopup]);
 
-  // Load settings from Chrome storage
+  // Load settings from Chrome storage, and keep them current as other
+  // contexts (content scripts, other tabs, sync) write to it
   useEffect(() => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      chrome.storage.local.get(null, (items: Record<string, any>) => {
-        setSettings(items);
-        setIsLoading(false);
-      });
-    } else {
+    if (typeof chrome === "undefined" || !chrome.storage) {
       // Fallback for non-Chrome environments (like testing)
       setIsLoading(false);
+      return;
     }
+
+    const handleStorageChanged = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string
+    ) => {
+      if (areaName !== "local") return;
+      setSettings((previousSettings) => {
+        const nextSettings = { ...previousSettings };
+        for (const key of Object.keys(changes)) {
+          if (changes[key].newValue === undefined) {
+            delete nextSettings[key];
+          } else {
+            nextSettings[key] = changes[key].newValue;
+          }
+        }
+        return nextSettings;
+      });
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChanged);
+    chrome.storage.local.get(null, (items: Record<string, any>) => {
+      setSettings(items);
+      setIsLoading(false);
+    });
+
+    return () => chrome.storage.onChanged.removeListener(handleStorageChanged);
   }, []);
 
   const handleSectionClick = (sectionName: string) => {
     setActiveSection(sectionName);
   };
 
-  const handleFeatureToggle = (featureName: string, enabled: boolean) => {
-    // Update the nested structure that features expect
-    const newSettings = {
-      ...settings,
+  /**
+   * Apply a change to one feature's settings. Only the changed field is
+   * written, merged into the latest stored settings, so concurrent writes from
+   * content scripts aren't overwritten with this page's snapshot.
+   */
+  const updateFeatureSetting = (
+    featureName: string,
+    field: string,
+    value: any
+  ) => {
+    setSettings((previousSettings) => ({
+      ...previousSettings,
       [featureName]: {
-        ...settings[featureName],
-        enabled: enabled,
+        ...previousSettings[featureName],
+        [field]: value,
       },
-    };
-    setSettings(newSettings);
+    }));
 
-    // Save to Chrome storage in the format features expect
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      const featureSettings = {
-        ...settings[featureName],
-        enabled: enabled,
-      };
-
-      chrome.storage.local.set({
-        [featureName]: featureSettings,
+    getSettingsService()
+      ?.updateFeatureSettings(featureName, { [field]: value })
+      .catch((error) => {
+        Logger.error(`Failed to save ${featureName}.${field}:`, error);
       });
-    }
+  };
+
+  const handleFeatureToggle = (featureName: string, enabled: boolean) => {
+    updateFeatureSetting(featureName, "enabled", enabled);
   };
 
   const handleConfigurableChange = (
@@ -94,27 +123,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     configName: string,
     value: any
   ) => {
-    // Update the nested structure that features expect
-    const newSettings = {
-      ...settings,
-      [featureName]: {
-        ...settings[featureName],
-        [configName]: value,
-      },
-    };
-    setSettings(newSettings);
-
-    // Save to Chrome storage in the format features expect
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      const featureSettings = {
-        ...settings[featureName],
-        [configName]: value,
-      };
-
-      chrome.storage.local.set({
-        [featureName]: featureSettings,
-      });
-    }
+    updateFeatureSetting(featureName, configName, value);
   };
 
   const getSettingsService = (): SettingsService | null => {
@@ -131,28 +140,15 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     const settingsService = getSettingsService();
     if (!settingsService) return;
 
-    const updatedFeatureSettings = await settingsService.resetStorageItems(
-      feature
-    );
-
-    setSettings((previousSettings) => ({
-      ...previousSettings,
-      [feature.class]: updatedFeatureSettings,
-    }));
+    // Settings state picks up the reset through the storage change listener
+    await settingsService.resetStorageItems(feature);
   };
 
   const handleStorageResetAll = async () => {
     const settingsService = getSettingsService();
     if (!settingsService) return;
 
-    const updatedSettings = await settingsService.resetAllStorageItems(
-      featuresWithStorage
-    );
-
-    setSettings((previousSettings) => ({
-      ...previousSettings,
-      ...updatedSettings,
-    }));
+    await settingsService.resetAllStorageItems(featuresWithStorage);
   };
 
   const getFeaturesForSection = (section: Section): Feature[] => {

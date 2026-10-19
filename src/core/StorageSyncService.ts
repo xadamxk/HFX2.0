@@ -1,177 +1,245 @@
 import { StorageService } from "./StorageService";
+import { isQuotaError } from "./StorageAdapter";
 import { Logger } from "./Logger";
-import { Util } from "./Util";
+import { isLocalOnlyKey, withoutStorageItems } from "./constants";
 
-type StorageChangeEventAreaName = "sync" | "local" | "managed" | "session";
+type StorageChanges = { [key: string]: chrome.storage.StorageChange };
 
 // Constants for storage areas and sync operations
 const STORAGE_AREAS = {
   SYNC: "sync",
   LOCAL: "local",
-  MANAGED: "managed",
-  SESSION: "session",
 } as const;
 
+type SyncedArea = (typeof STORAGE_AREAS)[keyof typeof STORAGE_AREAS];
+
+/**
+ * Written alongside every commit so the resulting onChanged event can be
+ * recognized as our own echo. `origin` identifies this service instance, so
+ * commits made by other devices are still applied.
+ */
 const SYNC_IGNORE_KEY = "_syncIgnore";
 
 const DEFAULT_CONFIG = {
   SYNC_DELAY: 2000, // 2 seconds
   MAX_RETRIES: 3,
   RETRY_DELAY: 200, // ms
-  MIN_DELAY: 100, // minimum delay in ms
 } as const;
+
+/** chrome.storage.sync.QUOTA_BYTES_PER_ITEM */
+const SYNC_QUOTA_BYTES_PER_ITEM = 8192;
+
+/**
+ * Size of an item as chrome.storage.sync counts it: key length plus the
+ * UTF-8 length of the JSON-serialized value.
+ */
+export function getSyncItemSize(key: string, value: any): number {
+  return utf8Length(key) + utf8Length(JSON.stringify(value) ?? "");
+}
+
+function utf8Length(text: string): number {
+  let length = 0;
+  for (const char of text) {
+    const codePoint = char.codePointAt(0);
+    length +=
+      codePoint < 0x80 ? 1 : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
+  }
+  return length;
+}
+
+/**
+ * The value of a key as it should exist in the other storage area: user
+ * settings only, never cached data.
+ */
+function toSyncedValue(value: any): any {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return withoutStorageItems(value);
+  }
+  return value;
+}
 
 /**
  * StorageSyncService
  *
- * Handles synchronization between local and sync storage.
+ * Mirrors user settings between chrome.storage.local and chrome.storage.sync.
+ * Cached data (`<class>:storage`, `ges_*`) and storage item fields stay local.
+ *
+ * In an MV3 service worker, `listen()` must be called synchronously at the top
+ * level of the worker script so the listener exists every time the worker
+ * restarts.
  */
 export class StorageSyncService {
-  private timeout: NodeJS.Timeout | undefined;
-  private queuedChanges: { [key: string]: any } = {};
-  private syncDelay = DEFAULT_CONFIG.SYNC_DELAY;
-  private maxRetries = DEFAULT_CONFIG.MAX_RETRIES;
-  private retryDelay = DEFAULT_CONFIG.RETRY_DELAY;
+  private timeout: ReturnType<typeof setTimeout> | undefined;
+  private queuedChanges: StorageChanges = {};
+  private syncDelay: number = DEFAULT_CONFIG.SYNC_DELAY;
+  private maxRetries: number = DEFAULT_CONFIG.MAX_RETRIES;
+  private retryDelay: number = DEFAULT_CONFIG.RETRY_DELAY;
+  private readonly origin = `${Date.now()}-${Math.random()}`;
 
   constructor(private storage: StorageService) {}
 
-  start(): void {
-    if (Util.isServiceWorker) {
-      this.initializeLocal(() => this.keepSynced());
-    }
+  /** Register the chrome.storage.onChanged listener. */
+  listen(): void {
+    chrome.storage.onChanged.addListener(this.handleChanged);
   }
 
-  private async initializeLocal(callback: Function): Promise<void> {
-    try {
-      await this.storage.syncFromSyncToLocal();
-      callback();
-    } catch (error) {
-      Logger.error("Failed to initialize local storage from sync:", error);
-      callback();
+  /**
+   * One-time reconciliation, run on install/update. Local values win for keys
+   * present in both areas (sync may be stale); keys only in sync are pulled
+   * into local. Cached data found in sync by older versions is removed.
+   */
+  async reconcile(): Promise<void> {
+    const [localItems, syncItems] = await Promise.all([
+      this.storage.getLocalStorage().getAll(),
+      this.storage.getSyncStorage().getAll(),
+    ]);
+
+    const toLocal: { [key: string]: any } = {};
+    const toSync: { [key: string]: any } = {};
+    const removeFromSync: string[] = [];
+
+    for (const key of Object.keys(syncItems)) {
+      if (isLocalOnlyKey(key)) {
+        if (key !== SYNC_IGNORE_KEY) removeFromSync.push(key);
+      } else if (!(key in localItems)) {
+        toLocal[key] = toSyncedValue(syncItems[key]);
+      }
     }
+
+    for (const key of Object.keys(localItems)) {
+      if (isLocalOnlyKey(key)) continue;
+      const value = toSyncedValue(localItems[key]);
+      if (JSON.stringify(value) !== JSON.stringify(syncItems[key])) {
+        toSync[key] = value;
+      }
+    }
+
+    if (removeFromSync.length > 0) {
+      await this.storage.getSyncStorage().remove(removeFromSync);
+    }
+    await this.commit(STORAGE_AREAS.LOCAL, toLocal, []);
+    await this.commit(STORAGE_AREAS.SYNC, toSync, []);
   }
 
-  private keepSynced(): void {
-    if (chrome.storage.onChanged.hasListeners()) {
-      Logger.warn(
-        "Potentially starting the StorageSyncService in multiple locations."
-      );
+  private handleChanged = (changes: StorageChanges, areaName: string): void => {
+    if (areaName !== STORAGE_AREAS.LOCAL && areaName !== STORAGE_AREAS.SYNC) {
       return;
     }
 
-    chrome.storage.onChanged.addListener(
-      (
-        changes: { [key: string]: chrome.storage.StorageChange },
-        areaName: StorageChangeEventAreaName
-      ) => {
-        if (
-          changes[SYNC_IGNORE_KEY] &&
-          changes[SYNC_IGNORE_KEY].newValue.area === areaName
-        ) {
-          return;
-        }
+    if (changes[SYNC_IGNORE_KEY]?.newValue?.origin === this.origin) {
+      return;
+    }
 
-        if (areaName === STORAGE_AREAS.LOCAL) {
-          this.handleLocalChanges(changes);
-        } else {
-          this.handleSyncChanges(changes);
-        }
+    const synced: StorageChanges = {};
+    for (const key of Object.keys(changes)) {
+      if (!isLocalOnlyKey(key)) {
+        synced[key] = changes[key];
       }
-    );
-  }
+    }
+    if (Object.keys(synced).length === 0) {
+      return;
+    }
 
-  private handleLocalChanges(changes: {
-    [key: string]: chrome.storage.StorageChange;
-  }): void {
+    if (areaName === STORAGE_AREAS.LOCAL) {
+      this.queueLocalChanges(synced);
+    } else {
+      this.applyChanges(STORAGE_AREAS.LOCAL, synced);
+    }
+  };
+
+  /** Debounce local changes so bursts become a single sync write. */
+  private queueLocalChanges(changes: StorageChanges): void {
     if (this.timeout !== undefined) {
       clearTimeout(this.timeout);
     }
 
-    for (const key in changes) {
-      this.queuedChanges[key] = changes[key];
-    }
+    Object.assign(this.queuedChanges, changes);
 
     this.timeout = setTimeout(() => {
-      this.commitChanges(STORAGE_AREAS.SYNC, this.queuedChanges);
+      const queued = this.queuedChanges;
       this.queuedChanges = {};
       this.timeout = undefined;
+      this.applyChanges(STORAGE_AREAS.SYNC, queued);
     }, this.syncDelay);
   }
 
-  private handleSyncChanges(changes: {
-    [key: string]: chrome.storage.StorageChange;
-  }): void {
-    this.commitChanges(STORAGE_AREAS.LOCAL, changes);
-  }
-
-  private async commitChanges(
-    areaName: StorageChangeEventAreaName,
-    changes: { [key: string]: chrome.storage.StorageChange }
-  ): Promise<void> {
-    Logger.debug(`Committing changes to ${areaName}.`);
-
-    // Filter out sync ignore keys and build items object
+  private applyChanges(target: SyncedArea, changes: StorageChanges): void {
     const items: { [key: string]: any } = {};
-    for (const key in changes) {
-      if (key !== SYNC_IGNORE_KEY) {
-        items[key] = changes[key].newValue;
+    const removed: string[] = [];
+    for (const key of Object.keys(changes)) {
+      if (changes[key].newValue === undefined) {
+        removed.push(key);
+      } else {
+        items[key] = toSyncedValue(changes[key].newValue);
       }
     }
 
-    // Only proceed if there are actual changes to sync
-    if (Object.keys(items).length === 0) {
-      return;
-    }
-
-    // Add sync ignore marker to prevent infinite loops
-    items[SYNC_IGNORE_KEY] = { area: areaName, rand: Math.random() };
-
-    await this.commitWithRetry(areaName, items, 0);
+    this.commit(target, items, removed).catch((error) => {
+      Logger.error(`Failed to sync changes to ${target}:`, error);
+    });
   }
 
-  private async commitWithRetry(
-    areaName: StorageChangeEventAreaName,
+  /**
+   * Write `items` to and remove `removed` from the target area. Rejects with
+   * the storage error (e.g. a quota error) once retries are exhausted.
+   */
+  async commit(
+    target: SyncedArea,
     items: { [key: string]: any },
-    attempt: number
+    removed: string[]
+  ): Promise<void> {
+    const area =
+      target === STORAGE_AREAS.SYNC
+        ? this.storage.getSyncStorage()
+        : this.storage.getLocalStorage();
+
+    const writes: { [key: string]: any } = {};
+    for (const key of Object.keys(items)) {
+      if (target === STORAGE_AREAS.SYNC) {
+        const size = getSyncItemSize(key, items[key]);
+        if (size > SYNC_QUOTA_BYTES_PER_ITEM) {
+          Logger.error(
+            `Not syncing "${key}": ${size} bytes exceeds the ${SYNC_QUOTA_BYTES_PER_ITEM} byte sync item limit.`
+          );
+          continue;
+        }
+      }
+      writes[key] = items[key];
+    }
+
+    if (removed.length > 0) {
+      await this.withRetry(target, () => area.remove(removed));
+    }
+
+    if (Object.keys(writes).length > 0) {
+      // Marks the resulting onChanged event as our own echo
+      writes[SYNC_IGNORE_KEY] = { origin: this.origin, rand: Math.random() };
+      await this.withRetry(target, () => area.setAll(writes));
+      Logger.debug(`Committed ${Object.keys(writes).length - 1} item(s) to ${target}.`);
+    }
+  }
+
+  private async withRetry(
+    target: SyncedArea,
+    operation: () => Promise<void>,
+    attempt: number = 0
   ): Promise<void> {
     try {
-      if (areaName === STORAGE_AREAS.SYNC) {
-        // We're committing local changes TO sync storage
-        // Set the items directly in sync storage with the ignore marker
-        await this.storage.getSyncStorage().setAll(items);
-      } else {
-        // We're committing sync changes TO local storage
-        // Set the items directly in local storage with the ignore marker
-        await this.storage.getLocalStorage().setAll(items);
+      await operation();
+    } catch (error) {
+      if (isQuotaError(error) || attempt >= this.maxRetries - 1) {
+        throw error;
       }
 
-      Logger.debug(
-        `Successfully committed changes to ${areaName} on attempt ${
-          attempt + 1
-        }`
-      );
-    } catch (error) {
-      Logger.error(
-        `Failed to commit changes to ${areaName} on attempt ${attempt + 1}:`,
+      const delay = this.retryDelay * Math.pow(2, attempt); // Exponential backoff
+      Logger.warn(
+        `Commit to ${target} failed (attempt ${attempt + 1}/${
+          this.maxRetries
+        }), retrying in ${delay}ms:`,
         error
       );
-
-      if (attempt < this.maxRetries - 1) {
-        const delay = this.retryDelay * Math.pow(2, attempt); // Exponential backoff
-        Logger.debug(
-          `Retrying commit to ${areaName} in ${delay}ms (attempt ${
-            attempt + 2
-          }/${this.maxRetries})`
-        );
-
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        return this.commitWithRetry(areaName, items, attempt + 1);
-      } else {
-        Logger.error(
-          `Failed to commit changes to ${areaName} after ${this.maxRetries} attempts. Giving up.`
-        );
-        // Could implement a dead letter queue or notification system here
-      }
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return this.withRetry(target, operation, attempt + 1);
     }
   }
 }

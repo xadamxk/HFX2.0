@@ -1,12 +1,7 @@
 export class Util {
   static isServiceWorker() {
-    return (
-      chrome !== undefined &&
-      chrome.runtime !== undefined &&
-      chrome.runtime.getManifest !== undefined &&
-      chrome.runtime.getManifest() !== undefined &&
-      chrome.runtime.getManifest()?.name === "Service Worker"
-    );
+    const scope = (globalThis as any).ServiceWorkerGlobalScope;
+    return typeof scope === "function" && globalThis instanceof scope;
   }
 
   static isPopup() {

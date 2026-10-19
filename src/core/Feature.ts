@@ -1,4 +1,4 @@
-import { Logger } from "./Logger";
+import { Logger, ScopedLogger } from "./Logger";
 import { Section } from "./Section";
 import { SettingsService } from "./SettingsService";
 import { StorageService } from "./StorageService";
@@ -51,6 +51,7 @@ export class Feature {
   configurables?: Configurable[];
   storageItems?: StorageItemOption<unknown>[];
   additionalSections?: SectionArray;
+  readonly logger: ScopedLogger;
 
   protected settingsService: SettingsService;
   protected selectorManager: SelectorManager;
@@ -71,26 +72,44 @@ export class Feature {
     this.selectorManager = SelectorManager.getInstance();
     this.settingsService = new SettingsService(new StorageService());
     this.additionalSections = options.additionalSections;
+    this.logger = Logger.scope(this.class);
   }
 
-  async start() {
-    const settings: { [key: string]: any } = await this.initializeSettings();
-    Logger.debug(`${this.name} loaded.`);
-    Logger.debug(`Settings: ${JSON.stringify(settings)}`);
+  /**
+   * Run the feature if it is enabled and runnable on the current page.
+   * @param settings - Initialized settings from initializeSettings()
+   * @returns Whether the feature ran
+   */
+  start(settings: { [key: string]: any }): boolean {
+    this.logger.debug("Loaded.");
+    this.logger.debug(`Settings: ${JSON.stringify(settings)}`);
 
     if (settings?.enabled && this.runnable()) {
-      Logger.debug(`${this.name} running.`);
+      this.logger.debug("Running.");
       this.run(settings, this.runnableSection());
       return true;
     }
     return false;
   }
 
-  async initializeSettings(): Promise<{ [key: string]: any }> {
-    // TODO: Rather than getting settings for each feature here, we should just get all settings in FeatureManager (or other higher level service)
-    // then pass settings for features in feature.start() => initializeSettings()
-    const settings = await this.settingsService.getFeatureSettings(this);
-    return await this.settingsService.initializeFeatureSettings(this, settings);
+  /**
+   * Fill in missing defaults for this feature's settings, persisting them if needed.
+   * @param storedSettings - Settings already read from storage (undefined if never saved)
+   * @param storedStorage - Storage items already read from storage (undefined if never saved)
+   */
+  async initializeSettings(
+    storedSettings: { [key: string]: any } | undefined,
+    storedStorage?: { [key: string]: any }
+  ): Promise<{ [key: string]: any }> {
+    this.settingsService.primeFeatureSettings(
+      this,
+      storedSettings,
+      storedStorage
+    );
+    return await this.settingsService.initializeFeatureSettings(
+      this,
+      storedSettings
+    );
   }
 
   run(settings: any, runnableSection: any) {

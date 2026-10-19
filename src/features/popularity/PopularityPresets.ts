@@ -186,19 +186,24 @@ class PopularityPresets extends Feature {
       }
     };
 
-    // The modal container may be added before its inner content; observe until select appears
-    const innerObserver = new MutationObserver(() => {
+    const tryMount = (): boolean => {
       const target = findReputationSelect();
-      if (target) {
-        const maxValue = target?.options[0].value;
-        const minValue = target?.options[target.options.length - 1].value;
-        const reputationReasonInput = target
-          ?.closest("form")
-          ?.querySelector("input[name='comments']") as HTMLInputElement;
+      const reputationReasonInput = target
+        ?.closest("form")
+        ?.querySelector<HTMLInputElement>("input[name='comments']");
+      if (!target?.options.length || !reputationReasonInput) return false;
 
-        innerObserver.disconnect();
-        mountDropdown(target, reputationReasonInput, maxValue, minValue);
-      }
+      const maxValue = target.options[0].value;
+      const minValue = target.options[target.options.length - 1].value;
+      mountDropdown(target, reputationReasonInput, maxValue, minValue);
+      return true;
+    };
+
+    // The modal may arrive fully rendered, or its content may load after the container
+    if (tryMount()) return;
+
+    const innerObserver = new MutationObserver(() => {
+      if (tryMount()) innerObserver.disconnect();
     });
     innerObserver.observe(modalRoot, { childList: true, subtree: true });
   }

@@ -34,15 +34,47 @@ export class SettingsService {
   }
 
   /**
+   * Get stored settings for many features in a single storage read. The
+   * result is keyed by feature class (user settings) and, for features with
+   * storage items, by `<class>:storage` (cached data). Keys that have never
+   * been written are absent from the result.
+   */
+  async getFeatureSettingsBatch(
+    features: Feature[]
+  ): Promise<{ [key: string]: any }> {
+    const keys: string[] = [];
+    features.forEach((feature) => {
+      keys.push(feature.class);
+      if (feature.storageItems?.length) {
+        keys.push(getFeatureStorageKey(feature.class));
+      }
+    });
+    return await this.storage.getMany(keys);
+  }
+
+  /**
+   * Cache values read elsewhere (e.g. via getFeatureSettingsBatch) so later
+   * reads for this feature skip storage. Writes always re-read storage, so a
+   * primed value can't be written back over a newer one.
+   */
+  primeFeatureSettings(
+    feature: Feature,
+    settings: any,
+    storage?: { [key: string]: any }
+  ): void {
+    this.storage.prime(feature.class, settings);
+    if (feature.storageItems?.length) {
+      this.storage.prime(getFeatureStorageKey(feature.class), storage);
+    }
+  }
+
+  /**
    * Replace the user settings (enabled flag and configurables) for a feature.
    * Storage items are ignored; use setStorageItem for those.
    */
   async setFeatureSettings(feature: Feature, settings: any): Promise<void> {
-    await this.storage.set(
-      feature.class,
-      withoutStorageItems(settings)
-    );
-    Logger.debug(`Updated settings for ${feature.class}.`);
+    await this.storage.set(feature.class, withoutStorageItems(settings));
+    feature.logger.debug("Updated settings.");
   }
 
   /**
@@ -81,7 +113,10 @@ export class SettingsService {
     const hasLegacyStorage = Object.keys(legacyStorage).length > 0;
 
     // Storage items first, so legacy values are copied before they are stripped
-    let storage = await this.getFeatureStorage(feature);
+    let storage =
+      feature.storageItems?.length || hasLegacyStorage
+        ? await this.getFeatureStorage(feature)
+        : undefined;
     if (hasLegacyStorage || this.hasMissingStorageItems(feature, storage)) {
       storage = await this.storage.update<SettingsObject>(
         getFeatureStorageKey(feature.class),
@@ -104,7 +139,7 @@ export class SettingsService {
             withoutStorageItems(current)
           )
       );
-      Logger.debug(`Updated settings for ${feature.class}.`);
+      feature.logger.debug("Updated settings.");
     }
 
     return { ...settings, ...(storage ?? {}) };
@@ -222,7 +257,7 @@ export class SettingsService {
           ? withoutStorageItems(current)
           : current
     );
-    Logger.debug(`Reset storage items for ${feature.class}.`);
+    feature.logger.debug("Reset storage items.");
     return defaults;
   }
 

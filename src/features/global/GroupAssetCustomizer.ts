@@ -121,7 +121,7 @@ class GroupAssetCustomizer extends Feature {
       });
     }
 
-    if (revertCustomStars) {
+    if (revertCustomStars || revertCustomGroupStyles) {
       this.checkPosts(revertCustomStars, revertCustomGroupStyles);
     }
 

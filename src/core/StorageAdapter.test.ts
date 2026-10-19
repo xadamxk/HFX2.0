@@ -29,6 +29,7 @@ describe("StorageAdapter", () => {
 
   it.each([
     ["get", (adapter: StorageAdapter) => adapter.get("a")],
+    ["getMany", (adapter: StorageAdapter) => adapter.getMany(["a", "b"])],
     ["getAll", (adapter: StorageAdapter) => adapter.getAll()],
     ["set", (adapter: StorageAdapter) => adapter.set("a", 1)],
     ["setAll", (adapter: StorageAdapter) => adapter.setAll({ a: 1 })],

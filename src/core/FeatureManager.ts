@@ -1,6 +1,9 @@
 import { Feature } from "./Feature";
 import { Logger } from "./Logger";
 import SelectorManager from "./SelectorManager";
+import { SettingsService } from "./SettingsService";
+import { StorageService } from "./StorageService";
+import { getFeatureStorageKey } from "./constants";
 
 export interface LoadedFeature {
   feature: string;
@@ -20,37 +23,36 @@ export class FeatureManager {
 
   private featureLoadingResults: LoadedFeature[] = [];
 
+  private settingsService = new SettingsService(new StorageService());
+
   public async loadFeatures(features: Feature[]): Promise<void> {
-    // Load features sequentially to maintain proper logging group nesting
-    // TODO: Make this parallel, requires refactoring how logger is passed down to keep logs grouped
-    Logger.time(this.LOAD_FEATURES_TIMER_LABEL);
-    for (const feature of features) {
-      const now = new Date();
-      try {
-        Logger.groupCollapsed(`Feature: ${feature.class}`);
-        const featureStarted = await feature.start();
-        this.featureLoadingResults.push({
-          feature: feature.name,
-          loaded: true,
-          running: featureStarted,
-          duration_ms: new Date().getTime() - now.getTime(),
-          error: undefined,
-        });
-        Logger.groupEnd();
-      } catch (error) {
-        Logger.error(`Error loading feature: ${error.message}`);
-        this.featureLoadingResults.push({
-          feature: feature.name,
-          loaded: false,
-          running: false,
-          duration_ms: new Date().getTime() - now.getTime(),
-          error: error?.message || "Unknown error",
-          context: error?.stack || "Unknown error stack",
-        });
-        Logger.groupEnd();
-      }
-    }
-    Logger.timeEnd(this.LOAD_FEATURES_TIMER_LABEL);
+    const loadStart = performance.now();
+
+    // Buffer each feature's logs so parallel loading doesn't interleave them
+    features.forEach((feature) => feature.logger.startBuffering());
+
+    const storedSettings = await this.settingsService.getFeatureSettingsBatch(
+      features
+    );
+
+    this.featureLoadingResults = await Promise.all(
+      features.map((feature) =>
+        this.loadFeature(
+          feature,
+          storedSettings[feature.class],
+          storedSettings[getFeatureStorageKey(feature.class)]
+        )
+      )
+    );
+    const loadDuration = performance.now() - loadStart;
+
+    // Print buffered logs as one group per feature, in a stable order
+    features.forEach((feature) =>
+      feature.logger.flush(`Feature: ${feature.class}`)
+    );
+    Logger.log(
+      `${this.LOAD_FEATURES_TIMER_LABEL}: ${loadDuration.toFixed(1)} ms`
+    );
 
     // After loading all features, consult SelectorManager to decide if toast should be shown
     const selectorManager = SelectorManager.getInstance();
@@ -72,6 +74,48 @@ export class FeatureManager {
     if (await selectorManager.shouldShowToast()) {
       // TODO: Do we want error feedback on HF or not? Selectors rarely break.
     }
+  }
+
+  /**
+   * Initialize settings and start a single feature.
+   * duration_ms covers the feature's synchronous start/run work, not the time
+   * spent waiting on storage or on other features loading in parallel.
+   */
+  private async loadFeature(
+    feature: Feature,
+    storedSettings: { [key: string]: any } | undefined,
+    storedStorage: { [key: string]: any } | undefined
+  ): Promise<LoadedFeature> {
+    let runStart: number | undefined;
+    try {
+      const settings = await feature.initializeSettings(
+        storedSettings,
+        storedStorage
+      );
+      runStart = performance.now();
+      const running = feature.start(settings);
+      return {
+        feature: feature.name,
+        loaded: true,
+        running,
+        duration_ms: this.elapsedSince(runStart),
+        error: undefined,
+      };
+    } catch (error) {
+      feature.logger.error(`Error loading feature: ${error?.message}`);
+      return {
+        feature: feature.name,
+        loaded: false,
+        running: false,
+        duration_ms: runStart === undefined ? 0 : this.elapsedSince(runStart),
+        error: error?.message || "Unknown error",
+        context: error?.stack || "Unknown error stack",
+      };
+    }
+  }
+
+  private elapsedSince(start: number): number {
+    return Math.round((performance.now() - start) * 100) / 100;
   }
 
   /**

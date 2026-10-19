@@ -15,6 +15,14 @@ export class MemoryStorage implements StorageInterface {
     return copy(this.items[key]);
   }
 
+  async getMany(keys: string[]): Promise<{ [key: string]: any }> {
+    const result: { [key: string]: any } = {};
+    for (const key of keys) {
+      if (key in this.items) result[key] = copy(this.items[key]);
+    }
+    return result;
+  }
+
   async set(key: string, value: any): Promise<void> {
     this.items[key] = copy(value);
   }

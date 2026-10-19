@@ -48,6 +48,29 @@ export class StorageService {
     return value;
   }
 
+  /**
+   * Read several keys in a single storage call. Missing keys are cached as
+   * undefined, matching get().
+   */
+  async getMany(keys: string[]): Promise<{ [key: string]: any }> {
+    const values = await this.localStorage.getMany(keys);
+
+    if (this.cacheEnabled) {
+      keys.forEach((key) => this.cache.set(key, values[key]));
+    }
+
+    return values;
+  }
+
+  /**
+   * Seed the cache with a value read elsewhere so later get() calls skip storage.
+   */
+  prime(key: string, value: any): void {
+    if (this.cacheEnabled) {
+      this.cache.set(key, value);
+    }
+  }
+
   async set(key: string, value: any): Promise<void> {
     await this.localStorage.set(key, value);
 

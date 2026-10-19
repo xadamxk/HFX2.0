@@ -11,6 +11,13 @@ const feature = {
     { id: "cache", description: "Cache", defaultValue: { entries: [] } },
     { id: "lastFetch", description: "Last fetch", defaultValue: 0 },
   ],
+  logger: { debug: jest.fn() },
+} as unknown as Feature;
+
+const plainFeature = {
+  class: "PlainFeature",
+  enabled: false,
+  logger: { debug: jest.fn() },
 } as unknown as Feature;
 
 describe("SettingsService", () => {
@@ -100,6 +107,74 @@ describe("SettingsService", () => {
       });
 
       expect(local.items.TestFeature).toEqual({ enabled: false, color: "blue" });
+    });
+  });
+
+  describe("getFeatureSettingsBatch", () => {
+    it("reads settings and storage keys in one call and primes both", async () => {
+      local.items = {
+        TestFeature: { enabled: true, color: "red" },
+        "TestFeature:storage": { storage_cache: {}, storage_lastFetch: 1 },
+        PlainFeature: { enabled: true },
+      };
+      const getMany = jest.spyOn(local, "getMany");
+      const get = jest.spyOn(local, "get");
+
+      const stored = await settingsService.getFeatureSettingsBatch([
+        feature,
+        plainFeature,
+      ]);
+      expect(getMany).toHaveBeenCalledTimes(1);
+      expect(getMany).toHaveBeenCalledWith([
+        "TestFeature",
+        "TestFeature:storage",
+        "PlainFeature",
+      ]);
+
+      // A feature's own service primed from the batch needs no further reads
+      const featureService = new SettingsService(
+        new StorageService(local, new MemoryStorage())
+      );
+      featureService.primeFeatureSettings(
+        feature,
+        stored.TestFeature,
+        stored["TestFeature:storage"]
+      );
+      const settings = await featureService.initializeFeatureSettings(
+        feature,
+        stored.TestFeature
+      );
+      featureService.primeFeatureSettings(plainFeature, stored.PlainFeature);
+      await featureService.initializeFeatureSettings(
+        plainFeature,
+        stored.PlainFeature
+      );
+
+      expect(get).not.toHaveBeenCalled();
+      expect(settings).toEqual({
+        enabled: true,
+        color: "red",
+        storage_cache: {},
+        storage_lastFetch: 1,
+      });
+    });
+
+    it("primed values never overwrite newer stored data on write", async () => {
+      local.items = { "TestFeature:storage": { storage_cache: "old" } };
+      settingsService.primeFeatureSettings(feature, {}, {
+        storage_cache: "old",
+      });
+      local.items["TestFeature:storage"] = {
+        storage_cache: "old",
+        storage_lastFetch: 7,
+      };
+
+      await settingsService.setStorageItem(feature, "cache", "new");
+
+      expect(local.items["TestFeature:storage"]).toEqual({
+        storage_cache: "new",
+        storage_lastFetch: 7,
+      });
     });
   });
 

@@ -1,5 +1,4 @@
 import { Feature } from "../../core/Feature";
-import { Logger } from "../../core/Logger";
 import { Util } from "../../core/Util";
 import HFX from "../../sections/HFX";
 
@@ -53,7 +52,7 @@ class HFXBadges extends Feature {
         : this.fetchDelay;
 
     if (timePassed < this.fetchDelay) {
-      Logger.debug(
+      this.logger.debug(
         `Badges: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`
       );
 
@@ -96,7 +95,7 @@ class HFXBadges extends Feature {
         })
         .catch((err) => {
           console.log(err);
-          Logger.error("Failed to fetch badge data.");
+          this.logger.error("Failed to fetch badge data.");
         });
     }
   }

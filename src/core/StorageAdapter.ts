@@ -1,6 +1,7 @@
 // Storage abstraction interface
 export interface StorageInterface {
   get(key: string): Promise<any>;
+  getMany(keys: string[]): Promise<{ [key: string]: any }>;
   set(key: string, value: any): Promise<void>;
   setAll(items: { [key: string]: any }): Promise<void>;
   remove(keys: string | string[]): Promise<void>;
@@ -33,6 +34,13 @@ export class StorageAdapter implements StorageInterface {
       this.storageArea.get(key, callback)
     );
     return result?.[key];
+  }
+
+  async getMany(keys: string[]): Promise<{ [key: string]: any }> {
+    const result = await this.call<{ [key: string]: any }>((callback) =>
+      this.storageArea.get(keys, callback)
+    );
+    return result ?? {};
   }
 
   async set(key: string, value: any): Promise<void> {

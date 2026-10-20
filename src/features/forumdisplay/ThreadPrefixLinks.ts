@@ -4,6 +4,7 @@ import ForumDisplay from "../../sections/ForumDisplay";
 class ThreadPrefixLinks extends Feature {
   constructor() {
     super({
+      id: "ThreadPrefixLinks",
       section: ForumDisplay,
       name: "Thread Prefix Links",
       enabled: true,

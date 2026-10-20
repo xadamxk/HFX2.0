@@ -4,6 +4,7 @@ import ForumDisplay from "../../sections/ForumDisplay";
 class HideClosedThreads extends Feature {
   constructor() {
     super({
+      id: "HideClosedThreads",
       section: ForumDisplay,
       name: "Hide Closed Threads",
       enabled: false,

@@ -5,6 +5,7 @@ import ForumDisplay from "../../sections/ForumDisplay";
 class SearchYourThreads extends Feature {
   constructor() {
     super({
+      id: "SearchYourThreads",
       section: ForumDisplay,
       name: "Search Your Threads",
       enabled: true,

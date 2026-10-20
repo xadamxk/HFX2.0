@@ -7,6 +7,7 @@ import Threads from "../../sections/Threads";
 class PMFromPost extends Feature {
   constructor() {
     super({
+      id: "PMFromPost",
       section: Threads,
       name: "PM From Post",
       enabled: true,

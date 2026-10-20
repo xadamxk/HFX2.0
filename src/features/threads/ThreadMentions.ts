@@ -6,6 +6,7 @@ import Threads from "../../sections/Threads";
 class ThreadMentions extends Feature {
   constructor() {
     super({
+      id: "ThreadMentions",
       section: Threads,
       name: "Thread Mentions",
       enabled: true,

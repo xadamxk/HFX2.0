@@ -10,4 +10,6 @@ async function initializeAndLoadFeatures(): Promise<void> {
   featureManager.getFeatureReport();
 }
 
-initializeAndLoadFeatures();
+initializeAndLoadFeatures().catch((error) =>
+  Logger.error(`Error loading features: ${error?.message}`, error)
+);

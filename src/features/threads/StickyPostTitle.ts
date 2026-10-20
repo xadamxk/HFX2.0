@@ -5,6 +5,7 @@ import Threads from "../../sections/Threads";
 class StickyPostTitle extends Feature {
   constructor() {
     super({
+      id: "StickyPostTitle",
       section: Threads,
       name: "Sticky Post Title",
       description: "Makes the thread title sticky when scrolling.",

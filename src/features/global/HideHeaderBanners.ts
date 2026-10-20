@@ -10,6 +10,7 @@ enum STORAGE_KEYS {
 class HideHeaderBanners extends Feature {
   constructor() {
     super({
+      id: "HideHeaderBanners",
       section: Global,
       name: "Hide Header Banners",
       enabled: true,

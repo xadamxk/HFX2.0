@@ -30,6 +30,7 @@ const KNOWN_GROUPS = {
 class WhosOnlineSorting extends Feature {
   constructor() {
     super({
+      id: "WhosOnlineSorting",
       section: Global,
       name: "Whos Online Sorting",
       enabled: true,

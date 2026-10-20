@@ -8,7 +8,7 @@ const runnableSection = { runnable: () => true } as unknown as Section;
 
 class AsyncFeature extends Feature {
   constructor(name: string, private delayMs: number) {
-    super({ section: runnableSection, name, description: "" });
+    super({ id: name, section: runnableSection, name, description: "" });
   }
 
   async run() {
@@ -20,7 +20,12 @@ class AsyncFeature extends Feature {
 
 class ThrowingFeature extends Feature {
   constructor() {
-    super({ section: runnableSection, name: "Throws", description: "" });
+    super({
+      id: "Throws",
+      section: runnableSection,
+      name: "Throws",
+      description: "",
+    });
   }
 
   run() {
@@ -28,9 +33,30 @@ class ThrowingFeature extends Feature {
   }
 }
 
+class RejectingFeature extends Feature {
+  constructor() {
+    super({
+      id: "Rejects",
+      section: runnableSection,
+      name: "Rejects",
+      description: "",
+    });
+  }
+
+  async run() {
+    await Promise.resolve();
+    throw new Error("async boom");
+  }
+}
+
 class MissingSelectorFeature extends Feature {
   constructor() {
-    super({ section: runnableSection, name: "Missing", description: "" });
+    super({
+      id: "Missing",
+      section: runnableSection,
+      name: "Missing",
+      description: "",
+    });
   }
 
   run() {
@@ -123,6 +149,30 @@ describe("FeatureManager.loadFeatures", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(console.log).toHaveBeenLastCalledWith("[GES] [First] after await");
+  });
+
+  it("logs a rejected async run() and records it in the loading summary", async () => {
+    store.Rejects = { enabled: true };
+    const manager = new FeatureManager();
+
+    await manager.loadFeatures([new RejectingFeature()]);
+    manager.getFeatureReport();
+
+    expect(console.error).toHaveBeenCalledWith(
+      "[GES] [Rejects] Error running feature: async boom",
+      expect.any(Error)
+    );
+    expect(console.table).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          feature: "Rejects",
+          loaded: true,
+          running: true,
+          error: "async boom",
+        }),
+      ],
+      expect.any(Array)
+    );
   });
 
   it("saves the page's selector errors in one write after loading", async () => {

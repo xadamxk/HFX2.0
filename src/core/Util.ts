@@ -16,14 +16,12 @@ export class Util {
     );
   }
 
-  static isDevelopment() {
-    return (
-      chrome !== undefined &&
-      chrome.runtime !== undefined &&
-      chrome.runtime.getManifest !== undefined &&
-      chrome.runtime.getManifest() !== undefined &&
-      !chrome.runtime.getManifest()?.update_url
-    );
+  /**
+   * Whether this is a development build (`npm run dev`). Set at build time by
+   * webpack's DefinePlugin; false when the flag isn't defined (e.g. under ts-node).
+   */
+  static isDevelopment(): boolean {
+    return typeof __HFX_DEV__ !== "undefined" && __HFX_DEV__;
   }
 
   static getVersion() {

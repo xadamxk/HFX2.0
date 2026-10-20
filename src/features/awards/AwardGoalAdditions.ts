@@ -6,6 +6,7 @@ import Awards from "../../sections/Awards";
 class AwardGoalAdditions extends Feature {
   constructor() {
     super({
+      id: "AwardGoalAdditions",
       section: Awards,
       name: "Award Goal Additions",
       enabled: true,

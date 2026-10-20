@@ -21,6 +21,7 @@ interface AssetGroup {
 class GroupAssetCustomizer extends Feature {
   constructor() {
     super({
+      id: "GroupAssetCustomizer",
       section: Global,
       name: "Group Asset Customizer",
       enabled: true,

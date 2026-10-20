@@ -4,6 +4,7 @@ import Threads from "../../sections/Threads";
 class ExpandIgnoredPosts extends Feature {
   constructor() {
     super({
+      id: "ExpandIgnoredPosts",
       section: Threads,
       name: "Expand Ignored Posts",
       enabled: false,

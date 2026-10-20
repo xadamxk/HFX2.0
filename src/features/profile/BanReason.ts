@@ -46,6 +46,7 @@ const ENTRY_MAX_AGE_MS = 180 * 24 * 60 * 60 * 1000;
 class BanReason extends Feature {
   constructor() {
     super({
+      id: "BanReason",
       section: Profile,
       name: "Ban Reason",
       enabled: true,

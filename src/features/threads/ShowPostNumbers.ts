@@ -5,6 +5,7 @@ import Threads from "../../sections/Threads";
 class ShowPostNumbers extends Feature {
   constructor() {
     super({
+      id: "ShowPostNumbers",
       section: Threads,
       name: "Show Post Numbers",
       enabled: true,

@@ -5,6 +5,7 @@ import Profile from "../../sections/Profile";
 class ExpandProfileSections extends Feature {
   constructor() {
     super({
+      id: "ExpandProfileSections",
       section: Profile,
       name: "Expand Profile Sections",
       enabled: true,

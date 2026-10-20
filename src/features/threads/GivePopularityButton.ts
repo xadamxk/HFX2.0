@@ -4,6 +4,7 @@ import Threads from "../../sections/Threads";
 class GivePopularityButton extends Feature {
   constructor() {
     super({
+      id: "GivePopularityButton",
       section: Threads,
       name: "Give Popularity Button",
       enabled: true,

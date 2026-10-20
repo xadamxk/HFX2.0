@@ -8,6 +8,7 @@ import Global from "../../sections/Global";
 class HFToolbar extends Feature {
   constructor() {
     super({
+      id: "Toolbar",
       section: Global,
       name: "Toolbar",
       enabled: true,

@@ -4,6 +4,7 @@ import Profile from "../../sections/Profile";
 class ExpandProfileShortcuts extends Feature {
   constructor() {
     super({
+      id: "ExpandProfileShortcuts",
       section: Profile,
       name: "Expand Profile Shortcuts",
       enabled: true,

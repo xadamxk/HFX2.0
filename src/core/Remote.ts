@@ -81,7 +81,7 @@ function asCachedValue<T>(stored: unknown): CachedValue<T> | undefined {
 
 function getDefaultSettingsService(): SettingsService {
   if (!defaultSettingsService) {
-    defaultSettingsService = new SettingsService(new StorageService());
+    defaultSettingsService = new SettingsService(StorageService.getInstance());
   }
   return defaultSettingsService;
 }

@@ -58,10 +58,9 @@ describe("HFXAlerts", () => {
   it("fetches and shows the alert on the first page load after a reset", async () => {
     local.items = { [HFXAlerts.class]: { enabled: true } };
     await settingsService.resetStorageItems(HFXAlerts);
-    const settings = await settingsService.initializeFeatureSettings(
-      HFXAlerts,
-      local.items[HFXAlerts.class]
-    );
+    const settings = (
+      await settingsService.initializeFeatureSettings([HFXAlerts])
+    )[HFXAlerts.class];
 
     HFXAlerts.run(settings);
     await flushPromises();

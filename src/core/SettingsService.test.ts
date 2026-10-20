@@ -82,10 +82,7 @@ describe("SettingsService", () => {
 
     it("never touches user settings written by another context", async () => {
       local.items = { TestFeature: { enabled: true, color: "red" } };
-      await settingsService.initializeFeatureSettings(
-        feature,
-        await settingsService.getFeatureSettings(feature)
-      );
+      await settingsService.initializeFeatureSettings([feature]);
 
       // The popup turns the feature off after this page loaded
       local.items.TestFeature = { enabled: false, color: "red" };
@@ -130,8 +127,8 @@ describe("SettingsService", () => {
     });
   });
 
-  describe("getFeatureSettingsBatch", () => {
-    it("reads settings and storage keys in one call and primes both", async () => {
+  describe("initializeFeatureSettings", () => {
+    it("reads every feature in one call and later reads come from the cache", async () => {
       local.items = {
         TestFeature: { enabled: true, color: "red" },
         "TestFeature:storage": { storage_cache: {}, storage_lastFetch: 1 },
@@ -140,7 +137,7 @@ describe("SettingsService", () => {
       const getMany = jest.spyOn(local, "getMany");
       const get = jest.spyOn(local, "get");
 
-      const stored = await settingsService.getFeatureSettingsBatch([
+      const initialized = await settingsService.initializeFeatureSettings([
         feature,
         plainFeature,
       ]);
@@ -150,60 +147,59 @@ describe("SettingsService", () => {
         "TestFeature:storage",
         "PlainFeature",
       ]);
+      expect(initialized).toEqual({
+        TestFeature: {
+          enabled: true,
+          color: "red",
+          storage_cache: {},
+          storage_lastFetch: 1,
+        },
+        PlainFeature: { enabled: true },
+      });
 
-      // A feature's own service primed from the batch needs no further reads
-      const featureService = new SettingsService(
-        new StorageService(local, new MemoryStorage())
-      );
-      featureService.primeFeatureSettings(
-        feature,
-        stored.TestFeature,
-        stored["TestFeature:storage"]
-      );
-      const settings = await featureService.initializeFeatureSettings(
-        feature,
-        stored.TestFeature
-      );
-      featureService.primeFeatureSettings(plainFeature, stored.PlainFeature);
-      await featureService.initializeFeatureSettings(
-        plainFeature,
-        stored.PlainFeature
-      );
-
+      // Another feature's service shares the same StorageService cache
+      await new SettingsService(storage).getStorageItem(feature, "lastFetch");
       expect(get).not.toHaveBeenCalled();
-      expect(settings).toEqual({
-        enabled: true,
-        color: "red",
-        storage_cache: {},
-        storage_lastFetch: 1,
-      });
     });
 
-    it("primed values never overwrite newer stored data on write", async () => {
-      local.items = { "TestFeature:storage": { storage_cache: "old" } };
-      settingsService.primeFeatureSettings(feature, {}, {
-        storage_cache: "old",
-      });
-      local.items["TestFeature:storage"] = {
-        storage_cache: "old",
-        storage_lastFetch: 7,
-      };
+    it("writes every feature's missing defaults with one setAll", async () => {
+      local.items = { PlainFeature: { enabled: true } };
+      const set = jest.spyOn(local, "set");
+      const setAll = jest.spyOn(local, "setAll");
 
-      await settingsService.setStorageItem(feature, "cache", "new");
-
-      expect(local.items["TestFeature:storage"]).toEqual({
-        storage_cache: "new",
-        storage_lastFetch: 7,
-      });
-    });
-  });
-
-  describe("initializeFeatureSettings", () => {
-    it("creates defaults under separate settings and storage keys", async () => {
-      const settings = await settingsService.initializeFeatureSettings(
+      await settingsService.initializeFeatureSettings([
         feature,
-        undefined
-      );
+        plainFeature,
+        { ...plainFeature, class: "OtherFeature" } as Feature,
+      ]);
+
+      expect(set).not.toHaveBeenCalled();
+      expect(setAll).toHaveBeenCalledTimes(1);
+      expect(setAll).toHaveBeenCalledWith({
+        TestFeature: { enabled: true, color: "red" },
+        "TestFeature:storage": {
+          storage_cache: { entries: [] },
+          storage_lastFetch: 0,
+        },
+        OtherFeature: { enabled: false },
+      });
+      expect(local.items.PlainFeature).toEqual({ enabled: true });
+    });
+
+    it("merges defaults into the latest stored value, not the cache", async () => {
+      local.items = { TestFeature: { enabled: true } };
+      await settingsService.getFeatureSettings(feature);
+      // The popup turns the feature off after the cache was filled
+      local.items.TestFeature = { enabled: false };
+
+      await settingsService.initializeFeatureSettings([feature]);
+
+      expect(local.items.TestFeature).toEqual({ enabled: false, color: "red" });
+    });
+
+    it("creates defaults under separate settings and storage keys", async () => {
+      const { TestFeature: settings } =
+        await settingsService.initializeFeatureSettings([feature]);
 
       expect(local.items.TestFeature).toEqual({ enabled: true, color: "red" });
       expect(local.items["TestFeature:storage"]).toEqual({
@@ -228,10 +224,8 @@ describe("SettingsService", () => {
         },
       };
 
-      const settings = await settingsService.initializeFeatureSettings(
-        feature,
-        await settingsService.getFeatureSettings(feature)
-      );
+      const { TestFeature: settings } =
+        await settingsService.initializeFeatureSettings([feature]);
 
       expect(local.items.TestFeature).toEqual({ enabled: false, color: "blue" });
       expect(local.items["TestFeature:storage"]).toEqual({
@@ -246,19 +240,58 @@ describe("SettingsService", () => {
       });
     });
 
+    it("fills in storage items added since the migration", async () => {
+      local.items = {
+        TestFeature: { enabled: false, color: "blue" },
+        "TestFeature:storage": { storage_cache: { entries: [3] } },
+      };
+
+      await settingsService.initializeFeatureSettings([feature]);
+
+      expect(local.items["TestFeature:storage"]).toEqual({
+        storage_cache: { entries: [3] },
+        storage_lastFetch: 0,
+      });
+      expect(local.items.TestFeature).toEqual({ enabled: false, color: "blue" });
+    });
+
+    it("keeps already-migrated data over stale pre-migration copies", async () => {
+      local.items = {
+        TestFeature: { enabled: true, color: "red", storage_cache: "stale" },
+        "TestFeature:storage": { storage_cache: "current", storage_lastFetch: 9 },
+      };
+
+      await settingsService.initializeFeatureSettings([feature]);
+
+      expect(local.items["TestFeature:storage"]).toEqual({
+        storage_cache: "current",
+        storage_lastFetch: 9,
+      });
+      expect(local.items.TestFeature).toEqual({ enabled: true, color: "red" });
+    });
+
     it("does not write when everything is already initialized", async () => {
       local.items = {
         TestFeature: { enabled: true, color: "red" },
         "TestFeature:storage": { storage_cache: {}, storage_lastFetch: 1 },
       };
       const set = jest.spyOn(local, "set");
+      const setAll = jest.spyOn(local, "setAll");
 
-      await settingsService.initializeFeatureSettings(
-        feature,
-        await settingsService.getFeatureSettings(feature)
-      );
+      await settingsService.initializeFeatureSettings([feature]);
 
       expect(set).not.toHaveBeenCalled();
+      expect(setAll).not.toHaveBeenCalled();
+    });
+
+    it("rejects when the write fails", async () => {
+      jest
+        .spyOn(local, "setAll")
+        .mockRejectedValue(new Error("QUOTA_BYTES quota exceeded"));
+
+      await expect(
+        settingsService.initializeFeatureSettings([feature])
+      ).rejects.toThrow("QUOTA_BYTES");
     });
   });
 
@@ -276,6 +309,38 @@ describe("SettingsService", () => {
         storage_lastFetch: 0,
       });
       expect(local.items.TestFeature).toEqual({ enabled: false, color: "blue" });
+    });
+  });
+
+  describe("resetAllStorageItems", () => {
+    it("resets every feature's cached data with one setAll", async () => {
+      const otherFeature = { ...feature, class: "OtherFeature" } as Feature;
+      local.items = {
+        TestFeature: { enabled: true, color: "red" },
+        "TestFeature:storage": { storage_cache: "x", storage_lastFetch: 5 },
+        OtherFeature: { enabled: false, color: "blue", storage_lastFetch: 3 },
+        "OtherFeature:storage": { storage_cache: "y", storage_lastFetch: 6 },
+      };
+      const setAll = jest.spyOn(local, "setAll");
+
+      const updated = await settingsService.resetAllStorageItems([
+        feature,
+        plainFeature,
+        otherFeature,
+      ]);
+
+      const defaults = {
+        storage_cache: { entries: [] as number[] },
+        storage_lastFetch: 0,
+      };
+      expect(setAll).toHaveBeenCalledTimes(1);
+      expect(updated).toEqual({ TestFeature: defaults, OtherFeature: defaults });
+      expect(local.items).toEqual({
+        TestFeature: { enabled: true, color: "red" },
+        "TestFeature:storage": defaults,
+        OtherFeature: { enabled: false, color: "blue" },
+        "OtherFeature:storage": defaults,
+      });
     });
   });
 });

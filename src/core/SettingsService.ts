@@ -34,41 +34,6 @@ export class SettingsService {
   }
 
   /**
-   * Get stored settings for many features in a single storage read. The
-   * result is keyed by feature class (user settings) and, for features with
-   * storage items, by `<class>:storage` (cached data). Keys that have never
-   * been written are absent from the result.
-   */
-  async getFeatureSettingsBatch(
-    features: Feature[]
-  ): Promise<{ [key: string]: any }> {
-    const keys: string[] = [];
-    features.forEach((feature) => {
-      keys.push(feature.class);
-      if (feature.storageItems?.length) {
-        keys.push(getFeatureStorageKey(feature.class));
-      }
-    });
-    return await this.storage.getMany(keys);
-  }
-
-  /**
-   * Cache values read elsewhere (e.g. via getFeatureSettingsBatch) so later
-   * reads for this feature skip storage. Writes always re-read storage, so a
-   * primed value can't be written back over a newer one.
-   */
-  primeFeatureSettings(
-    feature: Feature,
-    settings: any,
-    storage?: { [key: string]: any }
-  ): void {
-    this.storage.prime(feature.class, settings);
-    if (feature.storageItems?.length) {
-      this.storage.prime(getFeatureStorageKey(feature.class), storage);
-    }
-  }
-
-  /**
    * Replace the user settings (enabled flag and configurables) for a feature.
    * Storage items are ignored; use setStorageItem for those.
    */
@@ -112,30 +77,79 @@ export class SettingsService {
   }
 
   /**
-   * Initialize all settings (configurables and storage items) for a feature.
+   * Initialize all settings (configurables and storage items) for many
+   * features with one storage read and at most one write.
    *
    * Fills in missing defaults, migrates storage items that older versions kept
-   * inside the settings object to the feature's own storage key, and returns
-   * the combined view (settings plus `storage_<id>` fields) that features read.
+   * inside the settings object to the feature's own storage key, and returns,
+   * keyed by feature class, the combined view (settings plus `storage_<id>`
+   * fields) that features read.
    */
   async initializeFeatureSettings(
+    features: Feature[]
+  ): Promise<{ [featureClass: string]: SettingsObject }> {
+    const keys: string[] = [];
+    features.forEach((feature) => {
+      keys.push(feature.class);
+      if (feature.storageItems?.length) {
+        keys.push(getFeatureStorageKey(feature.class));
+      }
+    });
+
+    const initialized: { [featureClass: string]: SettingsObject } = {};
+    const updatedFeatures: Feature[] = [];
+    await this.storage.updateMany(keys, (current) => {
+      const changes: { [key: string]: any } = {};
+      features.forEach((feature) => {
+        const changeCount = Object.keys(changes).length;
+        const { settings, storage } = this.withFeatureDefaults(
+          feature,
+          current[feature.class],
+          current[getFeatureStorageKey(feature.class)],
+          changes
+        );
+        initialized[feature.class] = { ...settings, ...(storage ?? {}) };
+        if (Object.keys(changes).length > changeCount) {
+          updatedFeatures.push(feature);
+        }
+      });
+      return changes;
+    });
+
+    updatedFeatures.forEach((feature) =>
+      feature.logger.debug("Updated settings.")
+    );
+    return initialized;
+  }
+
+  /**
+   * Fill in one feature's missing defaults. Anything that needs writing is
+   * added to `changes`, keyed by storage key.
+   */
+  private withFeatureDefaults(
     feature: Feature,
-    existingSettings?: { [key: string]: any }
-  ): Promise<{ [key: string]: any }> {
+    existingSettings: SettingsObject | undefined,
+    existingStorage: SettingsObject | undefined,
+    changes: { [key: string]: any }
+  ): { settings: SettingsObject; storage?: SettingsObject } {
     const legacyStorage = onlyStorageItems(existingSettings);
     const hasLegacyStorage = Object.keys(legacyStorage).length > 0;
 
-    // Storage items first, so legacy values are copied before they are stripped
-    let storage =
-      feature.storageItems?.length || hasLegacyStorage
-        ? await this.getFeatureStorage(feature)
-        : undefined;
-    if (hasLegacyStorage || this.hasMissingStorageItems(feature, storage)) {
-      storage = await this.storage.update<SettingsObject>(
-        getFeatureStorageKey(feature.class),
-        (current) =>
-          this.withStorageItemDefaults(feature, current ?? legacyStorage)
-      );
+    // Legacy values only seed the storage key when it doesn't exist yet;
+    // otherwise they are stale copies left from an earlier migration.
+    let storage: SettingsObject | undefined;
+    if (feature.storageItems?.length) {
+      storage = existingStorage;
+      if (
+        (storage === undefined && hasLegacyStorage) ||
+        this.hasMissingStorageItems(feature, storage)
+      ) {
+        storage = this.withStorageItemDefaults(
+          feature,
+          storage ?? legacyStorage
+        );
+        changes[getFeatureStorageKey(feature.class)] = storage;
+      }
     }
 
     let settings = withoutStorageItems(existingSettings);
@@ -144,18 +158,11 @@ export class SettingsService {
       hasLegacyStorage ||
       this.hasMissingSettings(feature, settings)
     ) {
-      settings = await this.storage.update<SettingsObject>(
-        feature.class,
-        (current) =>
-          this.withSettingsDefaults(
-            feature,
-            withoutStorageItems(current)
-          )
-      );
-      feature.logger.debug("Updated settings.");
+      settings = this.withSettingsDefaults(feature, settings);
+      changes[feature.class] = settings;
     }
 
-    return { ...settings, ...(storage ?? {}) };
+    return { settings, storage };
   }
 
   /**
@@ -255,39 +262,49 @@ export class SettingsService {
    * Returns the feature's updated storage items.
    */
   async resetStorageItems(feature: Feature): Promise<{ [key: string]: any }> {
-    const defaults = this.getStorageItemDefaults(feature);
-
-    if (Object.keys(defaults).length === 0) {
-      return {};
-    }
-
-    await this.storage.set(getFeatureStorageKey(feature.class), defaults);
-    // Drop pre-migration copies inside the settings so they can't be migrated back
-    await this.storage.update<SettingsObject | undefined>(
-      feature.class,
-      (current) =>
-        Object.keys(onlyStorageItems(current)).length > 0
-          ? withoutStorageItems(current)
-          : current
-    );
-    feature.logger.debug("Reset storage items.");
-    return defaults;
+    const updatedStorage = await this.resetAllStorageItems([feature]);
+    return updatedStorage[feature.class] ?? {};
   }
 
   /**
-   * Reset storage items for multiple features. Returns a map of feature class
-   * to that feature's updated storage items.
+   * Reset storage items for multiple features in a single write. Returns a
+   * map of feature class to that feature's updated storage items.
    */
   async resetAllStorageItems(
     features: Feature[]
   ): Promise<{ [featureClass: string]: any }> {
-    const updatedStorage: { [featureClass: string]: any } = {};
-
-    for (const feature of features) {
-      if (!feature.storageItems?.length) continue;
-      updatedStorage[feature.class] = await this.resetStorageItems(feature);
+    const withStorage = features.filter(
+      (feature) => feature.storageItems?.length
+    );
+    if (withStorage.length === 0) {
+      return {};
     }
 
+    const keys: string[] = [];
+    withStorage.forEach((feature) =>
+      keys.push(feature.class, getFeatureStorageKey(feature.class))
+    );
+
+    const updatedStorage: { [featureClass: string]: any } = {};
+    await this.storage.updateMany(keys, (current) => {
+      const changes: { [key: string]: any } = {};
+      withStorage.forEach((feature) => {
+        const defaults = this.getStorageItemDefaults(feature);
+        changes[getFeatureStorageKey(feature.class)] = defaults;
+        updatedStorage[feature.class] = defaults;
+
+        // Drop pre-migration copies inside the settings so they can't be migrated back
+        const settings = current[feature.class];
+        if (Object.keys(onlyStorageItems(settings)).length > 0) {
+          changes[feature.class] = withoutStorageItems(settings);
+        }
+      });
+      return changes;
+    });
+
+    withStorage.forEach((feature) =>
+      feature.logger.debug("Reset storage items.")
+    );
     return updatedStorage;
   }
 

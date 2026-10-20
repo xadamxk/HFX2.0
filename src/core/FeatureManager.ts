@@ -3,7 +3,6 @@ import { Logger } from "./Logger";
 import SelectorManager from "./SelectorManager";
 import { SettingsService } from "./SettingsService";
 import { StorageService } from "./StorageService";
-import { getFeatureStorageKey } from "./constants";
 
 export interface LoadedFeature {
   feature: string;
@@ -23,7 +22,7 @@ export class FeatureManager {
 
   private featureLoadingResults: LoadedFeature[] = [];
 
-  private settingsService = new SettingsService(new StorageService());
+  private settingsService = new SettingsService(StorageService.getInstance());
 
   public async loadFeatures(features: Feature[]): Promise<void> {
     const loadStart = performance.now();
@@ -31,17 +30,17 @@ export class FeatureManager {
     // Buffer each feature's logs so parallel loading doesn't interleave them
     features.forEach((feature) => feature.logger.startBuffering());
 
-    const storedSettings = await this.settingsService.getFeatureSettingsBatch(
-      features
-    );
+    // One read and at most one write for every feature's settings
+    let settings: { [featureClass: string]: { [key: string]: any } } = {};
+    try {
+      settings = await this.settingsService.initializeFeatureSettings(features);
+    } catch (error) {
+      Logger.error("Failed to initialize feature settings:", error);
+    }
 
     this.featureLoadingResults = await Promise.all(
       features.map((feature) =>
-        this.loadFeature(
-          feature,
-          storedSettings[feature.class],
-          storedSettings[getFeatureStorageKey(feature.class)]
-        )
+        this.loadFeature(feature, settings[feature.class])
       )
     );
     const loadDuration = performance.now() - loadStart;
@@ -75,21 +74,19 @@ export class FeatureManager {
   }
 
   /**
-   * Initialize settings and start a single feature.
+   * Start a single feature with its initialized settings.
    * duration_ms covers the feature's synchronous start/run work, not the time
    * spent waiting on storage or on other features loading in parallel.
    */
   private async loadFeature(
     feature: Feature,
-    storedSettings: { [key: string]: any } | undefined,
-    storedStorage: { [key: string]: any } | undefined
+    settings: { [key: string]: any } | undefined
   ): Promise<LoadedFeature> {
     let runStart: number | undefined;
     try {
-      const settings = await feature.initializeSettings(
-        storedSettings,
-        storedStorage
-      );
+      if (!settings) {
+        throw new Error("Settings could not be loaded");
+      }
       runStart = performance.now();
       const running = feature.start(settings);
       return {

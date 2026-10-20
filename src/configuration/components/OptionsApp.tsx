@@ -92,17 +92,23 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
   // Load settings from Chrome storage, and keep them current as other
   // contexts (content scripts, other tabs, sync) write to it
   useEffect(() => {
-    if (typeof chrome === "undefined" || !chrome.storage) {
+    const settingsService = getSettingsService();
+    if (!settingsService) {
       // Fallback for non-Chrome environments (like testing)
       setIsLoading(false);
       return;
     }
+
+    // Keys changed before the initial read resolved; their values in state
+    // are newer than that read's snapshot
+    let changedWhileLoading: Set<string> | null = new Set();
 
     const handleStorageChanged = (
       changes: { [key: string]: chrome.storage.StorageChange },
       areaName: string
     ) => {
       if (areaName !== "local") return;
+      Object.keys(changes).forEach((key) => changedWhileLoading?.add(key));
       for (const key of Object.keys(changes)) {
         if (changes[key].newValue === undefined) {
           delete latestSettingsRef.current[key];
@@ -124,11 +130,36 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     };
 
     chrome.storage.onChanged.addListener(handleStorageChanged);
-    chrome.storage.local.get(null, (items: Record<string, any>) => {
-      latestSettingsRef.current = { ...items };
-      setSettings(items);
-      setIsLoading(false);
-    });
+    settingsService
+      .getAll()
+      .then((items) => {
+        const changedKeys = changedWhileLoading;
+        changedWhileLoading = null;
+        const latestSettings = { ...items };
+        changedKeys?.forEach((key) => {
+          if (key in latestSettingsRef.current) {
+            latestSettings[key] = latestSettingsRef.current[key];
+          } else {
+            delete latestSettings[key];
+          }
+        });
+        latestSettingsRef.current = latestSettings;
+        setSettings((previousSettings) => {
+          const nextSettings = { ...items };
+          changedKeys?.forEach((key) => {
+            if (key in previousSettings) {
+              nextSettings[key] = previousSettings[key];
+            } else {
+              delete nextSettings[key];
+            }
+          });
+          return nextSettings;
+        });
+      })
+      .catch((error) => {
+        Logger.error("Failed to load settings:", error);
+      })
+      .finally(() => setIsLoading(false));
 
     return () => chrome.storage.onChanged.removeListener(handleStorageChanged);
   }, []);
@@ -144,7 +175,9 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
       return null;
     }
     if (!settingsServiceRef.current) {
-      settingsServiceRef.current = new SettingsService(new StorageService());
+      settingsServiceRef.current = new SettingsService(
+        StorageService.getInstance()
+      );
     }
     return settingsServiceRef.current;
   }, []);
@@ -204,7 +237,9 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
       if (!settingsService) return;
 
       // Settings state picks up the reset through the storage change listener
-      await settingsService.resetStorageItems(feature);
+      await settingsService.resetStorageItems(feature).catch((error) => {
+        Logger.error(`Failed to reset ${feature.class} cached data:`, error);
+      });
     },
     [getSettingsService]
   );

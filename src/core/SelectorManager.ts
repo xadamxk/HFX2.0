@@ -24,7 +24,7 @@ export class SelectorManager {
   private readonly storedKey = STORAGE_KEYS.SELECTOR_MANAGER_ERRORS;
 
   constructor(
-    private readonly storage: StorageService = new StorageService()
+    private readonly storage: StorageService = StorageService.getInstance()
   ) {}
 
   static getInstance(): SelectorManager {

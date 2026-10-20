@@ -4,7 +4,31 @@ import HFX from "../../sections/HFX";
 
 enum HFXBadgesStorageKeys {
   BADGE_MAP = "badgeMap",
-  LAST_FETCH_TIME = "lastFetchTime",
+}
+
+/** Badge lists keyed by badge name, as published in badges.json. */
+type BadgeList = { [badgeName: string]: any };
+
+/** Cached badges and when they were fetched, stored as one item. */
+interface BadgeCache {
+  value?: BadgeList;
+  fetchedAt?: number;
+}
+
+/**
+ * Whether badges fetched at `fetchedAt` are due for a refresh, i.e. at least
+ * `fetchDelay` minutes old. A missing or future timestamp counts as stale.
+ */
+export function isBadgeCacheStale(
+  fetchedAt: unknown,
+  fetchDelay: number,
+  now: number = Date.now()
+): boolean {
+  if (typeof fetchedAt !== "number") {
+    return true;
+  }
+  const elapsed = now - fetchedAt;
+  return elapsed < 0 || elapsed >= fetchDelay * 60_000;
 }
 
 class HFXBadges extends Feature {
@@ -19,93 +43,68 @@ class HFXBadges extends Feature {
       storageItems: [
         {
           id: HFXBadgesStorageKeys.BADGE_MAP,
-          description: "Map of badges to display",
+          description: "Badges to display and when they were fetched",
           defaultValue: {},
-        },
-        {
-          id: HFXBadgesStorageKeys.LAST_FETCH_TIME,
-          description: "Last time the badges were fetched",
-          defaultValue: 0,
         },
       ],
     });
   }
-  fetchDelay: number = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new alert fetches
+  fetchDelay: number = Util.isDevelopment() ? 0 : 15; // Delay (minutes) between new badge fetches
   now = Date.now();
   fetchLocation =
     "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/badges.json?nc=" +
     this.now;
 
   run(settings: any) {
-    const STORAGE_KEYS = {
-      BADGE_MAP: `storage_${HFXBadgesStorageKeys.BADGE_MAP}`,
-      LAST_FETCH_TIME: `storage_${HFXBadgesStorageKeys.LAST_FETCH_TIME}`,
-    };
-    const badgeMap = settings[STORAGE_KEYS.BADGE_MAP];
-    const lastFetchTime = settings[STORAGE_KEYS.LAST_FETCH_TIME];
-    const timePassed =
-      settings[STORAGE_KEYS.LAST_FETCH_TIME] !== undefined
-        ? Math.floor(
-            (new Date().getTime() - lastFetchTime) /
-              (this.fetchDelay * 60 * 1000)
-          )
-        : this.fetchDelay;
+    // Caches from older versions ({ badges }) have no fetchedAt, so they refetch
+    const cache: BadgeCache | null | undefined =
+      settings[`storage_${HFXBadgesStorageKeys.BADGE_MAP}`];
+    const cachedBadges = cache?.value;
 
-    if (timePassed < this.fetchDelay) {
+    if (!isBadgeCacheStale(cache?.fetchedAt, this.fetchDelay)) {
       this.logger.debug(
-        `Badges: ${timePassed} - needs ${this.fetchDelay} minutes. Skipping.`
+        `Badges fetched less than ${this.fetchDelay} minutes ago. Skipping fetch.`
       );
-
-      if (badgeMap !== undefined) {
-        this.appendBadges(badgeMap);
+      if (cachedBadges) {
+        this.appendBadges(cachedBadges);
       }
-    } else {
-      fetch(this.fetchLocation)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((fetchedBadges) => {
-          const newLastFetchTime = new Date().getTime();
-          const newBadgeMap = {
-            badges: fetchedBadges,
+      return;
+    }
+
+    fetch(this.fetchLocation)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(
+        (fetchedBadges: BadgeList) => {
+          this.appendBadges(fetchedBadges);
+          const newCache: BadgeCache = {
+            value: fetchedBadges,
+            fetchedAt: Date.now(),
           };
-
-          if (
-            badgeMap.badges !== undefined ||
-            badgeMap?.badges?.hidden !== false
-          ) {
-            fetchedBadges.hidden = false;
-            newBadgeMap.badges = fetchedBadges;
-            this.appendBadges(fetchedBadges);
-          }
-
-          this.settingsService.setStorageItem(
+          return this.settingsService.setStorageItem(
             this,
             HFXBadgesStorageKeys.BADGE_MAP,
-            newBadgeMap
+            newCache
           );
-          this.settingsService.setStorageItem(
-            this,
-            HFXBadgesStorageKeys.LAST_FETCH_TIME,
-            newLastFetchTime
-          );
-        })
-        .catch((err) => {
-          console.log(err);
-          this.logger.error("Failed to fetch badge data.");
-        });
-    }
+        },
+        (err) => {
+          this.logger.error("Failed to fetch badge data.", err);
+          // Fall back to the last badges fetched, if any
+          if (cachedBadges) {
+            this.appendBadges(cachedBadges);
+          }
+        }
+      )
+      .catch((err) => {
+        this.logger.error("Failed to show or save badge data.", err);
+      });
   }
 
-  private appendBadges(badges: any) {
-    // Copy badge object to prevent issues with settings above
-    // Remove hidden property since it isn't needed here
-    const badgeList = Object.assign({}, badges);
-    delete badgeList["hidden"];
-
+  private appendBadges(badgeList: BadgeList) {
     // Loop posts
     const posts = document.querySelectorAll(".post");
     posts.forEach((post, postIndex) => {

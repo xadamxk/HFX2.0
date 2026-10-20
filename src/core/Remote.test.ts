@@ -115,6 +115,18 @@ describe("getOrFetch", () => {
     expect(local.items["RemoteFeature:storage"]).toBeUndefined();
   });
 
+  it("still returns the fetched value when caching it fails", async () => {
+    cache(["stale"], NOW - 2 * HOUR);
+    jest
+      .spyOn(settingsService, "setStorageItem")
+      .mockRejectedValue(new Error("quota"));
+    const fetcher = jest.fn().mockResolvedValue(["fresh"]);
+
+    await expect(
+      getOrFetch(feature, "badges", HOUR, fetcher, settingsService)
+    ).resolves.toEqual(["fresh"]);
+  });
+
   it("shares one fetch between concurrent calls", async () => {
     let resolve!: (value: string[]) => void;
     const fetcher = jest.fn(

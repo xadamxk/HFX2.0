@@ -42,11 +42,8 @@ class SmartQuote extends Feature {
   }
 
   run(settings: any) {
-    // Optional: logged-out visitors have no welcome block, so there is no
-    // username to look for in quote headers
-    const currentUserName =
-      this.querySelector(".welcome > strong > a", document, true)
-        ?.textContent?.trim() ?? "";
+    // Logged-out visitors have no username to look for in quote headers
+    const currentUserName = Util.getCurrentUser()?.username ?? "";
 
     // Remove the ::after element (underline) from the cite element
     Util.addCssToPage(`

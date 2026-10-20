@@ -1,4 +1,9 @@
 import { Feature } from "../../core/Feature";
+import {
+  fetchSharedDocument,
+  getOrFetch,
+  SHOWGROUPS_URL,
+} from "../../core/Remote";
 import { Section } from "../../core/Section";
 import { SectionArray } from "../../core/SectionArray";
 import { Util } from "../../core/Util";
@@ -11,6 +16,12 @@ enum GroupManagementStorageKeys {
 interface ManagedGroup {
   groupId: number;
   groupName: string;
+}
+
+/** How older versions cached the managed groups. */
+interface LegacyManagedGroupsCache {
+  groups: ManagedGroup[];
+  lastFetchTime: number;
 }
 
 class GroupManagement extends Feature {
@@ -28,139 +39,138 @@ class GroupManagement extends Feature {
         {
           id: GroupManagementStorageKeys.MANAGED_GROUPS,
           description: "Map of groups that the user is a leader of.",
-          defaultValue: { groups: [], lastFetchTime: 0 },
+          // { value: ManagedGroup[], fetchedAt } once fetched (see getOrFetch)
+          defaultValue: null,
         },
       ],
     });
   }
 
   async run(settings: any) {
-    const STORAGE_KEYS = {
-      MANAGED_GROUPS: `storage_${GroupManagementStorageKeys.MANAGED_GROUPS}`,
-    };
+    await this.migrateLegacyCache(
+      settings[`storage_${GroupManagementStorageKeys.MANAGED_GROUPS}`]
+    );
 
-    const lastFetchTime = settings[STORAGE_KEYS.MANAGED_GROUPS]?.lastFetchTime;
-    if (!lastFetchTime || lastFetchTime < Date.now() - this.fetchDelay) {
-      this.logger.debug("Fetching managed groups again");
-      const newManagedGroups = await this.fetchManagedGroups();
-      if (newManagedGroups === null) {
-        // Don't cache a failed fetch as "no groups" - keep the last known list
-        // and try again on the next page load
-        this.logger.warn("Couldn't fetch managed groups; will retry later");
-      } else {
-        this.settingsService.setStorageItem(
-          this,
-          GroupManagementStorageKeys.MANAGED_GROUPS,
-          { groups: newManagedGroups, lastFetchTime: Date.now() }
-        );
-        settings[STORAGE_KEYS.MANAGED_GROUPS] = {
-          groups: newManagedGroups,
-          lastFetchTime: Date.now(),
-        };
-      }
-    } else {
-      this.logger.debug(
-        `No need to fetch managed groups again until ${new Date(
-          lastFetchTime + this.fetchDelay
-        ).toLocaleString()}`
+    let managedGroups: ManagedGroup[];
+    try {
+      // Refetched once a day. A failed fetch isn't cached as "no groups": the
+      // last known list is used, and the next page load tries again
+      managedGroups = await getOrFetch(
+        this,
+        GroupManagementStorageKeys.MANAGED_GROUPS,
+        this.fetchDelay,
+        () => this.fetchManagedGroups(),
+        this.settingsService
       );
+    } catch {
+      this.logger.warn("Couldn't fetch managed groups; will retry later");
+      return;
     }
 
     const address = location.href;
     if (address.includes("/member.php?action=profile")) {
-      const managedGroups: ManagedGroup[] =
-        settings[STORAGE_KEYS.MANAGED_GROUPS]?.groups || [];
-      if (Array.isArray(managedGroups) && managedGroups.length > 0) {
+      if (managedGroups.length > 0) {
         this.appendGroupManagementButtons(managedGroups);
       }
     }
   }
 
   /**
-   * Fetch the groups the user leads from showgroups.php.
-   * @returns The managed groups, or null if the page couldn't be fetched or read
+   * Older versions cached `{ groups, lastFetchTime }`. Convert it to the
+   * `{ value, fetchedAt }` shape getOrFetch reads, so upgrading neither
+   * refetches early nor loses the fallback list.
    */
-  private async fetchManagedGroups(): Promise<ManagedGroup[] | null> {
-    const url = "https://hackforums.net/showgroups.php";
-
-    try {
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const htmlText = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlText, "text/html");
-
-      const container = doc.querySelector(
-        ".groupContainer"
-      ) as HTMLElement | null;
-      if (!container) {
-        // Logged out, error page, or layout change - not a real "no groups"
-        return null;
-      }
-
-      const managedGroups: ManagedGroup[] = [];
-
-      // Iterate direct children of .groupContainer
-      const children = Array.from(container.children) as HTMLElement[];
-      for (const child of children) {
-        const manageAnchor = child.querySelector(
-          ".groupControls > a"
-        ) as HTMLAnchorElement | null;
-
-        if (!manageAnchor) {
-          continue; // Not a managed group
-        }
-
-        // Extract groupId from href (e.g., managegroup.php?gid=71)
-        const href = manageAnchor.getAttribute("href") || "";
-        let groupId: number | null = null;
-        try {
-          const absolute = new URL(href, "https://hackforums.net/");
-          const gidStr = absolute.searchParams.get("gid");
-          if (gidStr) {
-            groupId = parseInt(gidStr, 10);
-          }
-        } catch (_) {
-          // Fallback parse if URL construction fails
-          const parts = href.split("gid=");
-          if (parts.length > 1) {
-            const gidStr = parts[1].split("&")[0];
-            const parsed = parseInt(gidStr, 10);
-            if (!isNaN(parsed)) {
-              groupId = parsed;
-            }
-          }
-        }
-
-        if (groupId === null || isNaN(groupId)) {
-          continue;
-        }
-
-        // Extract groupName from .groupName text content (first non-empty line)
-        const nameEl = child.querySelector(".groupName") as HTMLElement | null;
-        if (!nameEl) {
-          continue;
-        }
-        const rawText = (nameEl.textContent || "").trim();
-        const groupName =
-          rawText
-            .split("\n")
-            .map((t) => t.trim())
-            .filter((t) => t.length > 0)[0] || "";
-
-        if (!groupName) {
-          continue;
-        }
-
-        managedGroups.push({ groupId, groupName });
-      }
-
-      return managedGroups;
-    } catch (e) {
-      return null;
+  private async migrateLegacyCache(stored: unknown): Promise<void> {
+    const legacy = stored as LegacyManagedGroupsCache | null | undefined;
+    if (
+      !legacy ||
+      typeof legacy !== "object" ||
+      !Array.isArray(legacy.groups)
+    ) {
+      return;
     }
+    const fetchedAt = Number(legacy.lastFetchTime) || 0;
+    await this.settingsService.setStorageItem(
+      this,
+      GroupManagementStorageKeys.MANAGED_GROUPS,
+      fetchedAt ? { value: legacy.groups, fetchedAt } : null
+    );
+  }
+
+  /**
+   * Fetch the groups the user leads from showgroups.php.
+   * Rejects if the page couldn't be fetched or has no group list.
+   */
+  private async fetchManagedGroups(): Promise<ManagedGroup[]> {
+    // Shared with WhosOnlineSorting, so a page running both fetches it once
+    const doc = await fetchSharedDocument(SHOWGROUPS_URL);
+
+    const container = doc.querySelector(
+      ".groupContainer"
+    ) as HTMLElement | null;
+    if (!container) {
+      // Logged out, error page, or layout change - not a real "no groups"
+      throw new Error("showgroups.php has no group list");
+    }
+
+    const managedGroups: ManagedGroup[] = [];
+
+    // Iterate direct children of .groupContainer
+    const children = Array.from(container.children) as HTMLElement[];
+    for (const child of children) {
+      const manageAnchor = child.querySelector(
+        ".groupControls > a"
+      ) as HTMLAnchorElement | null;
+
+      if (!manageAnchor) {
+        continue; // Not a managed group
+      }
+
+      // Extract groupId from href (e.g., managegroup.php?gid=71)
+      const href = manageAnchor.getAttribute("href") || "";
+      let groupId: number | null = null;
+      try {
+        const absolute = new URL(href, "https://hackforums.net/");
+        const gidStr = absolute.searchParams.get("gid");
+        if (gidStr) {
+          groupId = parseInt(gidStr, 10);
+        }
+      } catch (_) {
+        // Fallback parse if URL construction fails
+        const parts = href.split("gid=");
+        if (parts.length > 1) {
+          const gidStr = parts[1].split("&")[0];
+          const parsed = parseInt(gidStr, 10);
+          if (!isNaN(parsed)) {
+            groupId = parsed;
+          }
+        }
+      }
+
+      if (groupId === null || isNaN(groupId)) {
+        continue;
+      }
+
+      // Extract groupName from .groupName text content (first non-empty line)
+      const nameEl = child.querySelector(".groupName") as HTMLElement | null;
+      if (!nameEl) {
+        continue;
+      }
+      const rawText = (nameEl.textContent || "").trim();
+      const groupName =
+        rawText
+          .split("\n")
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0)[0] || "";
+
+      if (!groupName) {
+        continue;
+      }
+
+      managedGroups.push({ groupId, groupName });
+    }
+
+    return managedGroups;
   }
 
   private appendGroupManagementButtons(managedGroups: ManagedGroup[]) {

@@ -18,6 +18,7 @@ const inFlight: Map<string, Promise<unknown>> = new Map();
  * a `null` default so resetting the feature clears it).
  *
  * - Concurrent calls for the same feature and key share one fetch.
+ * - If saving the fetched value fails, it is still returned.
  * - If the fetch fails, the stale cached value is returned when there is one;
  *   otherwise the error is thrown.
  * - A fetchedAt in the future (clock change) counts as expired.
@@ -45,7 +46,12 @@ export async function getOrFetch<T>(
     pending = (async () => {
       const value = await fetcher();
       const entry: CachedValue<T> = { value, fetchedAt: Date.now() };
-      await settingsService.setStorageItem(feature, key, entry);
+      try {
+        await settingsService.setStorageItem(feature, key, entry);
+      } catch (error) {
+        // Still use what was fetched; the next page load refetches
+        feature.logger.warn(`Caching ${key} failed: ${error}`);
+      }
       return value;
     })();
     inFlight.set(flightKey, pending);
@@ -103,6 +109,9 @@ export async function fetchDocument(
 }
 
 const sharedDocuments: Map<string, Promise<Document>> = new Map();
+
+/** HF's group list, read by WhosOnlineSorting and GroupManagement. */
+export const SHOWGROUPS_URL = "https://hackforums.net/showgroups.php";
 
 /**
  * Like fetchDocument, but GET requests for the same URL share one fetch and

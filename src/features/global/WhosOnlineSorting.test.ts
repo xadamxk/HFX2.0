@@ -1,4 +1,5 @@
 import WhosOnlineSorting from "./WhosOnlineSorting";
+import { resetRemoteCaches } from "../../core/Remote";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -37,6 +38,8 @@ describe("WhosOnlineSorting", () => {
   let setStorageItem: jest.SpyInstance;
 
   beforeEach(() => {
+    // showgroups.php is shared per page; each test is a fresh page load
+    resetRemoteCaches();
     fetchMock = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,

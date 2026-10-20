@@ -1,6 +1,7 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
 import { appendChildren, el, ElChild } from "../../core/Dom";
+import { fetchSharedDocument, SHOWGROUPS_URL } from "../../core/Remote";
 import Global from "../../sections/Global";
 
 enum STORAGE_KEYS {
@@ -149,23 +150,14 @@ class WhosOnlineSorting extends Feature {
    * Returns null on a network/HTTP error or when no groups were found (e.g. logged out).
    */
   private async fetchGroupMap(): Promise<Record<string, string> | null> {
-    let html: string;
+    let doc: Document;
     try {
-      const response = await fetch("https://hackforums.net/showgroups.php", {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        this.logger.debug(`Group map fetch failed: HTTP ${response.status}`);
-        return null;
-      }
-      html = await response.text();
+      // Shared with GroupManagement, so a page running both fetches it once
+      doc = await fetchSharedDocument(SHOWGROUPS_URL);
     } catch (error) {
       this.logger.debug(`Group map fetch failed: ${error}`);
       return null;
     }
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
 
     const map: Record<string, string> = {};
     const containers = doc.querySelectorAll(".groupName");

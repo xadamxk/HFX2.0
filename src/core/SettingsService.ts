@@ -57,6 +57,19 @@ export class SettingsService {
   }
 
   /**
+   * Write a feature's whole settings object without reading storage first, so
+   * the write is handed to the browser immediately. The options page uses this
+   * because it may be closing (the popup): the read in updateFeatureSettings
+   * would never complete there.
+   */
+  async writeFeatureSettingsNow(
+    featureClass: string,
+    settings: SettingsObject
+  ): Promise<void> {
+    await this.storage.set(featureClass, withoutStorageItems(settings));
+  }
+
+  /**
    * Get a feature's cached data, keyed by `storage_<id>`.
    */
   async getFeatureStorage(feature: Feature): Promise<SettingsObject | undefined> {

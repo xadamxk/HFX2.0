@@ -24,21 +24,6 @@ export class Logger {
   static groupEnd() {
     console.groupEnd();
   }
-  static time(label?: string) {
-    console.time(`[GES] ${label}`);
-  }
-  static timeEnd(label?: string) {
-    console.timeEnd(`[GES] ${label}`);
-  }
-  static timeLog(label?: string) {
-    console.timeLog(`[GES] ${label}`);
-  }
-  static profile(label?: string) {
-    console.profile(`[GES] ${label}`);
-  }
-  static profileEnd(label?: string) {
-    console.profileEnd(`[GES] ${label}`);
-  }
   static table(data?: any[], properties?: string[]) {
     console.table(data, properties);
   }

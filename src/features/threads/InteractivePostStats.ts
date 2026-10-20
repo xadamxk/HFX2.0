@@ -1,4 +1,5 @@
 import { Feature } from "../../core/Feature";
+import { getPosts } from "../../core/Posts";
 import Threads from "../../sections/Threads";
 
 class InteractivePostStats extends Feature {
@@ -12,19 +13,10 @@ class InteractivePostStats extends Feature {
   }
 
   run() {
-    const posts = this.querySelectorAll(".post");
-    posts.forEach((post) => {
+    const posts = getPosts({ featureName: this.name });
+    posts.forEach(({ el: post, authorUid: userId }) => {
       const postbitTable = post.querySelector(".post_author");
-      if (!postbitTable) return;
-
-      const profileAnchor = postbitTable.querySelector(
-        ".author_information .largetext > a"
-      );
-      const href = profileAnchor?.getAttribute("href") || "";
-      const userId = href.split("&uid=")[1];
-      if (!userId) return;
-
-      const postId = (post.id || "").replace("post_", "");
+      if (!postbitTable || !userId) return;
 
       postbitTable.querySelectorAll(".author_row").forEach((row) => {
         const labelEl = row.querySelector(".author_label");

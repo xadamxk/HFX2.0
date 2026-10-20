@@ -1,4 +1,5 @@
 import { Feature } from "../../core/Feature";
+import { Util } from "../../core/Util";
 import ForumDisplay from "../../sections/ForumDisplay";
 
 class SearchYourThreads extends Feature {
@@ -17,9 +18,7 @@ class SearchYourThreads extends Feature {
       const url = new URL(window.location.href);
       const fid = url.searchParams.get("fid") || "";
 
-      const username = (
-        document.querySelector("span.welcome a")?.textContent || ""
-      ).trim();
+      const username = Util.getCurrentUser()?.username || "";
 
       const strong = document.querySelector("td.thead div.float_right strong");
       if (!strong) return;

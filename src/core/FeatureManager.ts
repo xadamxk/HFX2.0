@@ -53,7 +53,7 @@ export class FeatureManager {
       `${this.LOAD_FEATURES_TIMER_LABEL}: ${loadDuration.toFixed(1)} ms`
     );
 
-    // After loading all features, consult SelectorManager to decide if toast should be shown
+    // Summarize this page's selector misses and save them in one write
     const selectorManager = SelectorManager.getInstance();
     const selectorErrors = selectorManager.getErrors();
     if (selectorErrors.length) {
@@ -70,9 +70,7 @@ export class FeatureManager {
       Logger.groupEnd();
     }
 
-    if (await selectorManager.shouldShowToast()) {
-      // TODO: Do we want error feedback on HF or not? Selectors rarely break.
-    }
+    await selectorManager.persistErrors();
   }
 
   /**

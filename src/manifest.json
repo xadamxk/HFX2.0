@@ -42,19 +42,21 @@
     "permissions": [
         "storage"
     ],
-    "host_permissions": [
-        "https://hackforums.net/*"
-    ],
     "web_accessible_resources": [
         {
             "resources": [
-                "assets/*",
-                "assets/*/*",
-                "assets/*/*/*"
+                "assets/dismiss_notice.png",
+                "assets/badges/trophy_codemonkey.png",
+                "assets/badges/trophy_contributer.png",
+                "assets/badges/trophy_donator.png",
+                "assets/badges/trophy_hfx_white.png",
+                "assets/badges/trophy_supporter.png",
+                "assets/badges/trophy_tester.png"
             ],
             "matches": [
                 "https://hackforums.net/*"
-            ]
+            ],
+            "use_dynamic_url": true
         }
     ],
     "browser_specific_settings": {

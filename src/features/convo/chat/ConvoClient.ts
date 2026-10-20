@@ -1,0 +1,525 @@
+import { SocketIOClient } from "./SocketIOClient";
+
+/**
+ * Data layer for Convo chat bubbles: talks to HF's Convo websocket (the same
+ * one convo.php uses) and keeps conversations and loaded messages in memory.
+ * Nothing here is persisted; message bodies never leave this tab.
+ *
+ * Protocol notes (verified 2026-10-20, see #393):
+ * - A ticket from `POST /convo.php?action=socket_ticket` authenticates each connection.
+ * - After `convo_ready`, `convo_join {publicRoom:false}` subscribes to the user's own conversations.
+ * - `load_more_inbox <offset>` lists the latest message of 20 conversations (offset 0 = newest).
+ * - `convo_loadmessages` (acked) sends `convo_receivemessage_bulk` for one party, oldest first.
+ * - `convo_receivemessage` arrives for every conversation, including our own sends (with requestId).
+ */
+
+export const HELPBOT_UID = 1337;
+export const HISTORY_PAGE_SIZE = 20;
+const SEND_TIMEOUT = 20000;
+const SEEN_LIMIT = 10000;
+
+export interface ChatUser {
+  uid: number;
+  username: string;
+  avatar: string;
+}
+
+export interface ChatImage {
+  type: string;
+  data: string;
+  width: number;
+  height: number;
+}
+
+export interface ChatMessage {
+  mid: number;
+  partyId: number;
+  uid: number;
+  text: string;
+  dateline: number;
+  image?: ChatImage;
+  /** Helpbot HTML the server marked as trusted; render as plain text. */
+  html?: boolean;
+  requestId?: string;
+}
+
+export interface Conversation {
+  partyId: number;
+  other: ChatUser;
+  lastMessage?: ChatMessage;
+  dateline: number;
+  unread: number;
+}
+
+export type ConvoStatus = "connecting" | "ready" | "disconnected" | "ended";
+
+export interface ConvoClientEvents {
+  status: (status: ConvoStatus, reason?: string) => void;
+  conversations: () => void;
+  /** Messages for a party were added (history or live). `live` is true for new arrivals. */
+  messages: (partyId: number, live: boolean) => void;
+  typing: (uid: number, typing: boolean) => void;
+  error: (message: string) => void;
+}
+
+type Listener<K extends keyof ConvoClientEvents> = ConvoClientEvents[K];
+
+export interface ConvoClientOptions {
+  postKey: string;
+  origin?: string;
+  createSocket?: (
+    auth: () => Promise<Record<string, unknown>>
+  ) => SocketIOClient;
+  fetch?: typeof fetch;
+  randomUUID?: () => string;
+}
+
+const toInt = (value: unknown): number => {
+  const n =
+    typeof value === "number" ? value : parseInt(String(value ?? ""), 10);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** The uids in a party string ("uidA,uidB"). */
+export function partyUids(party: unknown): number[] {
+  return String(party ?? "")
+    .split(",")
+    .map(toInt)
+    .filter((uid) => uid > 0);
+}
+
+export function parseUser(raw: any): ChatUser | null {
+  const uid = toInt(raw?.uid);
+  if (!uid || typeof raw?.username !== "string") return null;
+  return {
+    uid,
+    username: raw.username,
+    avatar: typeof raw.avatar === "string" ? raw.avatar : "",
+  };
+}
+
+/** Normalize a message from `convo_receivemessage(_bulk)`. Null if it isn't a 1:1 message. */
+export function parseMessage(raw: any): ChatMessage | null {
+  if (!raw || typeof raw.message !== "string") return null;
+  const partyId = toInt(raw.party_id);
+  const mid = toInt(raw.mid);
+  // Public room (-1) and group messages aren't shown in bubbles
+  if (partyId <= 0 || raw.is_group) return null;
+  const message: ChatMessage = {
+    mid,
+    partyId,
+    uid: toInt(raw.uid),
+    text: raw.message,
+    dateline: toInt(raw.dateline) || Math.floor(Date.now() / 1000),
+  };
+  if (raw.isImageDownload) {
+    message.text = "";
+    message.image = {
+      type: String(raw.imageType ?? ""),
+      data: raw.message,
+      width: toInt(raw.imageWidth),
+      height: toInt(raw.imageHeight),
+    };
+  }
+  if (message.uid === HELPBOT_UID && raw.trustedHtml) message.html = true;
+  if (typeof raw.requestId === "string") message.requestId = raw.requestId;
+  return message;
+}
+
+export class ConvoClient {
+  me: ChatUser | null = null;
+  status: ConvoStatus = "connecting";
+  readonly users = new Map<number, ChatUser>();
+  readonly conversations = new Map<number, Conversation>();
+  private readonly messages = new Map<number, ChatMessage[]>();
+  private readonly seen = new Set<string>();
+  private readonly listeners = new Map<string, Set<(...args: any[]) => void>>();
+  private readonly socket: SocketIOClient;
+  private readonly fetchFn: typeof fetch;
+  private readonly origin: string;
+  private readonly randomUUID: () => string;
+  private sending = false;
+  /** The party convo_loadmessages last loaded; the server may scope typing notices to it. */
+  private loadedParty = 0;
+  private typingParty = 0;
+
+  constructor(private readonly options: ConvoClientOptions) {
+    this.origin = options.origin ?? location.origin;
+    this.fetchFn = options.fetch ?? ((...args) => fetch(...args));
+    this.randomUUID = options.randomUUID ?? (() => crypto.randomUUID());
+    const auth = async () => ({ ticket: await this.fetchTicket() });
+    this.socket = options.createSocket
+      ? options.createSocket(auth)
+      : new SocketIOClient({
+          url: `${this.origin.replace(/^http/, "ws")}/convo-ws/?EIO=4&transport=websocket`,
+          auth,
+        });
+    this.bindSocket();
+  }
+
+  on<K extends keyof ConvoClientEvents>(event: K, listener: Listener<K>): this {
+    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
+    this.listeners.get(event)!.add(listener);
+    return this;
+  }
+
+  connect(): void {
+    this.setStatus("connecting");
+    this.socket.connect();
+  }
+
+  disconnect(): void {
+    this.socket.disconnect();
+  }
+
+  /** Conversations, most recent first. */
+  getConversations(): Conversation[] {
+    return Array.from(this.conversations.values()).sort(
+      (a, b) => b.dateline - a.dateline || b.partyId - a.partyId
+    );
+  }
+
+  /** Loaded messages for a party, oldest first. */
+  getMessages(partyId: number): ChatMessage[] {
+    return this.messages.get(partyId) ?? [];
+  }
+
+  /** Request a page of the conversation list (offset 0 = most recent). */
+  loadInbox(offset = 0): void {
+    this.socket.emit("load_more_inbox", offset);
+  }
+
+  /**
+   * Load the newest messages of a conversation, or the ones after what's
+   * already loaded (e.g. after a reconnect).
+   */
+  async loadHistory(partyId: number): Promise<void> {
+    let cursor = this.lastMid(partyId);
+    // Cap the catch-up loop; each page can be hundreds of KB
+    for (let page = 0; page < 5; page++) {
+      const result = await this.loadMessages(partyId, cursor, "new");
+      if (!result?.hasMore || !toInt(result.lastMid)) return;
+      cursor = toInt(result.lastMid);
+    }
+  }
+
+  /** Load the page before the oldest loaded message. Resolves false when there is nothing older. */
+  async loadOlder(partyId: number): Promise<boolean> {
+    const loaded = this.getMessages(partyId);
+    if (!loaded.length) return false;
+    const before = loaded.length;
+    await this.loadMessages(partyId, loaded[0].mid, "old");
+    return this.getMessages(partyId).length - before >= HISTORY_PAGE_SIZE;
+  }
+
+  /**
+   * Send a message. HF allows one pending send at a time; the message shows up
+   * through convo_receivemessage (with our requestId) before the ack.
+   */
+  async send(
+    partyId: number,
+    text: string,
+    requestId = this.createRequestId()
+  ): Promise<{ requestId: string }> {
+    const message = text.trim();
+    if (!message) throw new Error("Message is empty.");
+    if (this.sending)
+      throw new Error("Please wait for the pending send to finish.");
+    if (!this.socket.connected || this.status !== "ready") {
+      throw new Error("Convo is disconnected. Your message was not sent.");
+    }
+    this.sending = true;
+    try {
+      const result = await this.socket
+        .emitWithAck(
+          "convo_newmessage",
+          { partyID: partyId, message, requestId },
+          SEND_TIMEOUT
+        )
+        .catch((error: Error) => {
+          throw new Error(
+            error.message === "Timed out waiting for a reply." ||
+              error.message === "Disconnected."
+              ? "Delivery is unconfirmed. Check the conversation history before resending."
+              : error.message
+          );
+        });
+      if (!result?.ok)
+        throw new Error(result?.error || "Convo request failed.");
+      this.setTyping(partyId, false);
+      return { requestId };
+    } finally {
+      this.sending = false;
+    }
+  }
+
+  /** An id for a send, echoed back on the message so it can be matched. */
+  createRequestId(): string {
+    return this.randomUUID();
+  }
+
+  get isSending(): boolean {
+    return this.sending;
+  }
+
+  /** Mark a conversation read. Only call this when the user is looking at it. */
+  markRead(partyId: number): void {
+    const conversation = this.conversations.get(partyId);
+    if (conversation) conversation.unread = 0;
+    if (this.status === "ready") {
+      this.socket.emitWithAck("mark_read", partyId).catch(() => {
+        // Not critical: the conversation stays unread on HF
+      });
+    }
+    this.fire("conversations");
+  }
+
+  /**
+   * Tell the other user we're typing. The server's typing notices carry no party
+   * id, so only send them for the party convo_loadmessages last loaded.
+   */
+  setTyping(partyId: number, typing: boolean): void {
+    if (typing) {
+      if (partyId !== this.loadedParty || this.typingParty === partyId) return;
+      this.typingParty = partyId;
+      this.socket.emit("type_notice_start", true);
+    } else if (this.typingParty === partyId) {
+      this.typingParty = 0;
+      this.socket.emit("type_notice_stop", true);
+    }
+  }
+
+  private async fetchTicket(): Promise<string> {
+    const response = await this.fetchFn(
+      `${this.origin}/convo.php?action=socket_ticket`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          my_post_key: this.options.postKey,
+        }).toString(),
+      }
+    );
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Convo authentication failed.");
+    }
+    if (!response.ok || typeof data?.ticket !== "string" || !data.ticket) {
+      throw new Error(data?.error || "Convo authentication failed.");
+    }
+    return data.ticket;
+  }
+
+  private async loadMessages(
+    partyId: number,
+    mid: number,
+    position: "new" | "old"
+  ): Promise<{ ok: boolean; hasMore?: boolean; lastMid?: number } | undefined> {
+    this.loadedParty = partyId;
+    const result = await this.socket.emitWithAck("convo_loadmessages", {
+      party: partyId,
+      mid,
+      position,
+      bulk: true,
+      is_group: false,
+    });
+    if (!result?.ok)
+      throw new Error(result?.error || "Couldn't load messages.");
+    return result;
+  }
+
+  private lastMid(partyId: number): number {
+    const loaded = this.getMessages(partyId);
+    return loaded.length ? loaded[loaded.length - 1].mid : 0;
+  }
+
+  private bindSocket(): void {
+    const socket = this.socket;
+    socket.on("convo_ready", (data: any) => this.onReady(data));
+    socket.on("disconnect", (reason: string) => {
+      this.setStatus(
+        reason === "io server disconnect" ? "ended" : "disconnected",
+        reason
+      );
+    });
+    socket.on("reconnect_failed", () =>
+      this.setStatus("ended", "reconnect failed")
+    );
+    socket.on("convo_auth_expired", () => {
+      socket.disconnect();
+      this.connect();
+    });
+    socket.on("convo_loaded_more_inbox", (data: any) => this.onInbox(data));
+    socket.on("convo_receivemessage", (data: any) => this.receive(data, true));
+    socket.on("convo_receivemessage_bulk", (data: any) => {
+      if (!Array.isArray(data)) return;
+      const parties = new Set<number>();
+      for (const raw of data) {
+        const message = this.add(raw);
+        if (message) parties.add(message.partyId);
+      }
+      parties.forEach((partyId) => this.fire("messages", partyId, false));
+    });
+    socket.on("convo_read_notice", (data: any) => {
+      const conversation = this.conversations.get(toInt(data?.partyID));
+      if (conversation && conversation.unread) {
+        conversation.unread = 0;
+        this.fire("conversations");
+      }
+    });
+    socket.on("type_notice_add", (data: any) => {
+      const uid = toInt(data?.uid);
+      if (uid && uid !== this.me?.uid) this.fire("typing", uid, true);
+    });
+    socket.on("type_notice_remove", (data: any) => {
+      const uid = toInt(data?.uid);
+      if (uid) this.fire("typing", uid, false);
+    });
+    socket.on("convo_error", (data: any) => {
+      this.fire("error", String(data?.error || "Convo failed."));
+    });
+  }
+
+  private async onReady(data: any): Promise<void> {
+    const me = parseUser(data?.user);
+    if (!me) {
+      // The API changed: stop rather than guess
+      this.socket.disconnect();
+      this.setStatus("ended", "unexpected convo_ready payload");
+      return;
+    }
+    this.me = me;
+    this.users.set(me.uid, me);
+    try {
+      const joined = await this.socket.emitWithAck("convo_join", {
+        publicRoom: false,
+      });
+      if (!joined?.ok) throw new Error(joined?.error || "convo_join failed");
+    } catch (error: any) {
+      this.setStatus("disconnected", error?.message);
+      return;
+    }
+    this.typingParty = 0;
+    this.setStatus("ready");
+    this.loadInbox(0);
+  }
+
+  private onInbox(data: any): void {
+    if (!this.me || !data || typeof data.messages !== "object") return;
+    for (const raw of Object.values<any>(data.users ?? {})) {
+      const user = parseUser(raw);
+      if (user) this.users.set(user.uid, user);
+    }
+    for (const row of Object.values<any>(data.messages ?? {})) {
+      const partyId = toInt(row?.party_id);
+      const uids = partyUids(row?.party_data?.party);
+      if (partyId <= 0 || uids.length !== 2) continue;
+      const other = this.users.get(
+        uids.find((uid) => uid !== this.me!.uid) ?? 0
+      );
+      if (!other) continue;
+      const fromUid = toInt(row.from_uid);
+      const lastMessage = parseMessage({
+        ...row,
+        uid: fromUid,
+        party_id: partyId,
+      });
+      const existing = this.conversations.get(partyId);
+      const dateline = toInt(row.dateline);
+      if (existing && existing.dateline > dateline) continue;
+      this.conversations.set(partyId, {
+        partyId,
+        other,
+        lastMessage: lastMessage ?? undefined,
+        dateline,
+        unread:
+          existing?.unread ||
+          (fromUid !== this.me.uid && toInt(row.unread) > 0 ? 1 : 0),
+      });
+    }
+    this.fire("conversations");
+  }
+
+  private receive(raw: any, live: boolean): void {
+    const message = this.add(raw);
+    if (!message) return;
+    this.fire("messages", message.partyId, live);
+  }
+
+  /** Store a message (deduped by party:mid) and update its conversation. */
+  private add(raw: any): ChatMessage | null {
+    const message = parseMessage(raw);
+    if (!message || !message.mid) return null;
+    const key = `private:${message.partyId}:${message.mid}`;
+    if (this.seen.has(key)) return null;
+    this.seen.add(key);
+    if (this.seen.size > SEEN_LIMIT)
+      this.seen.delete(this.seen.values().next().value!);
+
+    for (const user of Object.values<any>(raw.users ?? {})) {
+      const parsed = parseUser(user);
+      if (parsed) this.users.set(parsed.uid, parsed);
+    }
+
+    const list = this.messages.get(message.partyId) ?? [];
+    // Usually appended in order; insert in place for older pages
+    let index = list.length;
+    while (index > 0 && list[index - 1].mid > message.mid) index--;
+    list.splice(index, 0, message);
+    this.messages.set(message.partyId, list);
+
+    this.updateConversation(message, raw);
+    return message;
+  }
+
+  private updateConversation(message: ChatMessage, raw: any): void {
+    if (!this.me) return;
+    let conversation = this.conversations.get(message.partyId);
+    if (!conversation) {
+      const uids = partyUids(raw.party?.party);
+      if (uids.length !== 2) return;
+      const other = this.users.get(
+        uids.find((uid) => uid !== this.me!.uid) ?? 0
+      );
+      if (!other) return;
+      conversation = {
+        partyId: message.partyId,
+        other,
+        dateline: 0,
+        unread: 0,
+      };
+      this.conversations.set(message.partyId, conversation);
+    }
+    if (message.dateline < conversation.dateline) return;
+    conversation.lastMessage = message;
+    conversation.dateline = message.dateline;
+    // History pages repeat old messages; only live ones from the other user count as unread
+    if (
+      !raw.history &&
+      raw.noSound === undefined &&
+      message.uid !== this.me.uid
+    ) {
+      conversation.unread++;
+    }
+    this.fire("conversations");
+  }
+
+  private setStatus(status: ConvoStatus, reason?: string): void {
+    this.status = status;
+    this.fire("status", status, reason);
+  }
+
+  private fire(event: keyof ConvoClientEvents, ...args: unknown[]): void {
+    for (const listener of Array.from(this.listeners.get(event) ?? [])) {
+      try {
+        listener(...args);
+      } catch (error) {
+        console.error(`[GES] Convo chat ${event} listener failed`, error);
+      }
+    }
+  }
+}

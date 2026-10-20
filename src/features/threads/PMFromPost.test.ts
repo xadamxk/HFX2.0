@@ -19,8 +19,8 @@ function setUpThreadPage() {
   `;
   // Set page-controlled text the same way HF renders it: escaped, decoded by textContent
   document.querySelectorAll(".breadcrumb a")[1].textContent = MALICIOUS_TITLE;
-  document.querySelector(".author_information a").textContent = `"><b>user`;
-  document.querySelector(".post_body").textContent = MALICIOUS_POST;
+  document.querySelector(".author_information a")!.textContent = `"><b>user`;
+  document.querySelector(".post_body")!.textContent = MALICIOUS_POST;
 }
 
 describe("PMFromPost", () => {
@@ -49,7 +49,7 @@ describe("PMFromPost", () => {
   });
 
   it("builds the form lazily on first toggle click", () => {
-    const post = document.querySelector(".post");
+    const post = document.querySelector(".post")!;
     expect(post.querySelector(".pm-from-post-container")).toBeNull();
 
     (document.querySelector(".pm-from-post-toggle") as HTMLElement).click();
@@ -58,7 +58,7 @@ describe("PMFromPost", () => {
 
   it("treats a malicious thread title, username and post body as text", () => {
     (document.querySelector(".pm-from-post-toggle") as HTMLElement).click();
-    const container = document.querySelector(".pm-from-post-container");
+    const container = document.querySelector(".pm-from-post-container")!;
 
     expect(container.querySelector("img")).toBeNull();
     expect(container.querySelector("b")).toBeNull();
@@ -67,18 +67,18 @@ describe("PMFromPost", () => {
     const subject = container.querySelector<HTMLInputElement>(
       "input[name='subject']"
     );
-    expect(subject.value).toBe(`Regarding Your Post: ${MALICIOUS_TITLE}`);
+    expect(subject!.value).toBe(`Regarding Your Post: ${MALICIOUS_TITLE}`);
 
     const to = container.querySelector<HTMLInputElement>("input[name='to']");
-    expect(to.value).toBe(`"><b>user`);
+    expect(to!.value).toBe(`"><b>user`);
 
     const postKey = container.querySelector<HTMLInputElement>(
       "input[name='my_post_key']"
     );
-    expect(postKey.value).toBe("abc123");
+    expect(postKey!.value).toBe("abc123");
 
     const message = container.querySelector("textarea");
-    expect(message.value).toContain(MALICIOUS_POST);
+    expect(message!.value).toContain(MALICIOUS_POST);
     // The form's controls all stay inside the form
     expect(container.querySelectorAll("form input[type='submit']")).toHaveLength(
       3

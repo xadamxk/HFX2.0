@@ -140,8 +140,8 @@ class PopularityPresets extends Feature {
     const mountDropdown = (
       reputationSelect: HTMLSelectElement,
       reputationReasonInput: HTMLInputElement,
-      maxValue?: string,
-      minValue?: string
+      maxValue: string,
+      minValue: string
     ) => {
       const presetDropdown = document.createElement("select");
       presetDropdown.classList.add("hfx-popularity-dropdown");

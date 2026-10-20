@@ -58,9 +58,9 @@ class WhosOnlineSorting extends Feature {
     ) as HTMLElement | null;
     if (!targetCell) return;
 
-    const { groupOrder, membersByGroup, summaryNodes } =
-      this.sortOnlineMembers(boardStats);
-    if (groupOrder.length === 0) return;
+    const sorted = this.sortOnlineMembers(boardStats);
+    if (!sorted || sorted.groupOrder.length === 0) return;
+    const { groupOrder, membersByGroup, summaryNodes } = sorted;
 
     const sortedGroupOrder = this.sortGroupOrder(groupOrder);
 
@@ -126,11 +126,13 @@ class WhosOnlineSorting extends Feature {
     return map;
   }
 
-  private sortOnlineMembers(boardStats: HTMLElement): {
-    groupOrder: string[];
-    membersByGroup: Record<string, GroupItem[]>;
-    summaryNodes: Node[];
-  } {
+  private sortOnlineMembers(boardStats: HTMLElement):
+    | {
+        groupOrder: string[];
+        membersByGroup: Record<string, GroupItem[]>;
+        summaryNodes: Node[];
+      }
+    | undefined {
     const rows = boardStats.querySelectorAll("tr");
     if (!rows || rows.length < 2) return;
 

@@ -6,10 +6,10 @@ import { Util } from "./Util";
  * @param selectorElements - The elements that are used to determine if this section is enabled.
  */
 export class Section {
-  class: string;
-  name: string;
+  class!: string;
+  name!: string;
   paths: string[];
-  elementSelectors?: string[];
+  elementSelectors: string[];
   constructor(paths: string[] = [], elementSelectors: string[] = []) {
     this.paths = [...paths];
     this.elementSelectors =

@@ -116,7 +116,7 @@ export class Feature {
     throw new Error(`Run has not been implemented for ${this.class} feature`);
   }
 
-  runnableSection(): Section {
+  runnableSection(): Section | undefined {
     return this.section.runnable()
       ? this.section
       : this.additionalSections && this.additionalSections.runnableSection();
@@ -125,7 +125,7 @@ export class Feature {
   runnable(): boolean {
     return (
       this.section.runnable() ||
-      (this.additionalSections && this.additionalSections.runnable())
+      (this.additionalSections?.runnable() ?? false)
     );
   }
 

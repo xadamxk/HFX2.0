@@ -54,7 +54,7 @@ export class Util {
     return resource.startsWith("/") ? resource : `/${resource}`;
   }
 
-  static getLocalStorage(callBack: Function, key: string = null) {
+  static getLocalStorage(callBack: Function, key: string | null = null) {
     return chrome.storage.local.get(key, (result: any) => callBack(result));
   }
 

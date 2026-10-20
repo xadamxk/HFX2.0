@@ -2,7 +2,7 @@ import { Configurable, ConfigurableOptions } from "../../core/Configurable";
 
 interface Option {
   label?: string;
-  value: string;
+  value: string | null;
 }
 
 export interface DropdownOptions extends ConfigurableOptions {

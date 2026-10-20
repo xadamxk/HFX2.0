@@ -45,7 +45,7 @@ class TrackingLinks extends Feature {
     return hasMessageTracking;
   }
 
-  private addTrackingLinksToTableBody(table: Element) {
+  private addTrackingLinksToTableBody(table: Element | null) {
     if (!table) return;
     table.querySelectorAll("tr").forEach((row) => {
       const checkbox = row.querySelector(".checkbox");

@@ -43,7 +43,7 @@ class SmartQuote extends Feature {
   run(settings: any) {
     const currentUserName = this.querySelector(
       ".welcome > strong > a"
-    ).textContent;
+    )?.textContent;
 
     // Remove the ::after element (underline) from the cite element
     Util.addCssToPage(`
@@ -69,6 +69,7 @@ class SmartQuote extends Feature {
       const citeElement = blockquote.querySelector(
         "cite"
       ) as HTMLElement | null;
+      if (!citeElement) return;
 
       // Remove classes from quoted username spans and apply bold/white styling
       const quoteUsername = citeElement?.querySelector(
@@ -89,7 +90,8 @@ class SmartQuote extends Feature {
       //   });
       // }
 
-      const isMentioned = citeElement?.textContent?.includes(currentUserName);
+      const isMentioned =
+        currentUserName && citeElement.textContent?.includes(currentUserName);
       if (isMentioned) {
         citeElement.style.background = quoteMentionColor;
       } else {
@@ -105,6 +107,7 @@ class SmartQuote extends Feature {
 
       // Color the quote header timestamp color
       const quoteHeaderTimestamp = citeElement.querySelector("span");
+      if (!quoteHeaderTimestamp) return;
       quoteHeaderTimestamp.style.color = quoteTextColor;
 
       const quoteHeaderTimestampText =

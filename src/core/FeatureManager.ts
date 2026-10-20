@@ -101,7 +101,7 @@ export class FeatureManager {
         duration_ms: this.elapsedSince(runStart),
         error: undefined,
       };
-    } catch (error) {
+    } catch (error: any) {
       feature.logger.error(`Error loading feature: ${error?.message}`);
       return {
         feature: feature.name,

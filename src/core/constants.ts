@@ -50,9 +50,10 @@ export function withoutStorageItems(settings: { [key: string]: any } | undefined
   [key: string]: any;
 } {
   const result: { [key: string]: any } = {};
-  for (const field of Object.keys(settings ?? {})) {
+  const source = settings ?? {};
+  for (const field of Object.keys(source)) {
     if (!isStorageItemField(field)) {
-      result[field] = settings[field];
+      result[field] = source[field];
     }
   }
   return result;
@@ -63,9 +64,10 @@ export function onlyStorageItems(settings: { [key: string]: any } | undefined): 
   [key: string]: any;
 } {
   const result: { [key: string]: any } = {};
-  for (const field of Object.keys(settings ?? {})) {
+  const source = settings ?? {};
+  for (const field of Object.keys(source)) {
     if (isStorageItemField(field)) {
-      result[field] = settings[field];
+      result[field] = source[field];
     }
   }
   return result;

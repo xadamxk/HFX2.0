@@ -17,10 +17,15 @@ export interface SelectorErrorRecord {
 export class SelectorManager {
   private static instance: SelectorManager | undefined;
 
+  /** Every error recorded on this page, for the console summary. */
   private readonly errors: SelectorErrorRecord[] = [];
+  /** Errors recorded since the last persistErrors() call. */
+  private unsaved: SelectorErrorRecord[] = [];
   private readonly storedKey = STORAGE_KEYS.SELECTOR_MANAGER_ERRORS;
-  private readonly suppressionKey = STORAGE_KEYS.SELECTOR_MANAGER_SUPPRESSION;
-  private readonly storage: StorageService = new StorageService();
+
+  constructor(
+    private readonly storage: StorageService = new StorageService()
+  ) {}
 
   static getInstance(): SelectorManager {
     if (!this.instance) {
@@ -29,29 +34,26 @@ export class SelectorManager {
     return this.instance;
   }
 
-  /** Append a record to persisted storage (bounded to last 500). */
-  private async logSelectorError(record: SelectorErrorRecord): Promise<void> {
+  /**
+   * Append the errors recorded since the last call to persisted storage in a
+   * single write (bounded to the last 500). Called once after features load,
+   * so several misses on one page don't each read and rewrite the whole list.
+   */
+  async persistErrors(): Promise<void> {
+    if (this.unsaved.length === 0) return;
+    const batch = this.unsaved;
+    this.unsaved = [];
     try {
       await this.storage.update<SelectorErrorRecord[]>(
         this.storedKey,
         (current) => {
           const existing = Array.isArray(current) ? [...current] : [];
-          existing.push(record);
+          existing.push(...batch);
           if (existing.length > 500) existing.splice(0, existing.length - 500);
           return existing;
         }
       );
     } catch {}
-  }
-
-  private async loadSelectorErrors(): Promise<SelectorErrorRecord[]> {
-    try {
-      const saved: SelectorErrorRecord[] =
-        (await this.storage.get(this.storedKey)) || [];
-      return Array.isArray(saved) ? saved : [];
-    } catch {
-      return [];
-    }
   }
 
   /**
@@ -134,13 +136,6 @@ export class SelectorManager {
     return [...this.errors];
   }
 
-  async clearErrors(): Promise<void> {
-    this.errors.length = 0;
-    try {
-      await this.storage.set(this.storedKey, []);
-    } catch {}
-  }
-
   private recordError(
     selector: string,
     featureName?: string,
@@ -154,8 +149,7 @@ export class SelectorManager {
       rootDescription,
     };
     this.errors.push(record);
-    // Fire-and-forget persistence
-    this.logSelectorError(record);
+    this.unsaved.push(record);
     Logger.warn(
       `Selector error${featureName ? ` [${featureName}]` : ""}: ${selector}`
     );
@@ -175,47 +169,6 @@ export class SelectorManager {
     } catch {
       return "unknown-root";
     }
-  }
-
-  /** Return true if we should show a toast now; handles suppression and threshold logic. */
-  public async shouldShowToast(): Promise<boolean> {
-    try {
-      // suppression
-      const suppressUntil: number | undefined = await this.storage.get(
-        this.suppressionKey
-      );
-      const now = Date.now();
-      if (typeof suppressUntil === "number" && now < suppressUntil) {
-        return false;
-      }
-
-      // threshold: if a feature has >=3 errors in the last 24h on this origin
-      const since = now - 24 * 60 * 60 * 1000;
-      const persisted = await this.loadSelectorErrors();
-      const combined = [...persisted, ...this.errors];
-      // group by feature
-      const byFeature: { [feature: string]: number } = {};
-      for (const err of combined) {
-        if (err.timestamp >= since) {
-          const key = err.feature || "unknown";
-          byFeature[key] = (byFeature[key] || 0) + 1;
-          if (byFeature[key] >= 3) {
-            return true;
-          }
-        }
-      }
-    } catch {}
-    return false;
-  }
-
-  /** Suppress selector toasts for 3 days and clear current errors. */
-  public async suppressToastsForThreeDays(): Promise<void> {
-    try {
-      const threeDays = 3 * 24 * 60 * 60 * 1000;
-      await this.storage.set(this.suppressionKey, Date.now() + threeDays);
-      //   await this.storage.set(this.storedKey, []);
-    } catch {}
-    await this.clearErrors();
   }
 }
 

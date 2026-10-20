@@ -43,14 +43,18 @@ class HideHeaderBanners extends Feature {
     const hideGlobalBanners = settings.hideGlobalBanners;
 
     if (hideAdTicker) {
-      const adTicker = this.querySelector(".hf-ad-ticker");
+      const adTicker = this.querySelector(".hf-ad-ticker", document, true);
       if (adTicker) {
         adTicker.remove();
       }
     }
 
     if (hideGlobalBanners) {
-      const contentWrapper = this.querySelector("#content > div.wrapper-content");
+      const contentWrapper = this.querySelector(
+        "#content > div.wrapper-content",
+        document,
+        true
+      );
       const firstWrapperDiv =
         contentWrapper?.querySelector<HTMLElement>("div");
 

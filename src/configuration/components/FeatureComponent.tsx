@@ -8,7 +8,8 @@ import { RocketLaunchIcon, TrashIcon } from "@heroicons/react/24/outline";
 interface FeatureComponentProps {
   feature: Feature;
   section: Section;
-  settings?: any;
+  /** This feature's own settings, so other features' changes don't re-render it */
+  featureSettings?: any;
   onFeatureToggle?: (featureName: string, enabled: boolean) => void;
   onConfigurableChange?: (
     featureName: string,
@@ -18,17 +19,17 @@ interface FeatureComponentProps {
   onStorageReset?: (feature: Feature) => void;
 }
 
-export const FeatureComponent: React.FC<FeatureComponentProps> = ({
+const FeatureComponentBase: React.FC<FeatureComponentProps> = ({
   feature,
   section,
-  settings,
+  featureSettings,
   onFeatureToggle,
   onConfigurableChange,
   onStorageReset,
 }) => {
   const featureId = `feature-${feature.class}`;
   // Get the feature-specific enabled state from settings
-  const isEnabled = settings?.[feature.class]?.enabled ?? feature.enabled;
+  const isEnabled = featureSettings?.enabled ?? feature.enabled;
   const { isPopup } = usePopup();
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
 
@@ -112,7 +113,7 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
               configurable={configurable}
               feature={feature}
               section={section}
-              settings={settings}
+              featureSettings={featureSettings}
               onChange={onConfigurableChange}
             />
           ))}
@@ -159,3 +160,6 @@ export const FeatureComponent: React.FC<FeatureComponentProps> = ({
     </div>
   );
 };
+
+// Only re-renders when this feature's settings (or a handler) change
+export const FeatureComponent = React.memo(FeatureComponentBase);

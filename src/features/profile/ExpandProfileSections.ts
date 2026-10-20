@@ -71,7 +71,7 @@ class ExpandProfileSections extends Feature {
     } else {
       this.appendProfileCard(
         ".pro-adv-awards-group",
-        "Groups",
+        "Awards",
         profileUsername,
         "hfxAwardCard"
       );

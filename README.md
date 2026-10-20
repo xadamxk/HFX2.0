@@ -75,6 +75,8 @@ To learn more about contributing to the development of HFX, get started <a href=
 
 <b>Note:</b> <code>alert.json</code> and <code>badges.json</code> in the repo root are fetched at runtime by the HFX Alerts and HFX Badges features from <code>raw.githubusercontent.com/xadamxk/HFX2.0/develop/</code>. Don't move or rename them — edits go live for all users once merged into <code>develop</code>.
 
+<b>Legacy files:</b> <code>emotes.json</code>, <code>reputationArchive.json</code> and the root <code>assets/</code> folder aren't used by the current build (webpack only copies <code>src/assets</code>), but keep them in place. Older HFX 2.x releases fetch the two JSON files from <code>develop</code> at runtime, emotes inserted into HF posts link to <code>assets/emotes/</code> on GitHub, and this README links to images in <code>assets/</code>.
+
 <h2>Reviews</h2>
 <ul><li><a href="https://chrome.google.com/webstore/detail/hf-xtension/hcfofmfmidhgbblcnnipcphhegcmdeeb/reviews">150+ Google Chrome Reviews</a></li></ul> 
 <i>It was fun helping out in the alpha phases of this extension, and I'm really happy that it is close to release. HFX has allowed me to completely uninstall Tampermonkey which makes it a win for me. With the wide variety of features here, I think most everyone will be able to find at least one thing they like.</i> -Aerodactyl<hr>

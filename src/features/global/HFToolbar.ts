@@ -127,16 +127,6 @@ class HFToolbar extends Feature {
   }
 
   run(settings: any) {
-    const favorites = new Map([
-      [settings.favorite1Label, settings.favorite1Url],
-      [settings.favorite2Label, settings.favorite2Url],
-      [settings.favorite3Label, settings.favorite3Url],
-      [settings.favorite4Label, settings.favorite4Url],
-      [settings.favorite5Label, settings.favorite5Url],
-      [settings.favorite6Label, settings.favorite6Url],
-      [settings.favorite7Label, settings.favorite7Url],
-    ]);
-
     // Sticky Header
     if (settings.stickyHeader) {
       const header = this.querySelector<HTMLElement>(
@@ -224,11 +214,23 @@ class HFToolbar extends Feature {
     }
 
     // Favorites
-    for (const [label, url] of favorites) {
+    for (const { label, url } of this.getFavorites(settings)) {
+      this.appendFavorite(label, url);
+    }
+  }
+
+  // Favorites 1-8 in order, skipping any without both a label and a URL.
+  // A list (not a label-keyed Map) so favorites sharing a label all show.
+  private getFavorites(settings: any): { label: string; url: string }[] {
+    const favorites: { label: string; url: string }[] = [];
+    for (let i = 1; i <= 8; i++) {
+      const label = settings[`favorite${i}Label`];
+      const url = settings[`favorite${i}Url`];
       if (label && url) {
-        this.appendFavorite(label, url);
+        favorites.push({ label, url });
       }
     }
+    return favorites;
   }
 
   private appendFavorite(label: string, url: string) {

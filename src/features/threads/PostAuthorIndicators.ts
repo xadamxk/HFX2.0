@@ -1,5 +1,7 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
+import { getPosts } from "../../core/Posts";
+import { Util } from "../../core/Util";
 import Threads from "../../sections/Threads";
 
 class PostAuthorIndicators extends Feature {
@@ -31,7 +33,7 @@ class PostAuthorIndicators extends Feature {
     const roundProfileIcons: boolean = settings.roundProfileIcons;
     const standardizeAvatarSize: boolean = settings.standardizeAvatarSize;
 
-    const posts = this.querySelectorAll(".post");
+    const posts = getPosts({ featureName: this.name });
     if (!posts.length) return;
 
     // Collect UIDs of users currently viewing this thread
@@ -51,15 +53,13 @@ class PostAuthorIndicators extends Feature {
           'a[href*="member.php?action=profile&uid="]'
         );
         viewerLinks.forEach((a) => {
-          const href = a.getAttribute("href") || "";
-          const uidStr = href.split("&uid=")[1] || "";
-          const uid = parseInt(uidStr, 10);
-          if (!Number.isNaN(uid)) usersViewing.push(uid);
+          const uid = Util.getUidFromHref(a.getAttribute("href"));
+          if (uid) usersViewing.push(uid);
         });
       }
     } catch (_) {}
 
-    posts.forEach((post) => {
+    posts.forEach(({ el: post, authorUid: userId }) => {
       const authorInfo = post.querySelector(
         ".author_information"
       ) as HTMLElement | null;
@@ -76,20 +76,6 @@ class PostAuthorIndicators extends Feature {
       ) as HTMLImageElement | null;
 
       if (!avatarImage || (!buddyImg && !titledEl)) return;
-
-      // Determine the UID for this post's author
-      let userId = 0;
-      try {
-        const profileLink =
-          (post.querySelector(
-            ".author_information .largetext > a"
-          ) as HTMLAnchorElement | null) ||
-          (post.querySelector(
-            ".author_avatar > a"
-          ) as HTMLAnchorElement | null);
-        const href = profileLink?.getAttribute("href") || "";
-        userId = parseInt(href.split("&uid=")[1] || "", 10) || 0;
-      } catch (_) {}
 
       let statusTitle = "";
       if (buddyImg) {

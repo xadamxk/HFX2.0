@@ -43,24 +43,10 @@ export class SettingsService {
   }
 
   /**
-   * Merge `changes` into a feature's stored user settings, leaving every other
-   * field as it currently is in storage.
-   */
-  async updateFeatureSettings(
-    featureClass: string,
-    changes: SettingsObject
-  ): Promise<SettingsObject> {
-    return await this.storage.update<SettingsObject>(featureClass, (current) => ({
-      ...withoutStorageItems(current),
-      ...changes,
-    }));
-  }
-
-  /**
    * Write a feature's whole settings object without reading storage first, so
    * the write is handed to the browser immediately. The options page uses this
-   * because it may be closing (the popup): the read in updateFeatureSettings
-   * would never complete there.
+   * because it may be closing (the popup): a read-modify-write would never
+   * complete there.
    */
   async writeFeatureSettingsNow(
     featureClass: string,
@@ -190,6 +176,25 @@ export class SettingsService {
   }
 
   /**
+   * Delete a storage item a feature no longer declares (e.g. after a cache
+   * changes shape). Skips the write when the item isn't stored.
+   */
+  async removeStorageItem(
+    feature: Feature,
+    storageItemId: string
+  ): Promise<void> {
+    const storageKey = `${STORAGE_ITEM_PREFIX}${storageItemId}`;
+    await this.storage.update<SettingsObject | undefined>(
+      getFeatureStorageKey(feature.class),
+      (current) => {
+        if (!current || !(storageKey in current)) return current;
+        const { [storageKey]: _removed, ...rest } = current;
+        return rest;
+      }
+    );
+  }
+
+  /**
    * Build the default values for a feature's storage items, keyed by their
    * settings key. Owns the `storage_<id>` key convention.
    */
@@ -308,18 +313,8 @@ export class SettingsService {
     return updatedStorage;
   }
 
-  async clear(): Promise<void> {
-    await this.storage.clear();
-    Logger.log("Cleared storage.");
-  }
-
   async getAll(): Promise<{ [key: string]: any }> {
     return await this.storage.getAll();
-  }
-
-  async getTotal(): Promise<number> {
-    const items = await this.getAll();
-    return Object.keys(items).length;
   }
 
   async printSettings(): Promise<void> {

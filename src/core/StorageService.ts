@@ -22,13 +22,11 @@ export class StorageService {
   private localStorage: StorageInterface;
   private syncStorage: StorageInterface;
   private cache: Map<string, any> = new Map();
-  private cacheEnabled: boolean = true;
   /**
-   * Bumped whenever a key changes (and `epoch` on clear), so a read or write
-   * that finishes after a newer change doesn't cache its now-stale value.
+   * Bumped whenever a key changes, so a read or write that finishes after a
+   * newer change doesn't cache its now-stale value.
    */
   private versions: Map<string, number> = new Map();
-  private epoch: number = 0;
 
   /** The StorageService shared by everything in this JS context. */
   static getInstance(): StorageService {
@@ -53,7 +51,7 @@ export class StorageService {
   // Primary storage operations (use local with optional sync)
   async get(key: string): Promise<any> {
     // Check cache first
-    if (this.cacheEnabled && this.cache.has(key)) {
+    if (this.cache.has(key)) {
       return this.cache.get(key);
     }
 
@@ -61,7 +59,7 @@ export class StorageService {
     const value = await this.localStorage.get(key);
 
     // Cache the result, unless the key changed while it was being read
-    if (this.cacheEnabled && this.versionOf(key) === version) {
+    if (this.versionOf(key) === version) {
       this.cache.set(key, value);
     }
 
@@ -76,13 +74,11 @@ export class StorageService {
     const versions = keys.map((key) => this.versionOf(key));
     const values = await this.localStorage.getMany(keys);
 
-    if (this.cacheEnabled) {
-      keys.forEach((key, i) => {
-        if (this.versionOf(key) === versions[i]) {
-          this.cache.set(key, values[key]);
-        }
-      });
-    }
+    keys.forEach((key, i) => {
+      if (this.versionOf(key) === versions[i]) {
+        this.cache.set(key, values[key]);
+      }
+    });
 
     return values;
   }
@@ -154,16 +150,6 @@ export class StorageService {
     this.bumpVersion(key);
   }
 
-  async clear(): Promise<void> {
-    await this.localStorage.clear();
-
-    // Clear cache
-    this.cache.clear();
-    this.epoch++;
-
-    // Note: Sync is handled by StorageSyncService via change listeners
-  }
-
   async getAll(): Promise<{ [key: string]: any }> {
     return await this.localStorage.getAll();
   }
@@ -206,8 +192,8 @@ export class StorageService {
     }
   }
 
-  private versionOf(key: string): string {
-    return `${this.epoch}:${this.versions.get(key) ?? 0}`;
+  private versionOf(key: string): number {
+    return this.versions.get(key) ?? 0;
   }
 
   private bumpVersion(key: string): void {
@@ -221,9 +207,9 @@ export class StorageService {
   private recordWrite(
     key: string,
     value: any,
-    versionBeforeWrite: string
+    versionBeforeWrite: number
   ): void {
-    if (this.cacheEnabled && this.versionOf(key) === versionBeforeWrite) {
+    if (this.versionOf(key) === versionBeforeWrite) {
       this.cache.set(key, value);
     } else {
       this.cache.delete(key);
@@ -241,9 +227,7 @@ export class StorageService {
   ): void => {
     if (areaName !== "local") return;
     for (const key of Object.keys(changes)) {
-      if (this.cacheEnabled) {
-        this.cache.set(key, changes[key].newValue);
-      }
+      this.cache.set(key, changes[key].newValue);
       this.bumpVersion(key);
     }
   };

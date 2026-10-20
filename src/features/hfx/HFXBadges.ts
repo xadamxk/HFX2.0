@@ -1,4 +1,6 @@
 import { Feature } from "../../core/Feature";
+import { getPosts } from "../../core/Posts";
+import { getOrFetch } from "../../core/Remote";
 import { Util } from "../../core/Util";
 import HFX from "../../sections/HFX";
 
@@ -8,28 +10,6 @@ enum HFXBadgesStorageKeys {
 
 /** Badge lists keyed by badge name, as published in badges.json. */
 type BadgeList = { [badgeName: string]: any };
-
-/** Cached badges and when they were fetched, stored as one item. */
-interface BadgeCache {
-  value?: BadgeList;
-  fetchedAt?: number;
-}
-
-/**
- * Whether badges fetched at `fetchedAt` are due for a refresh, i.e. at least
- * `fetchDelay` minutes old. A missing or future timestamp counts as stale.
- */
-export function isBadgeCacheStale(
-  fetchedAt: unknown,
-  fetchDelay: number,
-  now: number = Date.now()
-): boolean {
-  if (typeof fetchedAt !== "number") {
-    return true;
-  }
-  const elapsed = now - fetchedAt;
-  return elapsed < 0 || elapsed >= fetchDelay * 60_000;
-}
 
 class HFXBadges extends Feature {
   constructor() {
@@ -45,6 +25,7 @@ class HFXBadges extends Feature {
         {
           id: HFXBadgesStorageKeys.BADGE_MAP,
           description: "Badges to display and when they were fetched",
+          // { value: BadgeList, fetchedAt } once fetched (see getOrFetch)
           defaultValue: {},
         },
       ],
@@ -56,76 +37,38 @@ class HFXBadges extends Feature {
     "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/badges.json?nc=" +
     this.now;
 
-  run(settings: any) {
-    // Caches from older versions ({ badges }) have no fetchedAt, so they refetch
-    const cache: BadgeCache | null | undefined =
-      settings[`storage_${HFXBadgesStorageKeys.BADGE_MAP}`];
-    const cachedBadges = cache?.value;
-
-    if (!isBadgeCacheStale(cache?.fetchedAt, this.fetchDelay)) {
-      this.logger.debug(
-        `Badges fetched less than ${this.fetchDelay} minutes ago. Skipping fetch.`
+  async run() {
+    // Caches from older versions ({ badges }) have no fetchedAt, so they
+    // refetch. If a refetch fails, the last badges fetched are shown.
+    let badges: BadgeList;
+    try {
+      badges = await getOrFetch(
+        this,
+        HFXBadgesStorageKeys.BADGE_MAP,
+        this.fetchDelay * 60_000,
+        () => this.fetchBadges(),
+        this.settingsService
       );
-      if (cachedBadges) {
-        this.appendBadges(cachedBadges);
-      }
+    } catch (err) {
+      this.logger.error("Failed to fetch badge data.", err);
       return;
     }
+    this.appendBadges(badges);
+  }
 
-    fetch(this.fetchLocation)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(
-        (fetchedBadges: BadgeList) => {
-          this.appendBadges(fetchedBadges);
-          const newCache: BadgeCache = {
-            value: fetchedBadges,
-            fetchedAt: Date.now(),
-          };
-          return this.settingsService.setStorageItem(
-            this,
-            HFXBadgesStorageKeys.BADGE_MAP,
-            newCache
-          );
-        },
-        (err) => {
-          this.logger.error("Failed to fetch badge data.", err);
-          // Fall back to the last badges fetched, if any
-          if (cachedBadges) {
-            this.appendBadges(cachedBadges);
-          }
-        }
-      )
-      .catch((err) => {
-        this.logger.error("Failed to show or save badge data.", err);
-      });
+  private async fetchBadges(): Promise<BadgeList> {
+    const response = await fetch(this.fetchLocation);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return (await response.json()) as BadgeList;
   }
 
   private appendBadges(badgeList: BadgeList) {
-    // Loop posts
-    const posts = document.querySelectorAll(".post");
-    posts.forEach((post, postIndex) => {
-      // Get uid
-      const userLinkEl = post.querySelector(
-        ".author_information > strong > .largetext > a"
-      ) as HTMLAnchorElement | null;
-      const userLink = userLinkEl?.getAttribute("href") ?? null;
-      const uidStr = userLink
-        ? userLink.split("?action=profile&uid=")[1]
-        : null;
-      let uid = 0;
-      if (!uidStr) {
-        return;
-      }
-
-      // Parse uid as number
-      try {
-        uid = parseInt(uidStr, 10);
-      } catch (error) {
+    // Badges show on thread pages; elsewhere there are no posts
+    const posts = getPosts({ optional: true });
+    posts.forEach(({ el: post, authorUid: uid }, postIndex) => {
+      if (!uid) {
         return;
       }
 

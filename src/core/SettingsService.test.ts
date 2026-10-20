@@ -92,18 +92,32 @@ describe("SettingsService", () => {
     });
   });
 
-  describe("updateFeatureSettings", () => {
-    it("merges the changed field into the stored settings", async () => {
-      local.items = { TestFeature: { enabled: true, color: "red" } };
-      // Snapshot read before another context changes the color
-      await settingsService.getFeatureSettings(feature);
-      local.items.TestFeature = { enabled: true, color: "blue" };
+  describe("removeStorageItem", () => {
+    it("deletes only that item from the feature's storage key", async () => {
+      local.items = {
+        TestFeature: { enabled: true, color: "red" },
+        "TestFeature:storage": { storage_cache: "kept", storage_old: 5 },
+      };
 
-      await settingsService.updateFeatureSettings("TestFeature", {
-        enabled: false,
+      await settingsService.removeStorageItem(feature, "old");
+
+      expect(local.items["TestFeature:storage"]).toEqual({
+        storage_cache: "kept",
       });
+      expect(local.items.TestFeature).toEqual({ enabled: true, color: "red" });
+    });
 
-      expect(local.items.TestFeature).toEqual({ enabled: false, color: "blue" });
+    it("doesn't write when the item isn't stored", async () => {
+      local.items = { "TestFeature:storage": { storage_cache: "kept" } };
+      const set = jest.spyOn(local, "set");
+
+      await settingsService.removeStorageItem(feature, "old");
+      await settingsService.removeStorageItem(plainFeature, "old");
+
+      expect(set).not.toHaveBeenCalled();
+      expect(local.items).toEqual({
+        "TestFeature:storage": { storage_cache: "kept" },
+      });
     });
   });
 

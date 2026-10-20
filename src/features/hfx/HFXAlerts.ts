@@ -1,12 +1,16 @@
 import { Feature } from "../../core/Feature";
 import { Util } from "../../core/Util";
-import { el } from "../../core/Dom";
+import { dismissButton, el } from "../../core/Dom";
+import { getOrFetch } from "../../core/Remote";
 import HFX from "../../sections/HFX";
 
 enum HFXAlertsStorageKeys {
   ALERT_MAP = "alertMap",
-  LAST_FETCH_TIME = "lastFetchTime",
+  ALERT = "alert",
 }
+
+/** Older versions kept the last fetch time in its own storage item. */
+const LEGACY_LAST_FETCH_TIME = "lastFetchTime";
 
 interface HFXAlert {
   AlertKey: number;
@@ -30,10 +34,11 @@ class HFXAlerts extends Feature {
           defaultValue: { alerts: null, hidden: false },
         },
         {
-          id: HFXAlertsStorageKeys.LAST_FETCH_TIME,
-          description: "Time of the last alert fetch.",
-          // 0 means "never fetched", so the next page load fetches right away
-          defaultValue: 0,
+          id: HFXAlertsStorageKeys.ALERT,
+          description: "The published alert and when it was fetched.",
+          // { value: HFXAlert, fetchedAt } once fetched (see getOrFetch).
+          // null means "never fetched", so the next page load fetches right away
+          defaultValue: null,
         },
       ],
     });
@@ -44,67 +49,59 @@ class HFXAlerts extends Feature {
     "https://raw.githubusercontent.com/xadamxk/HFX2.0/develop/alert.json?nc=" +
     this.now;
 
-  run(settings: any) {
-    const STORAGE_KEYS = {
-      ALERT_MAP: `storage_${HFXAlertsStorageKeys.ALERT_MAP}`,
-      LAST_FETCH_TIME: `storage_${HFXAlertsStorageKeys.LAST_FETCH_TIME}`,
-    };
-    const alertMap = settings[STORAGE_KEYS.ALERT_MAP];
-    const lastFetchTime = settings[STORAGE_KEYS.LAST_FETCH_TIME];
-    const timePassedMinutes =
-      lastFetchTime !== undefined
-        ? (new Date().getTime() - lastFetchTime) / (60 * 1000)
-        : Infinity;
-
-    if (timePassedMinutes <= this.fetchDelay) {
-      this.logger.debug(
-        `HFX Alerts: ${timePassedMinutes} minutes passed - threshold ${this.fetchDelay} minutes. Skipping fetch.`
-      );
-      if (alertMap?.alerts && alertMap.hidden !== true) {
-        this.showAlert(alertMap.alerts);
-      }
-    } else {
-      this.logger.debug("Fetching HFX alert data...");
-      fetch(this.fetchLocation)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((fetchedAlert: HFXAlert) => {
-          this.logger.debug("Fetched alert data:", fetchedAlert);
-          const newLastFetchTime = new Date().getTime();
-          // Always update the last fetch time on successful fetch
-          this.settingsService.setStorageItem(
-            this,
-            HFXAlertsStorageKeys.LAST_FETCH_TIME,
-            newLastFetchTime
-          );
-
-          const storedKey = alertMap?.alerts?.AlertKey;
-          const fetchedKey = fetchedAlert?.AlertKey;
-
-          if (storedKey !== fetchedKey) {
-            const newAlertMap = {
-              alerts: fetchedAlert,
-              hidden: false,
-            };
-            this.settingsService.setStorageItem(
-              this,
-              HFXAlertsStorageKeys.ALERT_MAP,
-              newAlertMap
-            );
-            this.showAlert(fetchedAlert);
-          } else if (alertMap?.hidden !== true) {
-            // Same alert still active; keep showing until user dismisses
-            this.showAlert(alertMap?.alerts ?? fetchedAlert);
-          }
-        })
-        .catch(() => {
-          this.logger.error("Failed to fetch alert data.");
-        });
+  async run(settings: any) {
+    const alertMap = settings[`storage_${HFXAlertsStorageKeys.ALERT_MAP}`];
+    if (`storage_${LEGACY_LAST_FETCH_TIME}` in settings) {
+      // Replaced by the fetch time in the alert item's cache
+      this.settingsService
+        .removeStorageItem(this, LEGACY_LAST_FETCH_TIME)
+        .catch((): void => undefined);
     }
+
+    let publishedAlert: HFXAlert;
+    try {
+      // If a refetch fails, the last alert fetched is used
+      publishedAlert = await getOrFetch(
+        this,
+        HFXAlertsStorageKeys.ALERT,
+        this.fetchDelay * 60_000,
+        () => this.fetchAlert(),
+        this.settingsService
+      );
+    } catch {
+      this.logger.error("Failed to fetch alert data.");
+      return;
+    }
+
+    const storedKey = alertMap?.alerts?.AlertKey;
+    const publishedKey = publishedAlert?.AlertKey;
+
+    if (storedKey !== publishedKey) {
+      const newAlertMap = {
+        alerts: publishedAlert,
+        hidden: false,
+      };
+      this.settingsService.setStorageItem(
+        this,
+        HFXAlertsStorageKeys.ALERT_MAP,
+        newAlertMap
+      );
+      this.showAlert(publishedAlert);
+    } else if (alertMap?.hidden !== true) {
+      // Same alert still active; keep showing until user dismisses
+      this.showAlert(alertMap?.alerts ?? publishedAlert);
+    }
+  }
+
+  private async fetchAlert(): Promise<HFXAlert> {
+    this.logger.debug("Fetching HFX alert data...");
+    const response = await fetch(this.fetchLocation);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    const fetchedAlert = (await response.json()) as HFXAlert;
+    this.logger.debug("Fetched alert data:", fetchedAlert);
+    return fetchedAlert;
   }
 
   private showAlert(fetchedAlert: HFXAlert | null | undefined) {
@@ -130,11 +127,7 @@ class HFXAlerts extends Feature {
         el(
           "div",
           { class: "float-right", id: "DismissHFXAlert" },
-          el(
-            "a",
-            { href: "javascript:void(0);", title: "Dismiss HFX Alert" },
-            el("img", { src: Util.getURL("/assets/dismiss_notice.png") })
-          )
+          dismissButton("Dismiss HFX Alert")
         ),
         el("div", null, [
           el("div", null, el("b", null, String(fetchedAlert?.AlertTitle || ""))),

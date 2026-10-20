@@ -1,6 +1,13 @@
 import GroupManagement from "./GroupManagement";
+import WhosOnlineSorting from "../global/WhosOnlineSorting";
+import { resetRemoteCaches } from "../../core/Remote";
+import { SettingsService } from "../../core/SettingsService";
+import { StorageService } from "../../core/StorageService";
+import { MemoryStorage } from "../../test-utils/MemoryStorage";
 
-const STORAGE_KEY = "storage_managedGroups";
+const STORAGE_KEY = `${GroupManagement.class}:storage`;
+const ITEM = "storage_managedGroups";
+const DAY = 24 * 60 * 60 * 1000;
 const LEADER_GROUP = { groupId: 71, groupName: "Leaders" };
 
 const SHOWGROUPS_HTML = `
@@ -28,7 +35,8 @@ const renderProfile = ({ memberOf = [] as string[], nextCard = true } = {}) => {
 };
 
 const freshCache = (groups: object[]) => ({
-  [STORAGE_KEY]: { groups, lastFetchTime: Date.now() },
+  value: groups,
+  fetchedAt: Date.now(),
 });
 
 const buttonsFor = (label: string) =>
@@ -37,14 +45,24 @@ const buttonsFor = (label: string) =>
   ) as HTMLButtonElement[];
 
 describe("GroupManagement", () => {
-  let setStorageItem: jest.SpyInstance;
+  let local: MemoryStorage;
   let fetchMock: jest.Mock;
   let confirmMock: jest.Mock;
 
+  /** Store `cached` as the managed groups item, then run as on a page load. */
+  const runWith = async (cached?: unknown) => {
+    if (cached !== undefined) local.items[STORAGE_KEY] = { [ITEM]: cached };
+    await GroupManagement.run({ [ITEM]: cached });
+  };
+
+  const stored = () => local.items[STORAGE_KEY]?.[ITEM];
+
   beforeEach(() => {
-    setStorageItem = jest
-      .spyOn((GroupManagement as any).settingsService, "setStorageItem")
-      .mockResolvedValue(undefined);
+    resetRemoteCaches();
+    local = new MemoryStorage();
+    (GroupManagement as any).settingsService = new SettingsService(
+      new StorageService(local, new MemoryStorage())
+    );
     fetchMock = jest.fn();
     (global as any).fetch = fetchMock;
     confirmMock = jest.fn();
@@ -67,45 +85,119 @@ describe("GroupManagement", () => {
         text: async () => SHOWGROUPS_HTML,
       });
 
-      await GroupManagement.run({ [STORAGE_KEY]: { groups: [], lastFetchTime: 0 } });
+      await runWith(null);
 
-      expect(setStorageItem).toHaveBeenCalledWith(
-        GroupManagement,
-        "managedGroups",
-        expect.objectContaining({ groups: [LEADER_GROUP] })
-      );
+      expect(stored()).toEqual({
+        value: [LEADER_GROUP],
+        fetchedAt: expect.any(Number),
+      });
+    });
+
+    it("doesn't refetch within a day", async () => {
+      await runWith({
+        value: [LEADER_GROUP],
+        fetchedAt: Date.now() - DAY + 1000,
+      });
+
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("doesn't cache a failed request as 'no groups'", async () => {
       fetchMock.mockRejectedValue(new Error("offline"));
 
-      await GroupManagement.run({ [STORAGE_KEY]: { groups: [], lastFetchTime: 0 } });
+      await runWith(null);
 
-      expect(setStorageItem).not.toHaveBeenCalled();
+      expect(stored()).toBeNull();
     });
 
     it("doesn't cache an error response or a page without the group list", async () => {
       fetchMock.mockResolvedValueOnce({ ok: false, status: 500 });
-      await GroupManagement.run({ [STORAGE_KEY]: { groups: [], lastFetchTime: 0 } });
+      await runWith(null);
 
       fetchMock.mockResolvedValueOnce({
         ok: true,
         text: async () => "<p>You must be logged in</p>",
       });
-      await GroupManagement.run({ [STORAGE_KEY]: { groups: [], lastFetchTime: 0 } });
+      await runWith(null);
 
-      expect(setStorageItem).not.toHaveBeenCalled();
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(stored()).toBeNull();
     });
 
     it("keeps showing the previously cached groups when a refresh fails", async () => {
       renderProfile();
       fetchMock.mockRejectedValue(new Error("offline"));
 
-      await GroupManagement.run({
-        [STORAGE_KEY]: { groups: [LEADER_GROUP], lastFetchTime: 1 },
-      });
+      await runWith({ value: [LEADER_GROUP], fetchedAt: 1 });
 
       expect(document.getElementById("hfx-managed-groups")).not.toBeNull();
+    });
+
+    it("shares one showgroups.php fetch with Whos Online Sorting", async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        text: async () => SHOWGROUPS_HTML,
+      });
+      jest
+        .spyOn((WhosOnlineSorting as any).settingsService, "setStorageItem")
+        .mockResolvedValue(undefined);
+      document.body.innerHTML = `
+        <table><tbody id="boardstats_e">
+          <tr><td class="trow1"><span class="smalltext">1 user<br /><a href="#"><span class="group2">Alice</span></a></span></td></tr>
+        </tbody></table>`;
+
+      await Promise.all([
+        runWith(null),
+        WhosOnlineSorting.run({
+          labelByGroup: true,
+          storage_groupMap: {},
+          storage_groupMapNextFetch: 0,
+        }),
+      ]);
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(stored().value).toEqual([LEADER_GROUP]);
+    });
+  });
+
+  describe("upgrading from the { groups, lastFetchTime } cache", () => {
+    it("converts it without refetching or losing the list", async () => {
+      renderProfile();
+      const lastFetchTime = Date.now() - 1000;
+
+      await runWith({ groups: [LEADER_GROUP], lastFetchTime });
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(stored()).toEqual({
+        value: [LEADER_GROUP],
+        fetchedAt: lastFetchTime,
+      });
+      expect(document.getElementById("hfx-managed-groups")).not.toBeNull();
+    });
+
+    it("refetches a stale one and falls back to its list if that fails", async () => {
+      renderProfile();
+      fetchMock.mockRejectedValue(new Error("offline"));
+
+      await runWith({
+        groups: [LEADER_GROUP],
+        lastFetchTime: Date.now() - 2 * DAY,
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(document.getElementById("hfx-managed-groups")).not.toBeNull();
+    });
+
+    it("treats the old never-fetched default as nothing cached", async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        text: async () => SHOWGROUPS_HTML,
+      });
+
+      await runWith({ groups: [], lastFetchTime: 0 });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(stored().value).toEqual([LEADER_GROUP]);
     });
   });
 
@@ -113,7 +205,7 @@ describe("GroupManagement", () => {
     it("adds the card to the bottom of the first profile card without moving its neighbour", async () => {
       renderProfile();
 
-      await GroupManagement.run(freshCache([LEADER_GROUP]));
+      await runWith(freshCache([LEADER_GROUP]));
 
       const first = document.getElementById("first")!;
       const second = document.getElementById("second")!;
@@ -130,7 +222,7 @@ describe("GroupManagement", () => {
       document.getElementById("second")!.remove();
 
       await expect(
-        GroupManagement.run(freshCache([LEADER_GROUP]))
+        runWith(freshCache([LEADER_GROUP]))
       ).resolves.toBeUndefined();
       expect(document.getElementById("hfx-managed-groups")).toBeNull();
     });
@@ -138,9 +230,7 @@ describe("GroupManagement", () => {
     it("shows group names with < and > as written", async () => {
       renderProfile();
 
-      await GroupManagement.run(
-        freshCache([{ groupId: 1, groupName: "<3 Coders>" }])
-      );
+      await runWith(freshCache([{ groupId: 1, groupName: "<3 Coders>" }]));
 
       expect(
         document.querySelectorAll("#hfx-managed-groups strong")[1]?.textContent
@@ -151,7 +241,7 @@ describe("GroupManagement", () => {
       renderProfile({ memberOf: ["Leaders"] });
       confirmMock.mockReturnValue(false);
 
-      await GroupManagement.run(freshCache([LEADER_GROUP]));
+      await runWith(freshCache([LEADER_GROUP]));
       buttonsFor("Remove User")[0].click();
 
       expect(confirmMock).toHaveBeenCalledWith(
@@ -165,7 +255,7 @@ describe("GroupManagement", () => {
       confirmMock.mockReturnValue(true);
       fetchMock.mockReturnValue(new Promise(() => {}));
 
-      await GroupManagement.run(freshCache([LEADER_GROUP]));
+      await runWith(freshCache([LEADER_GROUP]));
       buttonsFor("Remove User")[0].click();
 
       expect(fetchMock).toHaveBeenCalledWith(
@@ -180,7 +270,7 @@ describe("GroupManagement", () => {
       renderProfile();
       confirmMock.mockReturnValue(false);
 
-      await GroupManagement.run(freshCache([LEADER_GROUP]));
+      await runWith(freshCache([LEADER_GROUP]));
       buttonsFor("Blacklist User")[0].click();
 
       expect(confirmMock).toHaveBeenCalledWith(
@@ -194,7 +284,7 @@ describe("GroupManagement", () => {
       confirmMock.mockReturnValue(true);
       fetchMock.mockReturnValue(new Promise(() => {}));
 
-      await GroupManagement.run(freshCache([LEADER_GROUP]));
+      await runWith(freshCache([LEADER_GROUP]));
       buttonsFor("Blacklist User")[0].click();
 
       const body = fetchMock.mock.calls[0][1].body as URLSearchParams;
@@ -205,7 +295,7 @@ describe("GroupManagement", () => {
       renderProfile();
       fetchMock.mockReturnValue(new Promise(() => {}));
 
-      await GroupManagement.run(freshCache([LEADER_GROUP]));
+      await runWith(freshCache([LEADER_GROUP]));
       buttonsFor("Add User")[0].click();
 
       expect(confirmMock).not.toHaveBeenCalled();

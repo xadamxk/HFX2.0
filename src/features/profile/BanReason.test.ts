@@ -92,6 +92,22 @@ describe("BanReason", () => {
     expect(cache.map[123].banReason).toBe("Scamming");
   });
 
+  it("reads uids from relative profile links on bans.php", async () => {
+    renderProfile();
+    mockBansPage(
+      bansPage([{ uid: 123, reason: "Scamming" }]).replace(
+        /https:\/\/hackforums\.net\//g,
+        ""
+      )
+    );
+
+    BanReason.run({ [STORAGE_KEY]: { fetchedAt: 0, map: {} } });
+    await flush();
+
+    expect(shownReason()).toBe("Scamming");
+    expect(savedCache().map[123].bannedByUID).toBe(1);
+  });
+
   it("doesn't refetch a banned profile missing from a fresh snapshot", async () => {
     renderProfile();
 

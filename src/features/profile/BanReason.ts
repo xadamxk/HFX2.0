@@ -1,5 +1,6 @@
 import { Feature } from "../../core/Feature";
 import { appendChildren, el, ElChild } from "../../core/Dom";
+import { fetchDocument } from "../../core/Remote";
 import { Util } from "../../core/Util";
 import Profile from "../../sections/Profile";
 
@@ -165,16 +166,8 @@ class BanReason extends Feature {
 
   /** Returns null when bans.php couldn't be fetched or parsed. */
   private async queryBanReason(): Promise<Record<number, BanInfo> | null> {
-    const url = "https://hackforums.net/bans.php";
     try {
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const html = await response.text();
-
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
+      const doc = await fetchDocument("https://hackforums.net/bans.php");
 
       const rows = this.querySelectorAll(
         "table.tborder tr.mobile-no-padding",
@@ -191,8 +184,7 @@ class BanReason extends Feature {
         );
         if (!usernameLink) return;
 
-        const uidParam = new URL(usernameLink.href).searchParams.get("uid");
-        const uid = parseInt(uidParam || "0", 10);
+        const uid = Util.getUidFromHref(usernameLink.getAttribute("href"));
         if (!uid) return;
 
         // const username = (usernameLink.textContent || "").trim();
@@ -218,10 +210,7 @@ class BanReason extends Feature {
         let bannedByUID = 0;
         let bannedByUsername = "";
         if (bannedByLink) {
-          const staffUidParam = new URL(bannedByLink.href).searchParams.get(
-            "uid"
-          );
-          bannedByUID = parseInt(staffUidParam || "0", 10);
+          bannedByUID = Util.getUidFromHref(bannedByLink.getAttribute("href"));
           bannedByUsername = (bannedByLink.textContent || "").trim();
         } else {
           const bannedByCell = this.querySelector<HTMLElement>(

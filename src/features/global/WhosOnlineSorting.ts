@@ -5,7 +5,13 @@ import Global from "../../sections/Global";
 
 enum STORAGE_KEYS {
   GROUP_MAP = "groupMap",
+  NEXT_FETCH = "groupMapNextFetch",
 }
+
+// Refresh the group map daily so new groups don't stay "Unknown"
+const GROUP_MAP_TTL = 24 * 60 * 60 * 1000;
+// After a failed or empty fetch, wait before trying showgroups.php again
+const FAILED_FETCH_RETRY_DELAY = 60 * 60 * 1000;
 
 type GroupItem = { el: Element; hasStar: boolean };
 
@@ -24,6 +30,7 @@ const KNOWN_GROUPS = {
 class WhosOnlineSorting extends Feature {
   constructor() {
     super({
+      id: "WhosOnlineSorting",
       section: Global,
       name: "Whos Online Sorting",
       enabled: true,
@@ -43,61 +50,119 @@ class WhosOnlineSorting extends Feature {
           description: "",
           defaultValue: {},
         },
+        {
+          id: STORAGE_KEYS.NEXT_FETCH,
+          description: "",
+          defaultValue: 0,
+        },
       ],
     });
   }
 
   async run(settings: any) {
-    const boardStats = document.getElementById("boardstats_e");
+    // Who's Online only exists on the index, but this feature runs everywhere
+    const boardStats = this.querySelector<HTMLElement>(
+      "#boardstats_e",
+      document,
+      true
+    );
     if (!boardStats) return;
 
     const labelByGroup: boolean = settings.labelByGroup;
 
-    const targetCell = boardStats.querySelector(
-      "td.trow1 > span.smalltext"
-    ) as HTMLElement | null;
+    const targetCell = this.querySelector<HTMLElement>(
+      "td.trow1 > span.smalltext",
+      boardStats
+    );
     if (!targetCell) return;
 
-    const sorted = this.sortOnlineMembers(boardStats);
-    if (!sorted || sorted.groupOrder.length === 0) return;
-    const { groupOrder, membersByGroup, summaryNodes } = sorted;
+    const members = this.collectOnlineMembers(targetCell);
+    if (!members) return;
+    const { groupOrder, membersByGroup, summaryNodes } = members;
 
-    const sortedGroupOrder = this.sortGroupOrder(groupOrder);
+    // Resolve the group map before touching the DOM, so a failed fetch leaves HF's list as-is
+    const groupMap = await this.resolveGroupMap(settings);
+    if (!groupMap) return;
 
-    const groupMap = settings[`storage_${STORAGE_KEYS.GROUP_MAP}`] as Record<
-      string,
-      string
-    >;
+    this.appendSortedMembers(
+      this.sortGroupOrder(groupOrder),
+      membersByGroup,
+      { ...groupMap, ...KNOWN_GROUPS },
+      targetCell,
+      labelByGroup,
+      summaryNodes
+    );
+  }
 
-    if (!groupMap || Object.keys(groupMap).length === 0) {
-      this.logger.debug("No group map or unknown group found, fetching...");
-      const newGroupMap = await this.fetchGroupMap();
-      this.appendSortedMembers(
-        sortedGroupOrder,
-        membersByGroup,
-        { ...newGroupMap, ...KNOWN_GROUPS },
-        targetCell,
-        labelByGroup,
-        summaryNodes
+  /**
+   * Use the stored group map while it's fresh, otherwise refetch it. Falls back to
+   * the stored map if the refetch fails; null when there's no map at all.
+   */
+  private async resolveGroupMap(
+    settings: any
+  ): Promise<Record<string, string> | null> {
+    const storedMap = settings[`storage_${STORAGE_KEYS.GROUP_MAP}`] as
+      | Record<string, string>
+      | undefined;
+    const hasStoredMap = !!storedMap && Object.keys(storedMap).length > 0;
+    const nextFetch =
+      Number(settings[`storage_${STORAGE_KEYS.NEXT_FETCH}`]) || 0;
+
+    // Not due yet: either the map is fresh, or a recent fetch failed and we're waiting to retry
+    if (Date.now() < nextFetch) {
+      this.logger.debug(
+        hasStoredMap
+          ? "Group map found, appending sorted members..."
+          : "Group map fetch failed recently, skipping sort."
       );
-    } else {
-      this.logger.debug("Group map found, appending sorted members...");
-      this.appendSortedMembers(
-        sortedGroupOrder,
-        membersByGroup,
-        { ...groupMap, ...KNOWN_GROUPS },
-        targetCell,
-        labelByGroup,
-        summaryNodes
+      return hasStoredMap ? storedMap : null;
+    }
+
+    this.logger.debug("Group map missing or stale, fetching...");
+    const fetchedMap = await this.fetchGroupMap();
+    if (fetchedMap) {
+      await this.saveStorageItem(STORAGE_KEYS.GROUP_MAP, fetchedMap);
+      await this.saveStorageItem(
+        STORAGE_KEYS.NEXT_FETCH,
+        Date.now() + GROUP_MAP_TTL
       );
+      return fetchedMap;
+    }
+
+    await this.saveStorageItem(
+      STORAGE_KEYS.NEXT_FETCH,
+      Date.now() + FAILED_FETCH_RETRY_DELAY
+    );
+    return hasStoredMap ? storedMap : null;
+  }
+
+  private async saveStorageItem(id: STORAGE_KEYS, value: unknown) {
+    try {
+      await this.settingsService.setStorageItem(this, id, value);
+    } catch (error) {
+      this.logger.debug(`Failed to save ${id}: ${error}`);
     }
   }
 
-  private async fetchGroupMap(): Promise<Record<string, string>> {
-    const response = await fetch("https://hackforums.net/showgroups.php", {
-      credentials: "include",
-    });
-    const html = await response.text();
+  /**
+   * Fetch class -> group name pairs from showgroups.php.
+   * Returns null on a network/HTTP error or when no groups were found (e.g. logged out).
+   */
+  private async fetchGroupMap(): Promise<Record<string, string> | null> {
+    let html: string;
+    try {
+      const response = await fetch("https://hackforums.net/showgroups.php", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        this.logger.debug(`Group map fetch failed: HTTP ${response.status}`);
+        return null;
+      }
+      html = await response.text();
+    } catch (error) {
+      this.logger.debug(`Group map fetch failed: ${error}`);
+      return null;
+    }
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
@@ -115,37 +180,26 @@ class WhosOnlineSorting extends Feature {
       map[className] = groupName;
     });
 
-    try {
-      await this.settingsService.setStorageItem(
-        this,
-        STORAGE_KEYS.GROUP_MAP,
-        map
-      );
-    } catch {}
-
-    return map;
+    return Object.keys(map).length > 0 ? map : null;
   }
 
-  private sortOnlineMembers(boardStats: HTMLElement):
-    | {
-        groupOrder: string[];
-        membersByGroup: Record<string, GroupItem[]>;
-        summaryNodes: Node[];
-      }
-    | undefined {
-    const rows = boardStats.querySelectorAll("tr");
-    if (!rows || rows.length < 2) return;
-
-    const targetCell = rows[1].querySelector("td.trow1 > span.smalltext");
-    if (!targetCell) return;
-
-    const br = targetCell.querySelector("br");
-    if (!br) return;
+  /**
+   * Group the online members in the cell by usergroup. Read-only: the DOM is only
+   * changed later by appendSortedMembers. Returns null when there's nothing to sort.
+   */
+  private collectOnlineMembers(targetCell: HTMLElement): {
+    groupOrder: string[];
+    membersByGroup: Record<string, GroupItem[]>;
+    summaryNodes: Node[];
+  } | null {
+    // No member list after the summary (e.g. nobody online)
+    const br = this.querySelector("br", targetCell, true);
+    if (!br) return null;
 
     // Collect nodes after the first <br>
     const allChildNodes = Array.from(targetCell.childNodes);
     const brIndex = allChildNodes.indexOf(br);
-    if (brIndex === -1) return;
+    if (brIndex === -1) return null;
 
     // Capture the summary (everything before the first <br>)
     const summaryNodes = allChildNodes
@@ -201,12 +255,7 @@ class WhosOnlineSorting extends Feature {
     }
 
     // If nothing to group, exit
-    if (groupOrder.length === 0) return;
-
-    // Remove everything after <br>
-    while (br.nextSibling) {
-      targetCell.removeChild(br.nextSibling);
-    }
+    if (groupOrder.length === 0) return null;
 
     return { groupOrder, membersByGroup, summaryNodes };
   }

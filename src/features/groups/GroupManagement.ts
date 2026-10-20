@@ -17,6 +17,7 @@ class GroupManagement extends Feature {
   fetchDelay = 24 * 60 * 60 * 1000; // 24 hours
   constructor() {
     super({
+      id: "GroupManagement",
       section: Groups,
       name: "Group Management",
       enabled: false,
@@ -42,15 +43,21 @@ class GroupManagement extends Feature {
     if (!lastFetchTime || lastFetchTime < Date.now() - this.fetchDelay) {
       this.logger.debug("Fetching managed groups again");
       const newManagedGroups = await this.fetchManagedGroups();
-      this.settingsService.setStorageItem(
-        this,
-        GroupManagementStorageKeys.MANAGED_GROUPS,
-        { groups: newManagedGroups, lastFetchTime: Date.now() }
-      );
-      settings[STORAGE_KEYS.MANAGED_GROUPS] = {
-        groups: newManagedGroups,
-        lastFetchTime: Date.now(),
-      };
+      if (newManagedGroups === null) {
+        // Don't cache a failed fetch as "no groups" - keep the last known list
+        // and try again on the next page load
+        this.logger.warn("Couldn't fetch managed groups; will retry later");
+      } else {
+        this.settingsService.setStorageItem(
+          this,
+          GroupManagementStorageKeys.MANAGED_GROUPS,
+          { groups: newManagedGroups, lastFetchTime: Date.now() }
+        );
+        settings[STORAGE_KEYS.MANAGED_GROUPS] = {
+          groups: newManagedGroups,
+          lastFetchTime: Date.now(),
+        };
+      }
     } else {
       this.logger.debug(
         `No need to fetch managed groups again until ${new Date(
@@ -69,7 +76,11 @@ class GroupManagement extends Feature {
     }
   }
 
-  private async fetchManagedGroups(): Promise<ManagedGroup[]> {
+  /**
+   * Fetch the groups the user leads from showgroups.php.
+   * @returns The managed groups, or null if the page couldn't be fetched or read
+   */
+  private async fetchManagedGroups(): Promise<ManagedGroup[] | null> {
     const url = "https://hackforums.net/showgroups.php";
 
     try {
@@ -85,7 +96,8 @@ class GroupManagement extends Feature {
         ".groupContainer"
       ) as HTMLElement | null;
       if (!container) {
-        return [];
+        // Logged out, error page, or layout change - not a real "no groups"
+        return null;
       }
 
       const managedGroups: ManagedGroup[] = [];
@@ -147,7 +159,7 @@ class GroupManagement extends Feature {
 
       return managedGroups;
     } catch (e) {
-      return [];
+      return null;
     }
   }
 
@@ -165,6 +177,8 @@ class GroupManagement extends Feature {
       ":scope > .pro-adv-card"
     ) as HTMLElement | null;
     if (!firstCard) return;
+
+    const profileUsername = Util.getProfileUsername() || "this user";
 
     // Build our card
     const card = document.createElement("div");
@@ -187,12 +201,10 @@ class GroupManagement extends Feature {
       const isMember = this.isMemberOfGroup(group.groupName);
       const row = document.createElement("div");
       row.setAttribute("style", "padding: 4px 12px;");
-      const safeName = (group.groupName || "")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
 
+      // textContent never parses HTML, so the name doesn't need escaping
       const nameEl = document.createElement("strong");
-      nameEl.textContent = `${safeName}:`;
+      nameEl.textContent = `${group.groupName || ""}:`;
       row.appendChild(nameEl);
 
       const toggleMembershipButton = document.createElement("button");
@@ -205,8 +217,10 @@ class GroupManagement extends Feature {
         "margin-left: 10px; padding: 2px 8px; font-size: 12px; cursor: pointer;"
       );
       toggleMembershipButton.addEventListener("click", () => {
-        if (isMember) this.removeGroupMember(group.groupId);
-        else this.addGroupMember(group.groupId);
+        if (isMember) {
+          if (confirm(`HFX: Remove ${profileUsername} from ${group.groupName}?`))
+            this.removeGroupMember(group.groupId);
+        } else this.addGroupMember(group.groupId);
       });
       row.appendChild(toggleMembershipButton);
 
@@ -222,7 +236,10 @@ class GroupManagement extends Feature {
           alert(
             "HFX: User is already a member of the group. Please remove them before blacklisting."
           );
-        else this.blacklistGroupUser(group.groupId);
+        else if (
+          confirm(`HFX: Blacklist ${profileUsername} from ${group.groupName}?`)
+        )
+          this.blacklistGroupUser(group.groupId);
       });
       row.appendChild(blacklistButton);
 
@@ -230,7 +247,9 @@ class GroupManagement extends Feature {
     }
 
     // Append to bottom of profile card - would a new card be better?
-    firstCard.append(card, firstCard.nextSibling ?? "");
+    // (Only our card - passing nextSibling here used to pull the card's
+    // neighbour inside it too)
+    firstCard.append(card);
   }
 
   private isMemberOfGroup(groupName: string) {

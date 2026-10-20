@@ -4,6 +4,7 @@ import Convo from "../../sections/Convo";
 class MessageTimestamps extends Feature {
   constructor() {
     super({
+      id: "MessageTimestamps",
       section: Convo,
       name: "Message Timestamps",
       enabled: true,

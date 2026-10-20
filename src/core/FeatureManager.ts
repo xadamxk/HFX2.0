@@ -3,7 +3,6 @@ import { Logger } from "./Logger";
 import SelectorManager from "./SelectorManager";
 import { SettingsService } from "./SettingsService";
 import { StorageService } from "./StorageService";
-import { getFeatureStorageKey } from "./constants";
 
 export interface LoadedFeature {
   feature: string;
@@ -23,7 +22,7 @@ export class FeatureManager {
 
   private featureLoadingResults: LoadedFeature[] = [];
 
-  private settingsService = new SettingsService(new StorageService());
+  private settingsService = new SettingsService(StorageService.getInstance());
 
   public async loadFeatures(features: Feature[]): Promise<void> {
     const loadStart = performance.now();
@@ -31,17 +30,17 @@ export class FeatureManager {
     // Buffer each feature's logs so parallel loading doesn't interleave them
     features.forEach((feature) => feature.logger.startBuffering());
 
-    const storedSettings = await this.settingsService.getFeatureSettingsBatch(
-      features
-    );
+    // One read and at most one write for every feature's settings
+    let settings: { [featureClass: string]: { [key: string]: any } } = {};
+    try {
+      settings = await this.settingsService.initializeFeatureSettings(features);
+    } catch (error: any) {
+      Logger.error("Failed to initialize feature settings:", error);
+    }
 
     this.featureLoadingResults = await Promise.all(
       features.map((feature) =>
-        this.loadFeature(
-          feature,
-          storedSettings[feature.class],
-          storedSettings[getFeatureStorageKey(feature.class)]
-        )
+        this.loadFeature(feature, settings[feature.class])
       )
     );
     const loadDuration = performance.now() - loadStart;
@@ -54,7 +53,7 @@ export class FeatureManager {
       `${this.LOAD_FEATURES_TIMER_LABEL}: ${loadDuration.toFixed(1)} ms`
     );
 
-    // After loading all features, consult SelectorManager to decide if toast should be shown
+    // Summarize this page's selector misses and save them in one write
     const selectorManager = SelectorManager.getInstance();
     const selectorErrors = selectorManager.getErrors();
     if (selectorErrors.length) {
@@ -71,36 +70,39 @@ export class FeatureManager {
       Logger.groupEnd();
     }
 
-    if (await selectorManager.shouldShowToast()) {
-      // TODO: Do we want error feedback on HF or not? Selectors rarely break.
-    }
+    await selectorManager.persistErrors();
   }
 
   /**
-   * Initialize settings and start a single feature.
+   * Start a single feature with its initialized settings.
    * duration_ms covers the feature's synchronous start/run work, not the time
    * spent waiting on storage or on other features loading in parallel.
+   * An async run() isn't awaited; if it rejects before the summary is printed,
+   * the error shows up there too.
    */
   private async loadFeature(
     feature: Feature,
-    storedSettings: { [key: string]: any } | undefined,
-    storedStorage: { [key: string]: any } | undefined
+    settings: { [key: string]: any } | undefined
   ): Promise<LoadedFeature> {
     let runStart: number | undefined;
     try {
-      const settings = await feature.initializeSettings(
-        storedSettings,
-        storedStorage
-      );
+      if (!settings) {
+        throw new Error("Settings could not be loaded");
+      }
       runStart = performance.now();
-      const running = feature.start(settings);
-      return {
+      const result: LoadedFeature = {
         feature: feature.name,
         loaded: true,
-        running,
-        duration_ms: this.elapsedSince(runStart),
+        running: false,
+        duration_ms: 0,
         error: undefined,
       };
+      result.running = feature.start(settings, (error) => {
+        result.error = error?.message || "Unknown error";
+        result.context = error?.stack || "Unknown error stack";
+      });
+      result.duration_ms = this.elapsedSince(runStart);
+      return result;
     } catch (error: any) {
       feature.logger.error(`Error loading feature: ${error?.message}`);
       return {

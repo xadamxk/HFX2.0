@@ -28,7 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "@reorx/webpack-ext-reloader": "^1.3.0",
-    "@types/chrome": "^0.0.237",
+    "@types/chrome": "^0.0.332",
     "@types/jest": "^30.0.0",
     "@types/mustache": "^4.2.2",
     "@types/node": "^22.20.5",
@@ -41,7 +41,7 @@
     "globals": "^17.12.0",
     "jest": "^30.5.2",
     "jest-environment-jsdom": "^30.5.2",
-    "mustache": "^3.1.0",
+    "mustache": "^4.2.0",
     "prettier": "^3.9.9",
     "ts-jest": "^29.1.1",
     "ts-loader": "^9.4.3",

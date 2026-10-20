@@ -32,25 +32,15 @@ export class OptionsData {
   private static discoverSections(): void {
     // Use webpack's require.context to dynamically import all sections
     const sectionsContext = (require as any).context('../sections', false, /\.ts$/);
-    
-    // console.log('Sections context keys:', sectionsContext.keys());
-    
+
     sectionsContext.keys().forEach((key: string) => {
       const sectionModule = sectionsContext(key);
       const section = sectionModule.default;
-      
-      // console.log('Section module:', section);
-      // console.log('Section class:', section?.class);
-      // console.log('Section name:', section?.name);
-      // console.log('Is Section instance:', section instanceof Section);
-      
+
       if (section && section instanceof Section) {
         this.sections[section.class] = section;
-        // console.log('Registered section:', section.class, 'as', section.name);
       }
     });
-    
-    // console.log('Final sections registry:', Object.keys(this.sections));
   }
 
   /**

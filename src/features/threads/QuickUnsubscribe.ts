@@ -1,9 +1,11 @@
 import { Feature } from "../../core/Feature";
+import { Util } from "../../core/Util";
 import Threads from "../../sections/Threads";
 
 class QuickUnsubscribe extends Feature {
   constructor() {
     super({
+      id: "QuickUnsubscribe",
       section: Threads,
       name: "Quick Unsubscribe",
       enabled: true,
@@ -20,9 +22,7 @@ class QuickUnsubscribe extends Feature {
     if (!unsubscribeElement) return;
 
     if (unsubscribeElement) {
-      const headHtml = document.head.innerHTML;
-      const match = headHtml.match(/my_post_key = "([a-f0-9]+)"/);
-      const postKey = match ? match[1] : "";
+      const postKey = Util.getUserPostKey() || "";
 
       const anchor = unsubscribeElement.querySelector("a");
       const onclick = anchor?.getAttribute("onclick") || "";

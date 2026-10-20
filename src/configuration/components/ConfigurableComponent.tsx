@@ -4,6 +4,7 @@ import { Feature } from '../../core/Feature';
 import { Section } from '../../core/Section';
 import { Dropdown } from '../configurables/Dropdown';
 import { Stepper } from '../configurables/Stepper';
+import { useDebouncedSetting } from './useDebouncedSetting';
 
 type OnChange = (featureName: string, configName: string, value: any) => void;
 
@@ -11,7 +12,8 @@ interface ConfigurableComponentProps {
   configurable: Configurable;
   feature: Feature;
   section: Section;
-  settings?: any;
+  /** This feature's own settings, not the whole settings map */
+  featureSettings?: any;
   onChange?: OnChange;
 }
 
@@ -62,9 +64,12 @@ const DropdownField: React.FC<FieldProps<Dropdown>> = ({ configurable, feature, 
 );
 
 const StepperField: React.FC<FieldProps<Stepper>> = ({ configurable, feature, configurableId, currentValue, onChange }) => {
-  const value = currentValue ?? 0;
+  // Clicks and typing update a local draft; the storage write is debounced
+  const [value, setValue, flush] = useDebouncedSetting<number>(currentValue ?? 0, (next) =>
+    onChange?.(feature.class, configurable.id, next)
+  );
   const step = (increment: boolean) =>
-    onChange?.(feature.class, configurable.id, increment ? value + configurable.step : value - configurable.step);
+    setValue(increment ? value + configurable.step : value - configurable.step);
 
   return (
     <div className="configurable-item configurable-stepper">
@@ -86,7 +91,8 @@ const StepperField: React.FC<FieldProps<Stepper>> = ({ configurable, feature, co
           data-config={configurable.id}
           value={value}
           step={configurable.step}
-          onChange={(e) => onChange?.(feature.class, configurable.id, parseInt(e.target.value) || 0)}
+          onChange={(e) => setValue(parseInt(e.target.value) || 0)}
+          onBlur={flush}
         />
         <button
           type="button"
@@ -103,21 +109,29 @@ const StepperField: React.FC<FieldProps<Stepper>> = ({ configurable, feature, co
   );
 };
 
-// Plain <input> for text, color, etc. (uses configurable.type as the input type)
-const InputField: React.FC<FieldProps> = ({ configurable, feature, configurableId, currentValue, onChange }) => (
-  <div className={`configurable-item configurable-${configurable.type}`}>
-    <label htmlFor={configurableId}>{configurable.label}</label>
-    <input
-      type={configurable.type || 'text'}
-      id={configurableId}
-      data-feature={feature.class}
-      data-config={configurable.id}
-      value={currentValue ?? ''}
-      onChange={(e) => onChange?.(feature.class, configurable.id, e.target.value)}
-    />
-    <p className="configurable-description">{configurable.description}</p>
-  </div>
-);
+// Plain <input> for text, color, etc. (uses configurable.type as the input type).
+// Typing and color dragging update a local draft; the storage write is debounced.
+const InputField: React.FC<FieldProps> = ({ configurable, feature, configurableId, currentValue, onChange }) => {
+  const [value, setValue, flush] = useDebouncedSetting(currentValue ?? '', (next) =>
+    onChange?.(feature.class, configurable.id, next)
+  );
+
+  return (
+    <div className={`configurable-item configurable-${configurable.type}`}>
+      <label htmlFor={configurableId}>{configurable.label}</label>
+      <input
+        type={configurable.type || 'text'}
+        id={configurableId}
+        data-feature={feature.class}
+        data-config={configurable.id}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={flush}
+      />
+      <p className="configurable-description">{configurable.description}</p>
+    </div>
+  );
+};
 
 /**
  * Renders a configurable based on its type. Configurables themselves are plain
@@ -126,13 +140,13 @@ const InputField: React.FC<FieldProps> = ({ configurable, feature, configurableI
 export const ConfigurableComponent: React.FC<ConfigurableComponentProps> = ({
   configurable,
   feature,
-  settings,
+  featureSettings,
   onChange
 }) => {
   const fieldProps = {
     feature,
     configurableId: `config-${feature.class}-${configurable.id}`,
-    currentValue: configurable.getCurrentValue(feature, settings),
+    currentValue: configurable.getCurrentValue(feature, { [feature.class]: featureSettings }),
     onChange,
   };
 

@@ -1,9 +1,11 @@
 import { Feature } from "../../core/Feature";
+import { getPosts } from "../../core/Posts";
 import Threads from "../../sections/Threads";
 
 class JoindateOnPosts extends Feature {
   constructor() {
     super({
+      id: "JoindateOnPosts",
       section: Threads,
       name: "Joindate On Posts",
       enabled: true,
@@ -12,7 +14,7 @@ class JoindateOnPosts extends Feature {
   }
 
   run() {
-    this.querySelectorAll(".post").forEach((post) => {
+    getPosts({ featureName: this.name }).forEach(({ el: post }) => {
       const avatarLink = post.querySelector(".author_avatar > a");
       const joinDateData = avatarLink?.getAttribute("data-tooltip") || "";
       const joinDate = joinDateData

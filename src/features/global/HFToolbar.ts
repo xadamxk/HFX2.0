@@ -2,11 +2,13 @@ import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { TextInput } from "../../configuration/configurables/TextInput";
 import { Feature } from "../../core/Feature";
 import { el, safeHttpUrl } from "../../core/Dom";
+import { StickyOnScroll } from "../../core/StickyOnScroll";
 import Global from "../../sections/Global";
 
 class HFToolbar extends Feature {
   constructor() {
     super({
+      id: "Toolbar",
       section: Global,
       name: "Toolbar",
       enabled: true,
@@ -127,16 +129,6 @@ class HFToolbar extends Feature {
   }
 
   run(settings: any) {
-    const favorites = new Map([
-      [settings.favorite1Label, settings.favorite1Url],
-      [settings.favorite2Label, settings.favorite2Url],
-      [settings.favorite3Label, settings.favorite3Url],
-      [settings.favorite4Label, settings.favorite4Url],
-      [settings.favorite5Label, settings.favorite5Url],
-      [settings.favorite6Label, settings.favorite6Url],
-      [settings.favorite7Label, settings.favorite7Url],
-    ]);
-
     // Sticky Header
     if (settings.stickyHeader) {
       const header = this.querySelector<HTMLElement>(
@@ -144,7 +136,7 @@ class HFToolbar extends Feature {
         document
       );
       if (header) {
-        // Make sticky via fixed-on-scroll with placeholder to prevent layout shift
+        // Pin to the top once scrolled past, leaving a placeholder behind
         const styleId = "hfx-sticky-header-style";
         if (!document.getElementById(styleId)) {
           const style = document.createElement("style");
@@ -159,56 +151,10 @@ class HFToolbar extends Feature {
           document.head.appendChild(style);
         }
 
-        const placeholder = document.createElement("div");
-        placeholder.style.display = "none";
-        placeholder.style.width = "100%";
-        placeholder.style.height = `${header.offsetHeight}px`;
-        header.parentElement?.insertBefore(placeholder, header);
-
-        const headerInitialTop =
-          header.getBoundingClientRect().top + window.scrollY;
-
-        const updateFixedMetrics = () => {
-          const rect = placeholder.getBoundingClientRect();
-
-          const computedStyle = window.getComputedStyle(header);
-          const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
-          const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
-          const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
-          const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
-
-          const totalHorizontalExtra =
-            paddingLeft + paddingRight + borderLeft + borderRight;
-
-          header.style.left = `${rect.left}px`;
-          header.style.width = `${rect.width - totalHorizontalExtra}px`;
-        };
-
-        const onScrollOrResize = () => {
-          const shouldFix = window.scrollY >= headerInitialTop;
-          if (shouldFix) {
-            if (!header.classList.contains("hfx-fixed-header")) {
-              placeholder.style.height = `${header.offsetHeight}px`;
-              placeholder.style.display = "block";
-              header.classList.add("hfx-fixed-header");
-            }
-            updateFixedMetrics();
-          } else {
-            if (header.classList.contains("hfx-fixed-header")) {
-              header.classList.remove("hfx-fixed-header");
-              placeholder.style.display = "none";
-              header.style.left = "";
-              header.style.width = "";
-            }
-          }
-        };
-
-        window.addEventListener("scroll", onScrollOrResize, { passive: true });
-        window.addEventListener("resize", () => {
-          placeholder.style.height = `${header.offsetHeight}px`;
-          onScrollOrResize();
+        new StickyOnScroll(header, {
+          fixedClass: "hfx-fixed-header",
+          isHeader: true,
         });
-        onScrollOrResize();
       }
     }
 
@@ -224,11 +170,23 @@ class HFToolbar extends Feature {
     }
 
     // Favorites
-    for (const [label, url] of favorites) {
+    for (const { label, url } of this.getFavorites(settings)) {
+      this.appendFavorite(label, url);
+    }
+  }
+
+  // Favorites 1-8 in order, skipping any without both a label and a URL.
+  // A list (not a label-keyed Map) so favorites sharing a label all show.
+  private getFavorites(settings: any): { label: string; url: string }[] {
+    const favorites: { label: string; url: string }[] = [];
+    for (let i = 1; i <= 8; i++) {
+      const label = settings[`favorite${i}Label`];
+      const url = settings[`favorite${i}Url`];
       if (label && url) {
-        this.appendFavorite(label, url);
+        favorites.push({ label, url });
       }
     }
+    return favorites;
   }
 
   private appendFavorite(label: string, url: string) {

@@ -1,9 +1,11 @@
 import { Feature } from "../../core/Feature";
+import { getPosts } from "../../core/Posts";
 import Threads from "../../sections/Threads";
 
 class ShowPostNumbers extends Feature {
   constructor() {
     super({
+      id: "ShowPostNumbers",
       section: Threads,
       name: "Show Post Numbers",
       enabled: true,
@@ -12,11 +14,8 @@ class ShowPostNumbers extends Feature {
   }
 
   run() {
-    const posts = this.querySelectorAll(".post");
-    posts.forEach((post) => {
-      const id = post.id || "";
-      const postId = parseInt(id.replace("post_", ""), 10) || 0;
-
+    const posts = getPosts({ featureName: this.name });
+    posts.forEach(({ el: post, pid: postId }) => {
       const source = document.getElementById(`post_url_${postId}`);
       if (!source) return;
 

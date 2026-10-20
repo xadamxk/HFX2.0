@@ -5,6 +5,7 @@ import Threads from "../../sections/Threads";
 class HideAwardRows extends Feature {
   constructor() {
     super({
+      id: "HideAwardRows",
       section: Threads,
       name: "Hide Award Rows",
       enabled: false,
@@ -31,8 +32,9 @@ class HideAwardRows extends Feature {
     const awards = this.querySelectorAll(".post_myawards > span");
     if (!awards.length) return;
 
-    var whBump = 0;
     awards.forEach((awardsPostbit) => {
+      // Wide awards only shift the row limit within their own post
+      let whBump = 0;
       awardsPostbit.querySelectorAll("i.award_sprite").forEach((award, i) => {
         if (award.classList.contains("award_2")) {
           whBump += 2;

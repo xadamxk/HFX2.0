@@ -37,7 +37,7 @@ const questions = [
   },
   {
     question:
-      "Section paths [ex. '/settings'] (required, comma-separated, allows regex)?",
+      "Section paths [ex. '/settings.php', '/member.php?action=profile', '/' for all] (required, comma-separated)?",
     parser: (answer: string) => answer.split(",").join('", "'),
     validation: {
       validator: (answer: string) => answer.length !== 0,

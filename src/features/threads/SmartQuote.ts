@@ -6,6 +6,7 @@ import Threads from "../../sections/Threads";
 class SmartQuote extends Feature {
   constructor() {
     super({
+      id: "SmartQuote",
       section: Threads,
       name: "Smart Quote",
       enabled: false,
@@ -41,9 +42,11 @@ class SmartQuote extends Feature {
   }
 
   run(settings: any) {
-    const currentUserName = this.querySelector(
-      ".welcome > strong > a"
-    )?.textContent;
+    // Optional: logged-out visitors have no welcome block, so there is no
+    // username to look for in quote headers
+    const currentUserName =
+      this.querySelector(".welcome > strong > a", document, true)
+        ?.textContent?.trim() ?? "";
 
     // Remove the ::after element (underline) from the cite element
     Util.addCssToPage(`
@@ -69,7 +72,6 @@ class SmartQuote extends Feature {
       const citeElement = blockquote.querySelector(
         "cite"
       ) as HTMLElement | null;
-      if (!citeElement) return;
 
       // Remove classes from quoted username spans and apply bold/white styling
       const quoteUsername = citeElement?.querySelector(
@@ -90,8 +92,15 @@ class SmartQuote extends Feature {
       //   });
       // }
 
+      // Quotes without a header have nothing else to style
+      if (!citeElement) {
+        return;
+      }
+
+      // An empty username would match every quote, so only check when known
       const isMentioned =
-        currentUserName && citeElement.textContent?.includes(currentUserName);
+        currentUserName !== "" &&
+        (citeElement.textContent ?? "").includes(currentUserName);
       if (isMentioned) {
         citeElement.style.background = quoteMentionColor;
       } else {
@@ -107,7 +116,9 @@ class SmartQuote extends Feature {
 
       // Color the quote header timestamp color
       const quoteHeaderTimestamp = citeElement.querySelector("span");
-      if (!quoteHeaderTimestamp) return;
+      if (!quoteHeaderTimestamp) {
+        return;
+      }
       quoteHeaderTimestamp.style.color = quoteTextColor;
 
       const quoteHeaderTimestampText =

@@ -44,7 +44,7 @@ describe("ConfigurableComponent dropdown", () => {
           configurable={dropdown}
           feature={feature}
           section={section}
-          settings={{ Test: { choice: "first" } }}
+          featureSettings={{ choice: "first" }}
         />
       )
     );

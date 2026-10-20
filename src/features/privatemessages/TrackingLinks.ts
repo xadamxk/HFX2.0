@@ -5,6 +5,7 @@ import PrivateMessages from "../../sections/PrivateMessages";
 class TrackingLinks extends Feature {
   constructor() {
     super({
+      id: "TrackingLinks",
       section: PrivateMessages,
       name: "Tracking Links",
       enabled: true,

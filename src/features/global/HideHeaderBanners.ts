@@ -1,6 +1,6 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
-import { Util } from "../../core/Util";
+import { dismissButton } from "../../core/Dom";
 import Global from "../../sections/Global";
 
 enum STORAGE_KEYS {
@@ -110,22 +110,16 @@ class HideHeaderBanners extends Feature {
       return;
     }
 
-    const dismissButton = document.createElement("a");
-    dismissButton.className = DISMISS_BUTTON_CLASS;
-    dismissButton.href = "javascript:void(0);";
-    dismissButton.title = "Dismiss Banner";
-    dismissButton.style.position = "absolute";
-    dismissButton.style.top = "4px";
-    dismissButton.style.right = "6px";
-    dismissButton.style.lineHeight = "0";
-    dismissButton.style.zIndex = "1";
+    const button = dismissButton("Dismiss Banner", {
+      class: DISMISS_BUTTON_CLASS,
+    });
+    button.style.position = "absolute";
+    button.style.top = "4px";
+    button.style.right = "6px";
+    button.style.lineHeight = "0";
+    button.style.zIndex = "1";
 
-    const dismissIcon = document.createElement("img");
-    dismissIcon.src = Util.getURL("/assets/dismiss_notice.png");
-    dismissIcon.alt = "Dismiss";
-    dismissButton.appendChild(dismissIcon);
-
-    dismissButton.addEventListener("click", async (event) => {
+    button.addEventListener("click", async (event) => {
       event.preventDefault();
       event.stopPropagation();
       await this.settingsService.setStorageItem(
@@ -140,7 +134,7 @@ class HideHeaderBanners extends Feature {
     if (!banner.style.position || banner.style.position === "static") {
       banner.style.position = "relative";
     }
-    banner.appendChild(dismissButton);
+    banner.appendChild(button);
   }
 }
 

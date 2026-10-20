@@ -5,6 +5,7 @@ import Threads from "../../sections/Threads";
 class HideAwardRows extends Feature {
   constructor() {
     super({
+      id: "HideAwardRows",
       section: Threads,
       name: "Hide Award Rows",
       enabled: false,

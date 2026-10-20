@@ -17,6 +17,7 @@ class GroupManagement extends Feature {
   fetchDelay = 24 * 60 * 60 * 1000; // 24 hours
   constructor() {
     super({
+      id: "GroupManagement",
       section: Groups,
       name: "Group Management",
       enabled: false,

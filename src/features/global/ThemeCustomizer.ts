@@ -23,6 +23,7 @@ enum THEMES {
 class ThemeCustomizer extends Feature {
   constructor() {
     super({
+      id: "ThemeCustomizer",
       section: Global,
       name: "Theme Customizer",
       enabled: false,

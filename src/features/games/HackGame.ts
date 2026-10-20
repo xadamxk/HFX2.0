@@ -5,6 +5,7 @@ import Games from "../../sections/Games";
 class HackGame extends Feature {
   constructor() {
     super({
+      id: "HackGameAdditions",
       section: Games,
       name: "Hack Game Additions",
       enabled: true,

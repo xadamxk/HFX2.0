@@ -4,6 +4,7 @@ import Awards from "../../sections/Awards";
 class ShowRecipientCount extends Feature {
   constructor() {
     super({
+      id: "ShowRecipientCount",
       section: Awards,
       name: "Show Recipient Count",
       enabled: true,

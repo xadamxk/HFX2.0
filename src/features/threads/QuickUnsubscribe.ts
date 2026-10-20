@@ -4,6 +4,7 @@ import Threads from "../../sections/Threads";
 class QuickUnsubscribe extends Feature {
   constructor() {
     super({
+      id: "QuickUnsubscribe",
       section: Threads,
       name: "Quick Unsubscribe",
       enabled: true,

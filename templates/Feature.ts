@@ -10,6 +10,7 @@ import {{{ section }}} from "../../sections/{{{ section }}}";
 class {{{ name }}} extends Feature {
   constructor() {
     super({
+      id: "{{{ name }}}",
       section: {{{ section }}},
       name: "{{{ nameSpaced }}}",
       enabled: {{{ enabled }}},

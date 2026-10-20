@@ -80,6 +80,8 @@ export class FeatureManager {
    * Initialize settings and start a single feature.
    * duration_ms covers the feature's synchronous start/run work, not the time
    * spent waiting on storage or on other features loading in parallel.
+   * An async run() isn't awaited; if it rejects before the summary is printed,
+   * the error shows up there too.
    */
   private async loadFeature(
     feature: Feature,
@@ -93,14 +95,19 @@ export class FeatureManager {
         storedStorage
       );
       runStart = performance.now();
-      const running = feature.start(settings);
-      return {
+      const result: LoadedFeature = {
         feature: feature.name,
         loaded: true,
-        running,
-        duration_ms: this.elapsedSince(runStart),
+        running: false,
+        duration_ms: 0,
         error: undefined,
       };
+      result.running = feature.start(settings, (error) => {
+        result.error = error?.message || "Unknown error";
+        result.context = error?.stack || "Unknown error stack";
+      });
+      result.duration_ms = this.elapsedSince(runStart);
+      return result;
     } catch (error) {
       feature.logger.error(`Error loading feature: ${error?.message}`);
       return {

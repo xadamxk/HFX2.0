@@ -5,6 +5,7 @@ import Threads from "../../sections/Threads";
 class PostAuthorIndicators extends Feature {
   constructor() {
     super({
+      id: "PostAuthorIndicators",
       section: Threads,
       name: "Post Author Indicators",
       enabled: true,

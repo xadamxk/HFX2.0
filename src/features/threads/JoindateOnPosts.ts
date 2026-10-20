@@ -4,6 +4,7 @@ import Threads from "../../sections/Threads";
 class JoindateOnPosts extends Feature {
   constructor() {
     super({
+      id: "JoindateOnPosts",
       section: Threads,
       name: "Joindate On Posts",
       enabled: true,

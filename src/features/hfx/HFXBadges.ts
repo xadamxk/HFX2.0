@@ -10,6 +10,7 @@ enum HFXBadgesStorageKeys {
 class HFXBadges extends Feature {
   constructor() {
     super({
+      id: "HFXBadges",
       section: HFX,
       name: "HFX Badges",
       enabled: true,

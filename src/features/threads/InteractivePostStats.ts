@@ -4,6 +4,7 @@ import Threads from "../../sections/Threads";
 class InteractivePostStats extends Feature {
   constructor() {
     super({
+      id: "InteractivePostStats",
       section: Threads,
       name: "Interactive Post Stats",
       enabled: true,

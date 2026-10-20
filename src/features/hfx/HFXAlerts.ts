@@ -17,6 +17,7 @@ interface HFXAlert {
 class HFXAlerts extends Feature {
   constructor() {
     super({
+      id: "HFXAlerts",
       section: HFX,
       name: "HFX Alerts",
       enabled: true,

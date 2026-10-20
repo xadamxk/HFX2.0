@@ -4,6 +4,7 @@ import Threads from "../../sections/Threads";
 class PostsOnThread extends Feature {
   constructor() {
     super({
+      id: "PostsOnThread",
       section: Threads,
       name: "Posts On Thread",
       enabled: true,

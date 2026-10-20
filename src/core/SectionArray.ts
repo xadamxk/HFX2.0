@@ -12,10 +12,8 @@ export class SectionArray {
     this.sections = sections;
   }
 
-  runnableSection() {
-    return this.sections
-      .filter((section: Section) => section.runnable())
-      .shift();
+  runnableSection(): Section | undefined {
+    return this.sections.find((section: Section) => section.runnable());
   }
 
   runnable() {

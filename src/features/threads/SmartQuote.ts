@@ -6,6 +6,7 @@ import Threads from "../../sections/Threads";
 class SmartQuote extends Feature {
   constructor() {
     super({
+      id: "SmartQuote",
       section: Threads,
       name: "Smart Quote",
       enabled: false,

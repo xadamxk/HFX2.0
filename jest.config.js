@@ -19,6 +19,10 @@ module.exports = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/setup-tests.ts'],
+  // Build-time flag set by webpack's DefinePlugin (see src/globals.d.ts)
+  globals: {
+    __HFX_DEV__: true
+  },
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',

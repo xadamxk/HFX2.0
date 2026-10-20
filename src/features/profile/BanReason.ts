@@ -26,6 +26,7 @@ interface BanReason {
 class BanReason extends Feature {
   constructor() {
     super({
+      id: "BanReason",
       section: Profile,
       name: "Ban Reason",
       enabled: true,

@@ -65,6 +65,7 @@ class PopularityPresets extends Feature {
     }
 
     super({
+      id: "PopularityPresets",
       section: Popularity,
       name: "Popularity Presets",
       enabled: true,

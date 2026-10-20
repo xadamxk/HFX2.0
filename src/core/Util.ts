@@ -1,9 +1,4 @@
 export class Util {
-  static isServiceWorker() {
-    const scope = (globalThis as any).ServiceWorkerGlobalScope;
-    return typeof scope === "function" && globalThis instanceof scope;
-  }
-
   static isPopup() {
     return (
       chrome !== undefined &&
@@ -52,10 +47,6 @@ export class Util {
       return chrome.runtime.getURL(resource);
     }
     return resource.startsWith("/") ? resource : `/${resource}`;
-  }
-
-  static getLocalStorage(callBack: Function, key: string = null) {
-    return chrome.storage.local.get(key, (result: any) => callBack(result));
   }
 
   /** Common functions for content scripts */

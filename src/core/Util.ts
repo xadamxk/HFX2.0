@@ -58,6 +58,36 @@ export class Util {
     );
   }
 
+  /**
+   * The logged-in user, from the header's "Welcome back" profile link.
+   * Returns null when logged out or the link can't be found.
+   */
+  static getCurrentUser(): { uid: number; username: string } | null {
+    const anchor = document.querySelector(
+      ".welcome a"
+    ) as HTMLAnchorElement | null;
+    if (!anchor) return null;
+
+    return {
+      uid: Util.getUidFromHref(anchor.getAttribute("href")),
+      username: (anchor.textContent || "").trim(),
+    };
+  }
+
+  /**
+   * Read the `uid` query parameter from a relative or absolute link, e.g. a
+   * `member.php?action=profile&uid=123` profile link. Returns 0 if missing.
+   */
+  static getUidFromHref(href: string | null | undefined): number {
+    if (!href) return 0;
+    try {
+      const url = new URL(href, "https://hackforums.net/");
+      return parseInt(url.searchParams.get("uid") || "", 10) || 0;
+    } catch {
+      return 0;
+    }
+  }
+
   static getProfileUsername() {
     const container = document.querySelector(
       ".pro-adv-content-info"

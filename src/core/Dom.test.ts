@@ -1,4 +1,4 @@
-import { appendChildren, el, safeHttpUrl } from "./Dom";
+import { appendChildren, dismissButton, el, safeHttpUrl } from "./Dom";
 
 describe("el", () => {
   it("creates an element with attributes and text children", () => {
@@ -82,5 +82,21 @@ describe("safeHttpUrl", () => {
     "",
   ])("rejects %j", (url) => {
     expect(safeHttpUrl(url, base)).toBeNull();
+  });
+});
+
+describe("dismissButton", () => {
+  it("builds HF's dismiss link with the extension's icon", () => {
+    const button = dismissButton("Dismiss Banner", { class: "HFXDismiss" });
+
+    expect(button.tagName).toBe("A");
+    expect(button.getAttribute("href")).toBe("javascript:void(0);");
+    expect(button.title).toBe("Dismiss Banner");
+    expect(button.className).toBe("HFXDismiss");
+    const icon = button.querySelector("img");
+    expect(icon?.getAttribute("src")).toBe(
+      "chrome-extension://test-id//assets/dismiss_notice.png"
+    );
+    expect(icon?.alt).toBe("Dismiss");
   });
 });

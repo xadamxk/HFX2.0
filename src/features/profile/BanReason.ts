@@ -7,7 +7,7 @@ enum BanReasonStorageKeys {
   BAN_REASONS = "banReasons",
 }
 
-interface BanReason {
+interface BanInfo {
   banReason: string;
   bannedByUID: number;
   bannedByUsername: string;
@@ -15,13 +15,33 @@ interface BanReason {
   expiresAt: string;
 }
 
+interface CachedBanInfo extends BanInfo {
+  /** When this ban was last listed on bans.php (ms since epoch). */
+  seenAt: number;
+}
+
+interface BanReasonCache {
+  /** When bans.php was last fetched (ms since epoch). 0 forces a refetch. */
+  fetchedAt: number;
+  map: Record<number, CachedBanInfo>;
+}
+
+/** How long a bans.php snapshot is trusted before refetching. */
+const CACHE_TTL_MS = 60 * 60 * 1000;
+/** Bans that haven't been listed on bans.php for this long are dropped. */
+const ENTRY_MAX_AGE_MS = 180 * 24 * 60 * 60 * 1000;
+
 /**
  * This feature shows ban reasons on profiles banned in the last month.
  *
  * NOTES:
- * - In order to save background requests, the ban reasons are cached in local storage.
- * - The ban reasons are cached in base64 encoded format to avoid quote limits with chrome's local storage.
- * - If "Resource::kQuotaBytesPerItem quota exceeded" errors are thrown, consider alternative caching solutions / remove the caching altogether.
+ * - bans.php only lists the last month of bans. The parsed page is cached in local storage as
+ *   `{ fetchedAt, map }` and only refetched once it is older than CACHE_TTL_MS.
+ * - While the snapshot is fresh, a banned profile missing from the map is a remembered miss:
+ *   it wasn't on bans.php, so refetching wouldn't find it either.
+ * - Each fetch is merged into the map, so bans that have dropped off bans.php keep showing
+ *   until they haven't been listed for ENTRY_MAX_AGE_MS.
+ * - Older versions stored the map base64-encoded; that value is converted once on first read.
  */
 class BanReason extends Feature {
   constructor() {
@@ -35,7 +55,7 @@ class BanReason extends Feature {
         {
           id: "banReasons",
           description: "Ban reason map",
-          defaultValue: "", // Base64-encoded map
+          defaultValue: { fetchedAt: 0, map: {} } as BanReasonCache,
         },
       ],
     });
@@ -45,43 +65,105 @@ class BanReason extends Feature {
     const STORAGE_KEYS = {
       BAN_REASONS: `storage_${BanReasonStorageKeys.BAN_REASONS}`,
     };
-    const storedRaw = settings[STORAGE_KEYS.BAN_REASONS] as string;
-    let storedBanReasons: Record<number, BanReason> = {};
-    if (typeof storedRaw === "string" && storedRaw.length > 0) {
-      const decoded = this.decodeBase64<Record<number, BanReason>>(storedRaw);
-      storedBanReasons = decoded || {};
+    const storedRaw = settings[STORAGE_KEYS.BAN_REASONS];
+    const cache = this.readCache(storedRaw);
+    if (typeof storedRaw === "string") {
+      // Replace the legacy base64 value so it is only decoded once
+      this.saveCache(cache);
     }
+
     const profileUserId = Util.getProfileUserId();
-    const isBanned = this.isUserBanned();
-    if (!isBanned) return;
+    if (!profileUserId) return;
+    const profileCard = this.getProfileCard();
+    if (!profileCard || !this.isUserBanned(profileCard)) return;
 
-    if (storedBanReasons[profileUserId]) {
+    const cached = cache.map[profileUserId];
+    if (cached) {
       this.logger.debug(`Ban reason found in cache for user ${profileUserId}`);
-      this.appendBanReason(storedBanReasons[profileUserId]);
-    } else {
-      this.logger.debug(
-        `Ban reason not found in cache for user ${profileUserId}, querying...`
-      );
-      this.queryBanReason()
-        .then((banReasonMap) => {
-          // Persist the map for reuse
-          this.settingsService.setStorageItem(
-            this,
-            BanReasonStorageKeys.BAN_REASONS,
-            this.encodeBase64(banReasonMap)
-          );
-
-          if (banReasonMap[profileUserId]) {
-            this.appendBanReason(banReasonMap[profileUserId]);
-          }
-        })
-        .catch(() => {
-          // Silent fail – nothing to append
-        });
+      this.appendBanReason(profileCard, cached);
     }
+
+    if (Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
+      if (!cached) {
+        this.logger.debug(
+          `User ${profileUserId} wasn't on bans.php when it was last fetched, skipping query`
+        );
+      }
+      return;
+    }
+
+    this.logger.debug("Ban reason cache is stale, querying...");
+    this.queryBanReason()
+      .then((banReasonMap) => {
+        if (!banReasonMap) return;
+        this.saveCache(this.mergeBanReasons(cache, banReasonMap));
+
+        // Re-render in case the ban changed since it was cached
+        if (banReasonMap[profileUserId]) {
+          this.appendBanReason(profileCard, banReasonMap[profileUserId]);
+        }
+      })
+      .catch(() => {
+        // Silent fail – nothing to append
+      });
   }
 
-  private async queryBanReason(): Promise<Record<number, BanReason>> {
+  /**
+   * Normalize the stored value into a cache. The legacy base64-encoded map has
+   * no fetch time, so it is kept but treated as stale.
+   */
+  private readCache(storedRaw: unknown): BanReasonCache {
+    if (typeof storedRaw === "string") {
+      const legacyMap =
+        storedRaw.length > 0
+          ? this.decodeBase64<Record<number, BanInfo>>(storedRaw)
+          : null;
+      const now = Date.now();
+      const map: Record<number, CachedBanInfo> = {};
+      Object.entries(legacyMap ?? {}).forEach(([uid, banReason]) => {
+        map[Number(uid)] = { ...banReason, seenAt: now };
+      });
+      return { fetchedAt: 0, map };
+    }
+
+    const stored = storedRaw as Partial<BanReasonCache> | null | undefined;
+    if (stored && typeof stored === "object" && stored.map) {
+      return { fetchedAt: Number(stored.fetchedAt) || 0, map: stored.map };
+    }
+    return { fetchedAt: 0, map: {} };
+  }
+
+  /**
+   * Merge a freshly fetched bans.php map into the cache, replacing entries for
+   * users listed again and dropping ones not listed for ENTRY_MAX_AGE_MS.
+   */
+  private mergeBanReasons(
+    cache: BanReasonCache,
+    banReasonMap: Record<number, BanInfo>
+  ): BanReasonCache {
+    const now = Date.now();
+    const map: Record<number, CachedBanInfo> = {};
+    Object.entries(cache.map).forEach(([uid, banReason]) => {
+      if (now - (banReason.seenAt || 0) < ENTRY_MAX_AGE_MS) {
+        map[Number(uid)] = banReason;
+      }
+    });
+    Object.entries(banReasonMap).forEach(([uid, banReason]) => {
+      map[Number(uid)] = { ...banReason, seenAt: now };
+    });
+    return { fetchedAt: now, map };
+  }
+
+  private saveCache(cache: BanReasonCache) {
+    this.settingsService
+      .setStorageItem(this, BanReasonStorageKeys.BAN_REASONS, cache)
+      .catch(() => {
+        this.logger.error("Failed to save ban reasons");
+      });
+  }
+
+  /** Returns null when bans.php couldn't be fetched or parsed. */
+  private async queryBanReason(): Promise<Record<number, BanInfo> | null> {
     const url = "https://hackforums.net/bans.php";
     try {
       const response = await fetch(url, { credentials: "include" });
@@ -93,16 +175,19 @@ class BanReason extends Feature {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
 
-      const rows = Array.from(
-        doc.querySelectorAll("table.tborder tr.mobile-no-padding")
+      const rows = this.querySelectorAll(
+        "table.tborder tr.mobile-no-padding",
+        doc
       );
 
-      const banMap: Record<number, BanReason> = {};
+      const banMap: Record<number, BanInfo> = {};
 
       rows.forEach((row) => {
-        const usernameLink = row.querySelector(
-          "td:nth-child(1) a[href*='uid=']"
-        ) as HTMLAnchorElement | null;
+        const usernameLink = this.querySelector<HTMLAnchorElement>(
+          "td:nth-child(1) a[href*='uid=']",
+          row,
+          true
+        );
         if (!usernameLink) return;
 
         const uidParam = new URL(usernameLink.href).searchParams.get("uid");
@@ -111,9 +196,11 @@ class BanReason extends Feature {
 
         // const username = (usernameLink.textContent || "").trim();
 
-        const reasonCell = row.querySelector(
-          "td:nth-child(2)"
-        ) as HTMLElement | null;
+        const reasonCell = this.querySelector<HTMLElement>(
+          "td:nth-child(2)",
+          row,
+          true
+        );
         const banReasonText = (
           reasonCell?.innerText ||
           reasonCell?.textContent ||
@@ -122,9 +209,11 @@ class BanReason extends Feature {
           .replace(/\u00A0/g, " ")
           .trim();
 
-        const bannedByLink = row.querySelector(
-          "td:nth-child(3) a[href*='uid=']"
-        ) as HTMLAnchorElement | null;
+        const bannedByLink = this.querySelector<HTMLAnchorElement>(
+          "td:nth-child(3) a[href*='uid=']",
+          row,
+          true
+        );
         let bannedByUID = 0;
         let bannedByUsername = "";
         if (bannedByLink) {
@@ -134,9 +223,11 @@ class BanReason extends Feature {
           bannedByUID = parseInt(staffUidParam || "0", 10);
           bannedByUsername = (bannedByLink.textContent || "").trim();
         } else {
-          const bannedByCell = row.querySelector(
-            "td:nth-child(3)"
-          ) as HTMLElement | null;
+          const bannedByCell = this.querySelector<HTMLElement>(
+            "td:nth-child(3)",
+            row,
+            true
+          );
           bannedByUsername = (
             bannedByCell?.innerText ||
             bannedByCell?.textContent ||
@@ -146,11 +237,15 @@ class BanReason extends Feature {
             .trim();
         }
 
-        const bannedAtRaw = (
-          row.querySelector("td:nth-child(4)") as HTMLElement | null
+        const bannedAtRaw = this.querySelector(
+          "td:nth-child(4)",
+          row,
+          true
         )?.textContent?.trim();
-        const unbanRaw = (
-          row.querySelector("td:nth-child(5)") as HTMLElement | null
+        const unbanRaw = this.querySelector(
+          "td:nth-child(5)",
+          row,
+          true
         )?.textContent?.trim();
 
         const bannedAt = this.formatBanDateString(bannedAtRaw || "");
@@ -162,23 +257,22 @@ class BanReason extends Feature {
           bannedByUsername,
           bannedAt,
           expiresAt,
-        } as BanReason;
+        } as BanInfo;
       });
 
       return banMap;
     } catch (e) {
       this.logger.error("Failed to parse ban reasons");
-      return {};
+      return null;
     }
   }
 
-  private appendBanReason(banReason: BanReason) {
-    const firstCard = document.querySelector(
-      ".pro-adv-content-info > .pro-adv-card"
-    ) as HTMLElement | null;
-    if (!firstCard) return;
-
-    const existing = firstCard.querySelector("[data-hfx-ban-reason='true']");
+  private appendBanReason(firstCard: HTMLElement, banReason: BanInfo) {
+    const existing = this.querySelector(
+      "[data-hfx-ban-reason='true']",
+      firstCard,
+      true
+    );
     if (existing) existing.remove();
 
     const block = document.createElement("div");
@@ -219,20 +313,7 @@ class BanReason extends Feature {
     firstCard.appendChild(block);
   }
 
-  private encodeBase64(obj: any): string {
-    try {
-      const json = JSON.stringify(obj);
-      const bytes = new TextEncoder().encode(json);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      return btoa(binary);
-    } catch {
-      return "";
-    }
-  }
-
+  /** Only used to read the legacy base64-encoded cache. */
   private decodeBase64<T>(b64: string): T | null {
     try {
       const binary = atob(b64);
@@ -271,21 +352,15 @@ class BanReason extends Feature {
     return this.formatBanDateString(trimmed);
   }
 
-  private isUserBanned() {
-    const container = document.querySelector(
-      ".pro-adv-content-info"
-    ) as HTMLElement | null;
-    if (!container) return null;
+  /** The profile's first info card, which holds the username and the ban block. */
+  private getProfileCard() {
+    return this.querySelector<HTMLElement>(
+      ".pro-adv-content-info > .pro-adv-card"
+    );
+  }
 
-    const firstCard = container.querySelector(
-      ":scope > .pro-adv-card"
-    ) as HTMLElement | null;
-    if (!firstCard) return null;
-
-    const bannedUserGroupElement = firstCard.querySelector(
-      ".largetext .group7"
-    ) as HTMLElement | null;
-    return bannedUserGroupElement !== null;
+  private isUserBanned(profileCard: HTMLElement) {
+    return this.selectorExists(".largetext .group7", profileCard, true);
   }
 }
 

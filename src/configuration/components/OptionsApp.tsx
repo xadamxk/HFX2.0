@@ -31,6 +31,9 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<string>("HFX");
   const [settings, setSettings] = useState<Record<string, any>>({});
+  // Same data as `settings`, but updated synchronously, for writes made while
+  // the page is closing (before React re-renders)
+  const latestSettingsRef = useRef<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { isPopup } = usePopup();
@@ -100,6 +103,13 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
       areaName: string
     ) => {
       if (areaName !== "local") return;
+      for (const key of Object.keys(changes)) {
+        if (changes[key].newValue === undefined) {
+          delete latestSettingsRef.current[key];
+        } else {
+          latestSettingsRef.current[key] = changes[key].newValue;
+        }
+      }
       setSettings((previousSettings) => {
         const nextSettings = { ...previousSettings };
         for (const key of Object.keys(changes)) {
@@ -115,6 +125,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
 
     chrome.storage.onChanged.addListener(handleStorageChanged);
     chrome.storage.local.get(null, (items: Record<string, any>) => {
+      latestSettingsRef.current = { ...items };
       setSettings(items);
       setIsLoading(false);
     });
@@ -139,12 +150,23 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
   }, []);
 
   /**
-   * Apply a change to one feature's settings. Only the changed field is
-   * written, merged into the latest stored settings, so concurrent writes from
-   * content scripts aren't overwritten with this page's snapshot.
+   * Apply a change to one feature's settings. The changed field is merged into
+   * this page's copy of the stored settings, which the onChanged listener keeps
+   * current, so writes from other contexts aren't overwritten with a stale
+   * snapshot.
+   *
+   * The merged object is written directly rather than with a fresh
+   * read-then-write: debounced inputs flush their last edit when the popup
+   * closes (on blur, then pagehide), and the page is gone before a read
+   * returns, so only a write handed to the browser right away survives.
    */
   const updateFeatureSetting = useCallback(
     (featureName: string, field: string, value: any) => {
+      const nextFeatureSettings = {
+        ...latestSettingsRef.current[featureName],
+        [field]: value,
+      };
+      latestSettingsRef.current[featureName] = nextFeatureSettings;
       setSettings((previousSettings) => ({
         ...previousSettings,
         [featureName]: {
@@ -154,7 +176,7 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
       }));
 
       getSettingsService()
-        ?.updateFeatureSettings(featureName, { [field]: value })
+        ?.writeFeatureSettingsNow(featureName, nextFeatureSettings)
         .catch((error) => {
           Logger.error(`Failed to save ${featureName}.${field}:`, error);
         });

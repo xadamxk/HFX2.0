@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Section } from "../../core/Section";
 import { Feature } from "../../core/Feature";
 import { FeatureComponent } from "./FeatureComponent";
@@ -22,7 +22,7 @@ interface SectionComponentProps {
   style?: React.CSSProperties;
 }
 
-export const SectionComponent: React.FC<SectionComponentProps> = ({
+const SectionComponentBase: React.FC<SectionComponentProps> = ({
   section,
   features,
   settings,
@@ -34,6 +34,11 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
   style,
 }) => {
   const { isPopup } = usePopup();
+  // Sort a copy; the features prop is shared with the parent
+  const sortedFeatures = useMemo(
+    () => [...features].sort((a, b) => a.name.localeCompare(b.name)),
+    [features]
+  );
 
   return (
     <div
@@ -56,19 +61,17 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
         }}
       >
         {section.name === "HFX" && <HFXHeader />}
-        {features
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((feature) => (
-            <FeatureComponent
-              key={feature.class}
-              feature={feature}
-              section={section}
-              settings={settings}
-              onFeatureToggle={onFeatureToggle}
-              onConfigurableChange={onConfigurableChange}
-              onStorageReset={onStorageReset}
-            />
-          ))}
+        {sortedFeatures.map((feature) => (
+          <FeatureComponent
+            key={feature.class}
+            feature={feature}
+            section={section}
+            featureSettings={settings?.[feature.class]}
+            onFeatureToggle={onFeatureToggle}
+            onConfigurableChange={onConfigurableChange}
+            onStorageReset={onStorageReset}
+          />
+        ))}
         {section.name === "HFX" && (
           <StorageResetCard
             features={featuresWithStorage ?? []}
@@ -79,3 +82,29 @@ export const SectionComponent: React.FC<SectionComponentProps> = ({
     </div>
   );
 };
+
+/**
+ * Props are equal when every prop but `settings` is unchanged and each of this
+ * section's features has the same settings object, so a change to one feature
+ * doesn't re-render every other section.
+ */
+const areSectionPropsEqual = (
+  previous: SectionComponentProps,
+  next: SectionComponentProps
+): boolean => {
+  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
+  for (const key of keys) {
+    if (key === "settings") continue;
+    const prop = key as keyof SectionComponentProps;
+    if (previous[prop] !== next[prop]) return false;
+  }
+  return next.features.every(
+    (feature) =>
+      previous.settings?.[feature.class] === next.settings?.[feature.class]
+  );
+};
+
+export const SectionComponent = React.memo(
+  SectionComponentBase,
+  areSectionPropsEqual
+);

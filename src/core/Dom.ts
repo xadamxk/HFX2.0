@@ -1,3 +1,5 @@
+import { Util } from "./Util";
+
 /**
  * Safe DOM building helpers.
  *
@@ -47,6 +49,24 @@ export function appendChildren(
       child instanceof Node ? child : document.createTextNode(String(child))
     );
   }
+}
+
+/**
+ * HF's dismiss ("x") button: `<a title><img dismiss_notice.png></a>`.
+ * Callers attach their own click handler and position it.
+ */
+export function dismissButton(
+  title: string,
+  attrs?: ElAttrs | null
+): HTMLAnchorElement {
+  return el(
+    "a",
+    { href: "javascript:void(0);", title, ...attrs },
+    el("img", {
+      src: Util.getURL("/assets/dismiss_notice.png"),
+      alt: "Dismiss",
+    })
+  );
 }
 
 /**

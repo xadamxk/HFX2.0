@@ -2,6 +2,7 @@ import { Feature } from "./Feature";
 import { FeatureManager } from "./FeatureManager";
 import { Logger } from "./Logger";
 import { Section } from "./Section";
+import { STORAGE_KEYS } from "./constants";
 
 const runnableSection = { runnable: () => true } as unknown as Section;
 
@@ -24,6 +25,17 @@ class ThrowingFeature extends Feature {
 
   run() {
     throw new Error("boom");
+  }
+}
+
+class MissingSelectorFeature extends Feature {
+  constructor() {
+    super({ section: runnableSection, name: "Missing", description: "" });
+  }
+
+  run() {
+    this.querySelector(".missing-one");
+    this.querySelector(".missing-two");
   }
 }
 
@@ -111,5 +123,22 @@ describe("FeatureManager.loadFeatures", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(console.log).toHaveBeenLastCalledWith("[GES] [First] after await");
+  });
+
+  it("saves the page's selector errors in one write after loading", async () => {
+    store.Missing = { enabled: true };
+    const missing = new MissingSelectorFeature();
+
+    await new FeatureManager().loadFeatures([missing]);
+
+    const errorWrites = (chrome.storage.local.set as jest.Mock).mock.calls
+      .map(([items]) => items)
+      .filter((items) => STORAGE_KEYS.SELECTOR_MANAGER_ERRORS in items);
+    expect(errorWrites).toHaveLength(1);
+    expect(
+      errorWrites[0][STORAGE_KEYS.SELECTOR_MANAGER_ERRORS].map(
+        (e: { selector: string }) => e.selector
+      )
+    ).toEqual([".missing-one", ".missing-two"]);
   });
 });

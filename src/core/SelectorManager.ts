@@ -20,7 +20,7 @@ export class SelectorManager {
   private readonly errors: SelectorErrorRecord[] = [];
   private readonly storedKey = STORAGE_KEYS.SELECTOR_MANAGER_ERRORS;
   private readonly suppressionKey = STORAGE_KEYS.SELECTOR_MANAGER_SUPPRESSION;
-  private readonly storage: StorageService = new StorageService();
+  private readonly storage: StorageService = StorageService.getInstance();
 
   static getInstance(): SelectorManager {
     if (!this.instance) {

@@ -40,7 +40,7 @@ export function getSyncItemSize(key: string, value: any): number {
 function utf8Length(text: string): number {
   let length = 0;
   for (const char of text) {
-    const codePoint = char.codePointAt(0);
+    const codePoint = char.codePointAt(0) ?? 0;
     length +=
       codePoint < 0x80 ? 1 : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
   }

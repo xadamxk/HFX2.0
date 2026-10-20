@@ -33,7 +33,10 @@ const mockChrome = {
 // Make chrome available globally
 (global as any).chrome = mockChrome;
 
-// Mock console methods to reduce noise in tests
+// Silence routine logging in tests, but let warnings and errors through
+// (React key/act() warnings, unexpected failures) so they show up in the output.
+// They are still mocks, so tests can assert on them.
+const { warn, error } = console;
 global.console = {
   ...console,
   // Uncomment to ignore specific console methods
@@ -49,6 +52,6 @@ global.console = {
   table: jest.fn(),
   debug: jest.fn(),
   info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+  warn: jest.fn((...args: any[]) => warn(...args)),
+  error: jest.fn((...args: any[]) => error(...args)),
 };

@@ -114,7 +114,7 @@ class GroupAssetCustomizer extends Feature {
       // Resize all current userbars to 136x42
       // Default group images are in images/groupimages/
       // Custom group images are in images/groupimages/custom/
-      const existingUserbars = document.querySelectorAll(
+      const existingUserbars = document.querySelectorAll<HTMLImageElement>(
         'img[src^="images/groupimages/"]'
       );
       existingUserbars.forEach((img: HTMLImageElement) => {
@@ -168,7 +168,9 @@ class GroupAssetCustomizer extends Feature {
 
   private replaceUserbar(userbarGroup: AssetGroup) {
     Object.entries(this.currentUserbars).forEach(([group, image]) => {
-      const currentImages = document.querySelectorAll(`img[src*="${image}"]`);
+      const currentImages = document.querySelectorAll<HTMLImageElement>(
+        `img[src*="${image}"]`
+      );
       currentImages.forEach((img: HTMLImageElement) => {
         if (group in userbarGroup) {
           img.src = userbarGroup[group as keyof AssetGroup];
@@ -206,7 +208,7 @@ class GroupAssetCustomizer extends Feature {
               }
             });
           }
-          if (revertCustomGroupStyles) {
+          if (revertCustomGroupStyles && userSpan) {
             userSpan.setAttribute(
               "style",
               `color: #fff !important; 

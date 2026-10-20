@@ -46,6 +46,8 @@ describe("StorageService", () => {
   describe("getInstance", () => {
     it("shares one instance, and one onChanged listener, per context", () => {
       jest.isolateModules(() => {
+        // isolateModules needs a synchronous require to get a fresh module
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { StorageService: IsolatedService } = require("./StorageService");
         const addListener = (chrome.storage as any).onChanged.addListener;
         addListener.mockClear();
@@ -101,7 +103,7 @@ describe("StorageService", () => {
 
     it("does not cache a read that finished after a newer change", async () => {
       local.items = { Feature: { enabled: true } };
-      let finishRead: (value: any) => void;
+      let finishRead!: (value: any) => void;
       jest
         .spyOn(local, "get")
         .mockImplementationOnce(
@@ -117,7 +119,7 @@ describe("StorageService", () => {
     });
 
     it("does not cache its own write when another change landed during it", async () => {
-      let finishWrite: () => void;
+      let finishWrite!: () => void;
       jest
         .spyOn(local, "set")
         .mockImplementationOnce(

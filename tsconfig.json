@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
       "outDir": "./dist/",
-      "noImplicitAny": true,
+      "strict": true,
       "module": "es6",
       "target": "es2020",
       "lib": ["es2020", "dom", "dom.iterable"],
@@ -24,6 +24,7 @@
       "coverage",
       "tests",
       "**/*.test.ts",
+      "**/*.test.tsx",
       "**/*.spec.ts"
     ]
   }

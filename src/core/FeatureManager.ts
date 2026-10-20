@@ -34,7 +34,7 @@ export class FeatureManager {
     let settings: { [featureClass: string]: { [key: string]: any } } = {};
     try {
       settings = await this.settingsService.initializeFeatureSettings(features);
-    } catch (error) {
+    } catch (error: any) {
       Logger.error("Failed to initialize feature settings:", error);
     }
 
@@ -103,7 +103,7 @@ export class FeatureManager {
       });
       result.duration_ms = this.elapsedSince(runStart);
       return result;
-    } catch (error) {
+    } catch (error: any) {
       feature.logger.error(`Error loading feature: ${error?.message}`);
       return {
         feature: feature.name,

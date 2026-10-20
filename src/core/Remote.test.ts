@@ -116,7 +116,7 @@ describe("getOrFetch", () => {
   });
 
   it("shares one fetch between concurrent calls", async () => {
-    let resolve: (value: string[]) => void;
+    let resolve!: (value: string[]) => void;
     const fetcher = jest.fn(
       () => new Promise<string[]>((r) => (resolve = r))
     );

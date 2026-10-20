@@ -270,8 +270,8 @@ class GroupManagement extends Feature {
   }
 
   private addGroupMember(groupId: number) {
-    const postKey = Util.getUserPostKey();
-    const profileUsername = Util.getProfileUsername();
+    const postKey = Util.getUserPostKey() || "";
+    const profileUsername = Util.getProfileUsername() || "";
     const body = new URLSearchParams({
       my_post_key: postKey,
       action: "do_add",
@@ -295,7 +295,7 @@ class GroupManagement extends Feature {
 
   private removeGroupMember(groupId: number) {
     const profileUserId = Util.getProfileUserId();
-    const postKey = Util.getUserPostKey();
+    const postKey = Util.getUserPostKey() || "";
     const body = new URLSearchParams();
     body.set("my_post_key", postKey);
     body.set("action", "do_manageusers");
@@ -317,8 +317,8 @@ class GroupManagement extends Feature {
   }
 
   private blacklistGroupUser(groupId: number) {
-    const postKey = Util.getUserPostKey();
-    const profileUsername = Util.getProfileUsername();
+    const postKey = Util.getUserPostKey() || "";
+    const profileUsername = Util.getProfileUsername() || "";
 
     const body = new URLSearchParams({
       my_post_key: postKey,

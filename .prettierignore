@@ -1,0 +1,7 @@
+dist/
+coverage/
+node_modules/
+extension/
+package-lock.json
+*.json
+!.prettierrc.json

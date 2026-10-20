@@ -31,7 +31,7 @@ export class StorageAdapter implements StorageInterface {
 
   async get(key: string): Promise<any> {
     const result = await this.call<{ [key: string]: any }>((callback) =>
-      this.storageArea.get(key, callback)
+      this.storageArea.get<{ [key: string]: any }>(key, callback)
     );
     return result?.[key];
   }

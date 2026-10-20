@@ -19,7 +19,7 @@ class GivePopularityButton extends Feature {
     );
     reputationAnchors.forEach((anchor) => {
       const uid = new URL(
-        anchor.getAttribute("href"),
+        anchor.getAttribute("href") ?? "",
         location.origin
       ).searchParams.get("uid");
       if (!uid) return;

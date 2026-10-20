@@ -54,7 +54,7 @@ const DropdownField: React.FC<FieldProps<Dropdown>> = ({ configurable, feature, 
       onChange={(e) => onChange?.(feature.class, configurable.id, e.target.value)}
     >
       {configurable.options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <option key={option.value} value={option.value ?? undefined}>
           {option.label || option.value}
         </option>
       ))}

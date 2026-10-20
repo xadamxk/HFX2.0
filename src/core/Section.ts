@@ -16,10 +16,10 @@ interface PathMatcher {
  * @param selectorElements - The elements that are used to determine if this section is enabled.
  */
 export class Section {
-  class: string;
-  name: string;
+  class!: string;
+  name!: string;
   paths: string[];
-  elementSelectors?: string[];
+  elementSelectors: string[];
   private readonly matchers: PathMatcher[];
   // Many features share a section, so only check the page once per URL
   private cached?: { url: string; runnable: boolean };

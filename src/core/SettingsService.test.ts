@@ -110,6 +110,26 @@ describe("SettingsService", () => {
     });
   });
 
+  describe("writeFeatureSettingsNow", () => {
+    it("hands the write to storage synchronously, without reading first", () => {
+      const get = jest.spyOn(local, "get");
+      const set = jest.spyOn(local, "set");
+
+      // Not awaited: a closing page gets no further turns of the event loop
+      void settingsService.writeFeatureSettingsNow("TestFeature", {
+        enabled: true,
+        color: "green",
+        storage_cache: "dropped",
+      });
+
+      expect(get).not.toHaveBeenCalled();
+      expect(set).toHaveBeenCalledWith("TestFeature", {
+        enabled: true,
+        color: "green",
+      });
+    });
+  });
+
   describe("getFeatureSettingsBatch", () => {
     it("reads settings and storage keys in one call and primes both", async () => {
       local.items = {

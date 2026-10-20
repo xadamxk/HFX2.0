@@ -1,4 +1,5 @@
 import { Feature } from "../../core/Feature";
+import { getPosts } from "../../core/Posts";
 import Threads from "../../sections/Threads";
 
 class PostsOnThread extends Feature {
@@ -13,20 +14,13 @@ class PostsOnThread extends Feature {
   }
 
   run() {
-    const posts = this.querySelectorAll(".post");
+    const posts = getPosts({ featureName: this.name });
     if (!posts.length) return;
 
-    posts.forEach((post, index) => {
-      let userId = 0;
+    posts.forEach(({ el: post, authorUid: userId }, index) => {
       let threadId = 0;
 
       try {
-        const profile = post.querySelector(
-          ".author_information .largetext > a"
-        );
-        const href = profile?.getAttribute("href") || "";
-        userId = parseInt(href.split("&uid=")[1]) || 0;
-
         const tidInput = document.querySelector(
           'input[type="hidden"][name="tid"]'
         );

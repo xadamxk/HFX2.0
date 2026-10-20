@@ -8,7 +8,8 @@ interface ConfigurableFactoryProps {
   configurable: Configurable;
   feature: Feature;
   section: Section;
-  settings?: any;
+  /** This feature's own settings, not the whole settings map */
+  featureSettings?: any;
   onChange?: (featureName: string, configName: string, value: any) => void;
 }
 
@@ -16,7 +17,7 @@ export const ConfigurableFactory: React.FC<ConfigurableFactoryProps> = ({
   configurable,
   feature,
   section,
-  settings,
+  featureSettings,
   onChange
 }) => {
   // Use the unified ConfigurableComponent which handles all types via renderReact
@@ -25,7 +26,7 @@ export const ConfigurableFactory: React.FC<ConfigurableFactoryProps> = ({
       configurable={configurable}
       feature={feature}
       section={section}
-      settings={settings}
+      featureSettings={featureSettings}
       onChange={onChange}
     />
   );

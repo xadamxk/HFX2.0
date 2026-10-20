@@ -29,6 +29,12 @@ class HFXAlerts extends Feature {
           description: "Map of the most recent alert.",
           defaultValue: { alerts: null, hidden: false },
         },
+        {
+          id: HFXAlertsStorageKeys.LAST_FETCH_TIME,
+          description: "Time of the last alert fetch.",
+          // 0 means "never fetched", so the next page load fetches right away
+          defaultValue: 0,
+        },
       ],
     });
   }
@@ -54,8 +60,8 @@ class HFXAlerts extends Feature {
       this.logger.debug(
         `HFX Alerts: ${timePassedMinutes} minutes passed - threshold ${this.fetchDelay} minutes. Skipping fetch.`
       );
-      if (alertMap !== undefined && alertMap?.hidden !== true) {
-        this.showAlert(alertMap?.alerts as HFXAlert);
+      if (alertMap?.alerts && alertMap.hidden !== true) {
+        this.showAlert(alertMap.alerts);
       }
     } else {
       this.logger.debug("Fetching HFX alert data...");
@@ -101,7 +107,11 @@ class HFXAlerts extends Feature {
     }
   }
 
-  private showAlert(fetchedAlert: HFXAlert) {
+  private showAlert(fetchedAlert: HFXAlert | null | undefined) {
+    // Nothing to show yet (e.g. right after "Reset cached data"), or the
+    // published alert was cleared: don't render an empty alert box
+    if (!fetchedAlert?.AlertTitle && !fetchedAlert?.AlertValue) return;
+
     const content = document.getElementById("content");
     if (!content) return;
 

@@ -13,7 +13,8 @@ class HideClosedThreads extends Feature {
   }
 
   run() {
-    this.querySelectorAll(".thread_status").forEach((el) => {
+    // Category pages list only subforums, so there may be no threads
+    this.querySelectorAll(".thread_status", document, true).forEach((el) => {
       const title = el.getAttribute("title") || "";
       if (title.includes("Locked thread.")) {
         const row = el.parentElement && el.parentElement.parentElement;

@@ -80,14 +80,14 @@ export class Feature {
     this.configurables = options.configurables;
     this.storageItems = options.storageItems;
     this.selectorManager = SelectorManager.getInstance();
-    this.settingsService = new SettingsService(new StorageService());
+    this.settingsService = new SettingsService(StorageService.getInstance());
     this.additionalSections = options.additionalSections;
     this.logger = Logger.scope(this.class);
   }
 
   /**
    * Run the feature if it is enabled and runnable on the current page.
-   * @param settings - Initialized settings from initializeSettings()
+   * @param settings - Initialized settings from SettingsService.initializeFeatureSettings()
    * @param onAsyncError - Called if an async run() rejects, after the error is logged
    * @returns Whether the feature ran
    */
@@ -118,26 +118,6 @@ export class Feature {
       });
     }
     return true;
-  }
-
-  /**
-   * Fill in missing defaults for this feature's settings, persisting them if needed.
-   * @param storedSettings - Settings already read from storage (undefined if never saved)
-   * @param storedStorage - Storage items already read from storage (undefined if never saved)
-   */
-  async initializeSettings(
-    storedSettings: { [key: string]: any } | undefined,
-    storedStorage?: { [key: string]: any }
-  ): Promise<{ [key: string]: any }> {
-    this.settingsService.primeFeatureSettings(
-      this,
-      storedSettings,
-      storedStorage
-    );
-    return await this.settingsService.initializeFeatureSettings(
-      this,
-      storedSettings
-    );
   }
 
   run(settings: any, runnableSection: Section): void | Promise<void> {

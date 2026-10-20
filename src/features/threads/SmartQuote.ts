@@ -42,9 +42,11 @@ class SmartQuote extends Feature {
   }
 
   run(settings: any) {
-    const currentUserName = this.querySelector(
-      ".welcome > strong > a"
-    ).textContent;
+    // Optional: logged-out visitors have no welcome block, so there is no
+    // username to look for in quote headers
+    const currentUserName =
+      this.querySelector(".welcome > strong > a", document, true)
+        ?.textContent?.trim() ?? "";
 
     // Remove the ::after element (underline) from the cite element
     Util.addCssToPage(`
@@ -90,7 +92,15 @@ class SmartQuote extends Feature {
       //   });
       // }
 
-      const isMentioned = citeElement?.textContent?.includes(currentUserName);
+      // Quotes without a header have nothing else to style
+      if (!citeElement) {
+        return;
+      }
+
+      // An empty username would match every quote, so only check when known
+      const isMentioned =
+        currentUserName !== "" &&
+        (citeElement.textContent ?? "").includes(currentUserName);
       if (isMentioned) {
         citeElement.style.background = quoteMentionColor;
       } else {
@@ -106,6 +116,9 @@ class SmartQuote extends Feature {
 
       // Color the quote header timestamp color
       const quoteHeaderTimestamp = citeElement.querySelector("span");
+      if (!quoteHeaderTimestamp) {
+        return;
+      }
       quoteHeaderTimestamp.style.color = quoteTextColor;
 
       const quoteHeaderTimestampText =

@@ -1,7 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { OptionsData } from "../OptionsData";
 import { sectionIcons } from "../sectionIcons";
-import { Section } from "../../core/Section";
 import { Feature } from "../../core/Feature";
 import { SettingsService } from "../../core/SettingsService";
 import { StorageService } from "../../core/StorageService";
@@ -17,11 +22,18 @@ interface OptionsAppProps {
   title?: string;
 }
 
+// Shared so memoized sections don't see a new style object every render
+const VISIBLE_SECTION_STYLE: React.CSSProperties = { display: "block" };
+const HIDDEN_SECTION_STYLE: React.CSSProperties = { display: "none" };
+
 const OptionsAppContent: React.FC<OptionsAppProps> = ({
   title = "HFX Settings",
 }) => {
   const [activeSection, setActiveSection] = useState<string>("HFX");
   const [settings, setSettings] = useState<Record<string, any>>({});
+  // Same data as `settings`, but updated synchronously, for writes made while
+  // the page is closing (before React re-renders)
+  const latestSettingsRef = useRef<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { isPopup } = usePopup();
@@ -29,10 +41,37 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
   // Created lazily; StorageService reaches for chrome.storage on construction
   const settingsServiceRef = useRef<SettingsService | null>(null);
 
-  const sections = OptionsData.getSections();
-  const featuresWithStorage = Object.values(OptionsData.getFeatures())
-    .filter((feature) => (feature.storageItems?.length ?? 0) > 0)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Sections and features are fixed for the life of the page, so these are
+  // computed once instead of on every settings change
+  const sections = useMemo(() => OptionsData.getSections(), []);
+  const featuresWithStorage = useMemo(
+    () =>
+      Object.values(OptionsData.getFeatures())
+        .filter((feature) => (feature.storageItems?.length ?? 0) > 0)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    []
+  );
+  const featuresBySection = useMemo(() => {
+    const result: Record<string, Feature[]> = {};
+    for (const [sectionName, section] of Object.entries(sections)) {
+      result[sectionName] = OptionsData.getFeaturesForSection(section);
+    }
+    return result;
+  }, [sections]);
+  const sortedSections = useMemo(
+    () =>
+      Object.entries(sections).sort((a, b) => {
+        const [aName] = a;
+        const [bName] = b;
+        const aIsHfx = aName.toLowerCase() === "hfx";
+        const bIsHfx = bName.toLowerCase() === "hfx";
+        // HFX should be the first section
+        if (aIsHfx && !bIsHfx) return -1;
+        if (bIsHfx && !aIsHfx) return 1;
+        return aName.localeCompare(bName);
+      }),
+    [sections]
+  );
   // const features = OptionsData.getFeatures();
 
   // Initialize active section to first section
@@ -53,17 +92,30 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
   // Load settings from Chrome storage, and keep them current as other
   // contexts (content scripts, other tabs, sync) write to it
   useEffect(() => {
-    if (typeof chrome === "undefined" || !chrome.storage) {
+    const settingsService = getSettingsService();
+    if (!settingsService) {
       // Fallback for non-Chrome environments (like testing)
       setIsLoading(false);
       return;
     }
+
+    // Keys changed before the initial read resolved; their values in state
+    // are newer than that read's snapshot
+    let changedWhileLoading: Set<string> | null = new Set();
 
     const handleStorageChanged = (
       changes: { [key: string]: chrome.storage.StorageChange },
       areaName: string
     ) => {
       if (areaName !== "local") return;
+      Object.keys(changes).forEach((key) => changedWhileLoading?.add(key));
+      for (const key of Object.keys(changes)) {
+        if (changes[key].newValue === undefined) {
+          delete latestSettingsRef.current[key];
+        } else {
+          latestSettingsRef.current[key] = changes[key].newValue;
+        }
+      }
       setSettings((previousSettings) => {
         const nextSettings = { ...previousSettings };
         for (const key of Object.keys(changes)) {
@@ -78,10 +130,36 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     };
 
     chrome.storage.onChanged.addListener(handleStorageChanged);
-    chrome.storage.local.get(null, (items: Record<string, any>) => {
-      setSettings(items);
-      setIsLoading(false);
-    });
+    settingsService
+      .getAll()
+      .then((items) => {
+        const changedKeys = changedWhileLoading;
+        changedWhileLoading = null;
+        const latestSettings = { ...items };
+        changedKeys?.forEach((key) => {
+          if (key in latestSettingsRef.current) {
+            latestSettings[key] = latestSettingsRef.current[key];
+          } else {
+            delete latestSettings[key];
+          }
+        });
+        latestSettingsRef.current = latestSettings;
+        setSettings((previousSettings) => {
+          const nextSettings = { ...items };
+          changedKeys?.forEach((key) => {
+            if (key in previousSettings) {
+              nextSettings[key] = previousSettings[key];
+            } else {
+              delete nextSettings[key];
+            }
+          });
+          return nextSettings;
+        });
+      })
+      .catch((error) => {
+        Logger.error("Failed to load settings:", error);
+      })
+      .finally(() => setIsLoading(false));
 
     return () => chrome.storage.onChanged.removeListener(handleStorageChanged);
   }, []);
@@ -90,71 +168,88 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
     setActiveSection(sectionName);
   };
 
-  /**
-   * Apply a change to one feature's settings. Only the changed field is
-   * written, merged into the latest stored settings, so concurrent writes from
-   * content scripts aren't overwritten with this page's snapshot.
-   */
-  const updateFeatureSetting = (
-    featureName: string,
-    field: string,
-    value: any
-  ) => {
-    setSettings((previousSettings) => ({
-      ...previousSettings,
-      [featureName]: {
-        ...previousSettings[featureName],
-        [field]: value,
-      },
-    }));
-
-    getSettingsService()
-      ?.updateFeatureSettings(featureName, { [field]: value })
-      .catch((error) => {
-        Logger.error(`Failed to save ${featureName}.${field}:`, error);
-      });
-  };
-
-  const handleFeatureToggle = (featureName: string, enabled: boolean) => {
-    updateFeatureSetting(featureName, "enabled", enabled);
-  };
-
-  const handleConfigurableChange = (
-    featureName: string,
-    configName: string,
-    value: any
-  ) => {
-    updateFeatureSetting(featureName, configName, value);
-  };
-
-  const getSettingsService = (): SettingsService | null => {
+  // Handlers below are stable across renders so memoized sections and
+  // features only re-render when their own settings change
+  const getSettingsService = useCallback((): SettingsService | null => {
     if (typeof chrome === "undefined" || !chrome.storage) {
       return null;
     }
     if (!settingsServiceRef.current) {
-      settingsServiceRef.current = new SettingsService(new StorageService());
+      settingsServiceRef.current = new SettingsService(
+        StorageService.getInstance()
+      );
     }
     return settingsServiceRef.current;
-  };
+  }, []);
 
-  const handleStorageReset = async (feature: Feature) => {
-    const settingsService = getSettingsService();
-    if (!settingsService) return;
+  /**
+   * Apply a change to one feature's settings. The changed field is merged into
+   * this page's copy of the stored settings, which the onChanged listener keeps
+   * current, so writes from other contexts aren't overwritten with a stale
+   * snapshot.
+   *
+   * The merged object is written directly rather than with a fresh
+   * read-then-write: debounced inputs flush their last edit when the popup
+   * closes (on blur, then pagehide), and the page is gone before a read
+   * returns, so only a write handed to the browser right away survives.
+   */
+  const updateFeatureSetting = useCallback(
+    (featureName: string, field: string, value: any) => {
+      const nextFeatureSettings = {
+        ...latestSettingsRef.current[featureName],
+        [field]: value,
+      };
+      latestSettingsRef.current[featureName] = nextFeatureSettings;
+      setSettings((previousSettings) => ({
+        ...previousSettings,
+        [featureName]: {
+          ...previousSettings[featureName],
+          [field]: value,
+        },
+      }));
 
-    // Settings state picks up the reset through the storage change listener
-    await settingsService.resetStorageItems(feature);
-  };
+      getSettingsService()
+        ?.writeFeatureSettingsNow(featureName, nextFeatureSettings)
+        .catch((error) => {
+          Logger.error(`Failed to save ${featureName}.${field}:`, error);
+        });
+    },
+    [getSettingsService]
+  );
 
-  const handleStorageResetAll = async () => {
+  const handleFeatureToggle = useCallback(
+    (featureName: string, enabled: boolean) => {
+      updateFeatureSetting(featureName, "enabled", enabled);
+    },
+    [updateFeatureSetting]
+  );
+
+  const handleConfigurableChange = useCallback(
+    (featureName: string, configName: string, value: any) => {
+      updateFeatureSetting(featureName, configName, value);
+    },
+    [updateFeatureSetting]
+  );
+
+  const handleStorageReset = useCallback(
+    async (feature: Feature) => {
+      const settingsService = getSettingsService();
+      if (!settingsService) return;
+
+      // Settings state picks up the reset through the storage change listener
+      await settingsService.resetStorageItems(feature).catch((error) => {
+        Logger.error(`Failed to reset ${feature.class} cached data:`, error);
+      });
+    },
+    [getSettingsService]
+  );
+
+  const handleStorageResetAll = useCallback(async () => {
     const settingsService = getSettingsService();
     if (!settingsService) return;
 
     await settingsService.resetAllStorageItems(featuresWithStorage);
-  };
-
-  const getFeaturesForSection = (section: Section): Feature[] => {
-    return OptionsData.getFeaturesForSection(section);
-  };
+  }, [getSettingsService, featuresWithStorage]);
 
   // Show loading state while settings are being loaded
   if (isLoading) {
@@ -171,17 +266,6 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
       </div>
     );
   }
-
-  const sortedSections = Object.entries(sections).sort((a, b) => {
-    const [aName, aSection] = a;
-    const [bName, bSection] = b;
-    const aIsHfx = aName.toLowerCase() === "hfx";
-    const bIsHfx = bName.toLowerCase() === "hfx";
-    // HFX should be the first section
-    if (aIsHfx && !bIsHfx) return -1;
-    if (bIsHfx && !aIsHfx) return 1;
-    return aName.localeCompare(bName);
-  });
 
   return (
     <div className="options-container">
@@ -248,21 +332,20 @@ const OptionsAppContent: React.FC<OptionsAppProps> = ({
           }}
         >
           {Object.entries(sections).map(([sectionName, section]) => {
-            const sectionFeatures = getFeaturesForSection(section);
             const isActive = sectionName === activeSection;
 
             return (
               <SectionComponent
                 key={sectionName}
                 section={section}
-                features={sectionFeatures}
+                features={featuresBySection[sectionName]}
                 settings={settings}
                 onFeatureToggle={handleFeatureToggle}
                 onConfigurableChange={handleConfigurableChange}
                 onStorageReset={handleStorageReset}
                 featuresWithStorage={featuresWithStorage}
                 onStorageResetAll={handleStorageResetAll}
-                style={{ display: isActive ? "block" : "none" }}
+                style={isActive ? VISIBLE_SECTION_STYLE : HIDDEN_SECTION_STYLE}
               />
             );
           })}

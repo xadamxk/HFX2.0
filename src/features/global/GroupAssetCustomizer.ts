@@ -1,6 +1,7 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Dropdown } from "../../configuration/configurables/Dropdown";
 import { Feature } from "../../core/Feature";
+import { getPosts } from "../../core/Posts";
 import Global from "../../sections/Global";
 
 enum THEMES {
@@ -186,8 +187,8 @@ class GroupAssetCustomizer extends Feature {
     const currentUrl = window.location.pathname;
     if (currentUrl.includes("/showthread.php")) {
       // Replace stars
-      const posts = this.querySelectorAll(".post");
-      posts.forEach((post) => {
+      const posts = getPosts({ featureName: this.name });
+      posts.forEach(({ el: post }) => {
         const authorInfo = post.querySelector(".author_information");
         const userSpan = authorInfo?.querySelector(
           "strong > span.largetext > a > span"

@@ -1,6 +1,7 @@
 import { Feature } from "../../core/Feature";
 import { Util } from "../../core/Util";
 import { el } from "../../core/Dom";
+import { getPosts } from "../../core/Posts";
 import Threads from "../../sections/Threads";
 
 class PMFromPost extends Feature {
@@ -23,7 +24,7 @@ class PMFromPost extends Feature {
 
     this.startDynamicListeners(threadTitle, myPostKey);
 
-    document.querySelectorAll(".post").forEach((post, index) => {
+    getPosts({ optional: true }).forEach(({ el: post }, index) => {
       const buttons = post.querySelector(".author_buttons");
       if (buttons) {
         const a = document.createElement("a");

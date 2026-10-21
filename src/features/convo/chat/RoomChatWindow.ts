@@ -1,7 +1,7 @@
 import { el, ElChild } from "../../../core/Dom";
 import { convoNiceTime } from "../common/timestamps";
 import type { ChatUser, ConvoStatus } from "./ConvoClient";
-import { avatarUrl, renderMessage } from "./formatMessage";
+import { avatarUrl, mentionsUser, renderMessage } from "./formatMessage";
 import { isCommand, RoomMessage } from "./GlobalRoomClient";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { MentionPicker } from "./mentions";
@@ -425,7 +425,8 @@ export abstract class RoomChatWindow {
     const mention =
       me &&
       message.uid !== me.uid &&
-      message.text.toLowerCase().includes(`@${me.username.toLowerCase()}@`);
+      !message.html &&
+      mentionsUser(message.text, me, this.origin);
     return el(
       "div",
       {
@@ -433,7 +434,7 @@ export abstract class RoomChatWindow {
         title: convoNiceTime(message.dateline),
         "data-key": message.key,
       },
-      renderMessage(message)
+      renderMessage(message, this.origin)
     );
   }
 

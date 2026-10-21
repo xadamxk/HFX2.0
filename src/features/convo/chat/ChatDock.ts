@@ -7,7 +7,12 @@ import type {
   ConvoStatus,
 } from "./ConvoClient";
 import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
-import { avatarUrl, previewText, renderMessage } from "./formatMessage";
+import {
+  avatarUrl,
+  mentionsUser,
+  previewText,
+  renderMessage,
+} from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
@@ -439,9 +444,7 @@ export class ChatDock {
     const last = this.client.getGroupMessages(gid).slice(-1)[0];
     const me = this.client.me;
     if (!last || last.quiet || !me || last.uid === me.uid) return;
-    const mentionsMe = last.text
-      .toLowerCase()
-      .includes(`@${me.username.toLowerCase()}@`);
+    const mentionsMe = !last.html && mentionsUser(last.text, me, this.origin);
     if (groups.sound === "mentions" && !mentionsMe) return;
     if (this.groupWindows.get(gid)?.isActive()) return;
     if (mutedParties().has(gid)) return;
@@ -580,7 +583,7 @@ export class ChatDock {
 
   private dmHead(conversation: Conversation): HTMLElement {
     const { other } = conversation;
-    const preview = previewText(conversation.lastMessage);
+    const preview = previewText(conversation.lastMessage, this.origin);
     const status = presence(other.lastActive);
     const typing = this.typingUsers.has(other.uid);
     const head = el(
@@ -645,7 +648,7 @@ export class ChatDock {
       last.uid === this.client.me?.uid
         ? "You"
         : this.client.users.get(last.uid)?.username;
-    const text = previewText(last);
+    const text = previewText(last, this.origin);
     return sender ? `${sender}: ${text}` : text;
   }
 
@@ -802,7 +805,7 @@ export class ChatDock {
     // The avatar's dot animates while they type; the preview says so too
     const preview = typing
       ? "typing…"
-      : [mine && "You: ", previewText(lastMessage)];
+      : [mine && "You: ", previewText(lastMessage, this.origin)];
 
     const row = el(
       "button",
@@ -1379,7 +1382,7 @@ export class ChatDock {
         title: convoNiceTime(message.dateline),
         "data-mid": message.mid,
       },
-      renderMessage(message)
+      renderMessage(message, this.origin)
     );
   }
 

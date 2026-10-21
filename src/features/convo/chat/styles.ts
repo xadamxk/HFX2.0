@@ -577,6 +577,13 @@ export const CHAT_DOCK_CSS = `
 }
 .hfx-chat-msg.hfx-chat-group-start { margin-top: 6px; }
 .hfx-chat-msg a { color: #9ecbff; text-decoration: underline; }
+/* HF links shown by their label (mentions, threads): the name in its group style */
+#hfx-chat-dock a.hfx-chat-preview { text-decoration: none; }
+#hfx-chat-dock .hfx-chat-preview strong {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: normal !important;
+}
 .hfx-chat-msg img { max-width: 100%; height: auto; border-radius: 8px; display: block; }
 .hfx-chat-mine { align-self: flex-end; background: var(--hfx-chat-mine); color: #fff; }
 .hfx-chat-theirs { align-self: flex-start; background: var(--hfx-chat-theirs); border: 1px solid var(--hfx-chat-border); }

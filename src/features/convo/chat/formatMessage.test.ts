@@ -1,6 +1,9 @@
 import {
   avatarUrl,
   htmlToText,
+  mentionsUser,
+  parsePreviews,
+  previewKey,
   previewText,
   renderImage,
   renderMessage,
@@ -216,5 +219,147 @@ describe("avatarUrl", () => {
         "https://hackforums.net/images/default_avatar.png"
       );
     }
+  });
+});
+
+describe("link previews", () => {
+  const HF = "https://hackforums.net";
+  // As the server sends a mention of G33K (convo_receivemessage extra)
+  const mention = {
+    text: `${HF}/member.php?action=profile&uid=1692747 no we do not`,
+    extra: {
+      message: `${HF}/member.php?action=profile&uid=1692747 no we do not`,
+      users: { 1692747: { uid: 1692747, username: "G33K", group: 68 } },
+      previews: {
+        "/member.php?action=profile&uid=1692747": {
+          label: "G33K",
+          title: "G33K's Profile",
+          group: 68,
+        },
+      },
+    },
+  };
+
+  it("keys HF links by path and sorted query, ignoring www", () => {
+    expect(previewKey(`${HF}/member.php?uid=5&action=profile`, HF)).toBe(
+      "/member.php?action=profile&uid=5"
+    );
+    expect(previewKey("https://www.hackforums.net/x.php?a=1&a=2", HF)).toBe(
+      "/x.php?a=2"
+    );
+    expect(previewKey("https://example.com/member.php?uid=5", HF)).toBeNull();
+    expect(previewKey("https://user:pw@hackforums.net/", HF)).toBeNull();
+    expect(previewKey("https://hackforums.net:8443/", HF)).toBeNull();
+  });
+
+  it("parses previews field by field", () => {
+    expect(parsePreviews(undefined)).toBeUndefined();
+    expect(parsePreviews({})).toEqual({});
+    expect(
+      parsePreviews({
+        previews: {
+          "/a": { label: "A", group: 2, title: "T", extra: "<b>" },
+          "/b": { label: 5 },
+          "/c": { label: "C", group: -1 },
+          "/t": {
+            label: "Thread",
+            author: { uid: 9, username: "Nova", group: 46 },
+          },
+          "/u": { label: "U", author: { uid: 0, username: "x" } },
+        },
+      })
+    ).toEqual({
+      "/a": { label: "A", group: 2, title: "T" },
+      "/c": { label: "C" },
+      "/t": {
+        label: "Thread",
+        author: { uid: 9, username: "Nova", group: 46 },
+      },
+      "/u": { label: "U" },
+    });
+  });
+
+  it("shows a mention as the member's name in their group style", () => {
+    const node = renderText(mention.text, parsePreviews(mention.extra), HF);
+    const div = document.createElement("div");
+    div.appendChild(node);
+    const link = div.querySelector("a")!;
+    expect(link.href).toBe(`${HF}/member.php?action=profile&uid=1692747`);
+    expect(link.title).toBe("G33K's Profile");
+    expect(link.className).toBe("hfx-chat-preview");
+    expect(link.querySelector("strong")!.className).toBe("group68");
+    expect(link.querySelector("i")!.className).toBe(
+      "far fa-link hfx-chat-icon"
+    );
+    expect(div.textContent).toBe("G33K no we do not");
+  });
+
+  it("adds a thread's author and leaves other links alone", () => {
+    const text = `see ${HF}/showthread.php?tid=1, and https://example.com/a.`;
+    const div = document.createElement("div");
+    div.appendChild(
+      renderText(
+        text,
+        {
+          "/showthread.php?tid=1": {
+            label: "A thread",
+            author: { uid: 9, username: "Nova", group: 46 },
+          },
+        },
+        HF
+      )
+    );
+    expect(div.textContent).toBe(
+      "see A thread by Nova, and https://example.com/a."
+    );
+    const links = div.querySelectorAll("a");
+    expect(links[1].href).toBe(`${HF}/member.php?action=profile&uid=9`);
+    expect(links[1].querySelector("strong")!.className).toBe("group46");
+    expect(links[2].className).toBe("");
+  });
+
+  it("links 'help docs' only when the message has previews", () => {
+    const withExtra = document.createElement("div");
+    withExtra.appendChild(renderText("read the help docs!", {}, HF));
+    expect(withExtra.querySelector("a")!.href).toBe(
+      `${HF}/misc.php?action=help`
+    );
+    expect(withExtra.textContent).toBe("read the Help Docs!");
+    const without = document.createElement("div");
+    without.appendChild(renderText("read the help docs!", undefined, HF));
+    expect(without.querySelector("a")).toBeNull();
+  });
+
+  it("never treats a label as HTML", () => {
+    const div = document.createElement("div");
+    div.appendChild(
+      renderText(
+        `${HF}/x.php`,
+        { "/x.php": { label: "<img src=x onerror=1>" } },
+        HF
+      )
+    );
+    expect(div.querySelector("img")).toBeNull();
+    expect(div.textContent).toBe("<img src=x onerror=1>");
+  });
+
+  it("renders previews from a message and uses labels in previews", () => {
+    const previews = parsePreviews(mention.extra);
+    expect(
+      html(renderMessage(message({ text: mention.text, previews }), HF))
+    ).toContain('<strong class="group68">G33K</strong>');
+    expect(previewText(message({ text: mention.text, previews }), HF)).toBe(
+      "G33K no we do not"
+    );
+  });
+
+  it("finds mentions as profile links or @name@", () => {
+    const me = { uid: 1692747, username: "G33K" };
+    expect(mentionsUser(mention.text, me, HF)).toBe(true);
+    expect(mentionsUser("hey @g33k@ there", me, HF)).toBe(true);
+    expect(
+      mentionsUser(`${HF}/member.php?action=profile&uid=16927470`, me, HF)
+    ).toBe(false);
+    expect(mentionsUser("hey g33k", me, HF)).toBe(false);
   });
 });

@@ -171,6 +171,33 @@ describe("GlobalChatWindow", () => {
     expect(lines[1].classList).not.toContain("hfx-gc-mention");
   });
 
+  it("shows mentions the way HF sends them now: a previewed profile link", async () => {
+    await open();
+    const url = `https://hackforums.net/member.php?action=profile&uid=${ME.uid}`;
+    socket.fire(
+      "convo_receivemessage",
+      room({
+        mid: 3,
+        message: `${url} look`,
+        extra: {
+          message: `${url} look`,
+          previews: {
+            [`/member.php?action=profile&uid=${ME.uid}`]: {
+              label: "Me",
+              title: "Me's Profile",
+              group: 2,
+            },
+          },
+        },
+      })
+    );
+    const line = win.root.querySelector(".hfx-gc-line")!;
+    expect(line.textContent).toBe("Me look");
+    expect(line.querySelector("a strong")!.className).toBe("group2");
+    expect(line.classList).toContain("hfx-gc-mention");
+    expect(sound.play).toHaveBeenCalledTimes(1);
+  });
+
   it("renders message text as text", async () => {
     await open();
     socket.fire(

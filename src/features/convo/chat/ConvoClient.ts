@@ -1,3 +1,4 @@
+import { LinkPreviews, parsePreviews } from "./formatMessage";
 import { SocketIOClient } from "./SocketIOClient";
 
 /**
@@ -70,6 +71,8 @@ export interface ChatMessage {
   quiet?: boolean;
   /** A private group convo message; `partyId` is then the group id. */
   group?: boolean;
+  /** HF's previews of HF links in the text (mentions are profile links). */
+  previews?: LinkPreviews;
 }
 
 /** A private group convo ("Comrades" on convo.php). Group ids are HF usergroup ids. */
@@ -209,6 +212,8 @@ export function parseMessage(raw: any): ChatMessage | null {
   if (typeof raw.requestId === "string") message.requestId = raw.requestId;
   if ("noSound" in raw) message.quiet = true;
   if (raw.is_group) message.group = true;
+  const previews = parsePreviews(raw.extra);
+  if (previews) message.previews = previews;
   return message;
 }
 

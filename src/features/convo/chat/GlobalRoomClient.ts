@@ -8,6 +8,7 @@ import {
   parseUser,
   toInt,
 } from "./ConvoClient";
+import { LinkPreviews, parsePreviews } from "./formatMessage";
 import { SocketIOClient } from "./SocketIOClient";
 
 /**
@@ -45,6 +46,8 @@ export interface RoomMessage {
   requestId?: string;
   /** The server sent it with noSound (history, system notices): HF plays no sound for it. */
   quiet?: boolean;
+  /** HF's previews of HF links in the text (mentions are profile links). */
+  previews?: LinkPreviews;
 }
 
 export interface RoomUser extends ChatUser {
@@ -107,6 +110,8 @@ export function parseRoomMessage(raw: any): RoomMessage | null {
   if (message.uid === HELPBOT_UID && raw.trustedHtml) message.html = true;
   if (typeof raw.requestId === "string") message.requestId = raw.requestId;
   if ("noSound" in raw) message.quiet = true;
+  const previews = parsePreviews(raw.extra);
+  if (previews) message.previews = previews;
   return message;
 }
 

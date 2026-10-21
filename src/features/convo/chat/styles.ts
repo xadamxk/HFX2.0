@@ -333,7 +333,9 @@ export const CHAT_DOCK_CSS = `
   display: flex;
   flex-direction: column;
 }
-.hfx-gc-messages { gap: 0; padding: 6px 0; }
+/* Both classes, so this beats .hfx-chat-messages' side padding: each group
+   already has 10px on each side */
+.hfx-chat-messages.hfx-gc-messages { gap: 0; padding: 6px 0; }
 .hfx-gc-group {
   display: flex;
   gap: 8px;

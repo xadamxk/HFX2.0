@@ -197,6 +197,11 @@ describe("ChatDock group chats", () => {
 
     document.body.innerHTML = "";
     socket = new FakeConvoSocket();
+    socket.ackReplies.convo_loadmessages = () => ({
+      ok: true,
+      hasMore: false,
+      lastMid: 0,
+    });
     client = new ConvoClient({
       postKey: "abc",
       createSocket: () => socket as unknown as SocketIOClient,
@@ -214,10 +219,19 @@ describe("ChatDock group chats", () => {
     await mount({ members: [48] });
     socket.fire("convo_receivemessage", groupMessage());
     const last = saved[saved.length - 1];
-    expect(last.groups?.["48"]).toEqual({ dateline: NOW - 60, unread: 1 });
+    expect(last.groups?.["48"]).toEqual({
+      dateline: NOW - 60,
+      unread: 1,
+      lastMid: 1,
+    });
     dock.destroy();
 
     socket = new FakeConvoSocket();
+    socket.ackReplies.convo_loadmessages = () => ({
+      ok: true,
+      hasMore: false,
+      lastMid: 0,
+    });
     client = new ConvoClient({
       postKey: "abc",
       createSocket: () => socket as unknown as SocketIOClient,
@@ -227,6 +241,54 @@ describe("ChatDock group chats", () => {
       dateline: NOW - 60,
       unread: 1,
     });
+  });
+
+  it("learns each group's latest message once, then only asks for newer ones", async () => {
+    await mount({ members: [48] });
+    expect(socket.acked).toContainEqual([
+      "convo_loadmessages",
+      { party: 48, mid: 0, position: "new", bulk: true, is_group: true },
+    ]);
+  });
+
+  it("counts messages missed while away as unread", async () => {
+    socket.ackReplies.convo_loadmessages = (data) => {
+      if (data.is_group && data.mid === 40) {
+        socket.fire("convo_receivemessage_bulk", [
+          groupMessage({ mid: 41, noSound: true, history: true }),
+          groupMessage({ mid: 42, uid: ME.uid, noSound: true, history: true }),
+          groupMessage({ mid: 43, noSound: true, history: true }),
+        ]);
+      }
+      return { ok: true, hasMore: false, lastMid: 0 };
+    };
+    await mount({
+      members: [48],
+      state: {
+        groups: { 48: { dateline: NOW - 9999, unread: 0, lastMid: 40 } },
+      },
+    });
+    expect(socket.acked).toContainEqual([
+      "convo_loadmessages",
+      { party: 48, mid: 40, position: "new", bulk: true, is_group: true },
+    ]);
+    expect(client.groups.get(48)!.unread).toBe(2);
+  });
+
+  it("skips the catch-up when it ran a moment ago", async () => {
+    await mount({
+      members: [48],
+      state: {
+        groups: { 48: { dateline: NOW - 9999, unread: 0, lastMid: 40 } },
+        groupsCheckedAt: Date.now(),
+      },
+    });
+    expect(
+      socket.acked.some(
+        ([event, data]) =>
+          event === "convo_loadmessages" && (data as any).is_group
+      )
+    ).toBe(false);
   });
 
   it("plays the group sound for mentions only by default", async () => {

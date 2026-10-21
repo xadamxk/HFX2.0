@@ -375,9 +375,12 @@ export class ConvoClient {
     return results.filter((gid) => gid > 0);
   }
 
-  /** Load a group's newest messages, or the ones after what's loaded. */
-  async loadGroupHistory(gid: number): Promise<void> {
-    await this.loadNewer(true, gid);
+  /**
+   * Load a group's newest messages, or the ones after what's loaded. With
+   * `after` and nothing loaded yet, only messages newer than that id.
+   */
+  async loadGroupHistory(gid: number, after = 0): Promise<void> {
+    await this.loadNewer(true, gid, after);
   }
 
   /** Load the page of group messages before the oldest loaded. False when there's nothing older. */
@@ -422,9 +425,13 @@ export class ConvoClient {
     return this.loadedParty === chatKey(group, id);
   }
 
-  private async loadNewer(group: boolean, id: number): Promise<void> {
+  private async loadNewer(
+    group: boolean,
+    id: number,
+    after = 0
+  ): Promise<void> {
     const list = group ? this.getGroupMessages(id) : this.getMessages(id);
-    let cursor = list.length ? list[list.length - 1].mid : 0;
+    let cursor = list.length ? list[list.length - 1].mid : after;
     // Cap the catch-up loop; each page can be hundreds of KB
     for (let page = 0; page < 5; page++) {
       const result = await this.loadMessages(group, id, cursor, "new");

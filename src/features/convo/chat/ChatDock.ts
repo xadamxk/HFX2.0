@@ -43,7 +43,12 @@ export interface DockState {
    * Group activity HFX tracks itself (HF sends no group list or read state):
    * last message time and unread count by group id.
    */
-  groups?: Record<string, { dateline: number; unread: number }>;
+  groups?: Record<
+    string,
+    { dateline: number; unread: number; lastMid?: number }
+  >;
+  /** When groups were last caught up (ms since epoch). */
+  groupsCheckedAt?: number;
 }
 
 /** What the dock needs to show the user's private group convos. */
@@ -150,6 +155,10 @@ interface ChatWindow {
 }
 
 const TYPING_TIMEOUT = 35000;
+// How often group activity is caught up on page load
+const GROUP_CATCH_UP_MS = 5 * 60 * 1000;
+// The longest saved windows wait for group setup on page load
+const GROUP_SETUP_WAIT_MS = 5000;
 const OWN_TYPING_TIMEOUT = 30000;
 const UNCONFIRMED_RETRY =
   "Delivery of this message is unconfirmed. Check the conversation first: sending it again may create a duplicate.\n\nSend it again?";
@@ -220,6 +229,7 @@ export class ChatDock {
       collapsed: Boolean(options.state?.collapsed),
       filter: options.state?.filter,
       groups: options.state?.groups,
+      groupsCheckedAt: options.state?.groupsCheckedAt,
     };
     this.heads = el("div", {
       class: options.layout === "list" ? "hfx-chat-list" : "hfx-chat-heads",
@@ -336,11 +346,11 @@ export class ChatDock {
   private async firstReady(): Promise<void> {
     // Saving before the windows are back would drop them from the saved state
     const toRestore = [...this.state.open];
-    try {
-      await this.setupGroups();
-    } catch {
-      // Groups are optional; DMs still work
-    }
+    // Groups are optional: don't let a slow or failed setup hold the windows back
+    await Promise.race([
+      this.setupGroups().catch(() => undefined),
+      new Promise((resolve) => setTimeout(resolve, GROUP_SETUP_WAIT_MS)),
+    ]);
     // Oldest first, so the newest ends up next to the bubbles
     toRestore.reverse().forEach((chat) => {
       const restore = { minimized: chat.minimized, restore: true };
@@ -376,6 +386,45 @@ export class ChatDock {
         unread: saved[gid]?.unread ?? 0,
       }))
     );
+    await this.catchUpGroups(members, saved);
+  }
+
+  /**
+   * HF gives no group activity, so HFX keeps its own: once per group, load its
+   * latest page to learn its last message; afterwards (at most every few
+   * minutes) fetch only messages newer than the last one seen, counting the
+   * ones from others as unread.
+   */
+  private async catchUpGroups(
+    gids: number[],
+    saved: NonNullable<DockState["groups"]>
+  ): Promise<void> {
+    const due =
+      Date.now() - (this.state.groupsCheckedAt ?? 0) >= GROUP_CATCH_UP_MS ||
+      gids.some((gid) => !saved[gid]?.lastMid);
+    if (!due) return;
+    const me = this.client.me?.uid;
+    await Promise.all(
+      gids.map(async (gid) => {
+        const lastMid = saved[gid]?.lastMid ?? 0;
+        if (this.client.getGroupMessages(gid).length) return;
+        try {
+          await this.client.loadGroupHistory(gid, lastMid);
+        } catch {
+          return;
+        }
+        if (!lastMid) return;
+        const missed = this.client
+          .getGroupMessages(gid)
+          .filter(
+            (message) => message.mid > lastMid && message.uid !== me
+          ).length;
+        const group = this.client.groups.get(gid);
+        if (group && missed) group.unread += missed;
+      })
+    );
+    this.state.groupsCheckedAt = Date.now();
+    this.renderHeads();
   }
 
   /** Name groups that were only known by id (e.g. found through a message). */
@@ -391,7 +440,14 @@ export class ChatDock {
     if (!this.options.groups || !this.windowsRestored) return;
     const groups: NonNullable<DockState["groups"]> = {};
     for (const group of this.client.groups.values()) {
-      groups[group.gid] = { dateline: group.dateline, unread: group.unread };
+      const lastMid =
+        this.client.getGroupMessages(group.gid).slice(-1)[0]?.mid ??
+        this.state.groups?.[group.gid]?.lastMid;
+      groups[group.gid] = {
+        dateline: group.dateline,
+        unread: group.unread,
+        ...(lastMid ? { lastMid } : {}),
+      };
     }
     const before = JSON.stringify(this.state.groups ?? {});
     if (JSON.stringify(groups) === before) return;

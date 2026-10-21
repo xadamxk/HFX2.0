@@ -1,12 +1,13 @@
 import {
   decodeSocketPacket,
+  deconstructBinary,
   SocketIOClient,
   WebSocketLike,
 } from "./SocketIOClient";
 
 class FakeSocket implements WebSocketLike {
   readyState = 1;
-  sent: string[] = [];
+  sent: unknown[] = [];
   closed = false;
   onopen: ((event: any) => void) | null = null;
   onmessage: ((event: { data: unknown }) => void) | null = null;
@@ -15,7 +16,7 @@ class FakeSocket implements WebSocketLike {
 
   constructor(readonly url: string) {}
 
-  send(data: string) {
+  send(data: unknown) {
     this.sent.push(data);
   }
 
@@ -69,6 +70,33 @@ describe("decodeSocketPacket", () => {
 
   it("returns null for malformed JSON", () => {
     expect(decodeSocketPacket("2[oops")).toBeNull();
+  });
+});
+
+describe("deconstructBinary", () => {
+  it("replaces nested buffers with numbered placeholders", () => {
+    const a = new ArrayBuffer(2);
+    const b = new Uint8Array([1]);
+    const { data, buffers } = deconstructBinary([
+      "ev",
+      { x: a, list: [1, b], s: "keep" },
+    ]);
+    expect(data).toEqual([
+      "ev",
+      {
+        x: { _placeholder: true, num: 0 },
+        list: [1, { _placeholder: true, num: 1 }],
+        s: "keep",
+      },
+    ]);
+    expect(buffers).toEqual([a, b]);
+  });
+
+  it("leaves data without buffers alone", () => {
+    expect(deconstructBinary({ a: 1 })).toEqual({
+      data: { a: 1 },
+      buffers: [],
+    });
   });
 });
 
@@ -144,6 +172,26 @@ describe("SocketIOClient", () => {
     client.on("ask", onAsk);
     latest().receive('427["ask","ping"]');
     expect(latest().sent).toContain('437["pong"]');
+  });
+
+  it("sends binary data as a binary event followed by the buffer", async () => {
+    client.connect();
+    await handshake();
+    const image = new Uint8Array([137, 80, 78, 71]).buffer;
+
+    const reply = client.emitWithAck("convo_imageupload", {
+      partyID: 5,
+      imageData: image,
+      requestId: "r",
+    });
+    const sent = latest().sent.slice(-2);
+    expect(sent[0]).toBe(
+      '451-0["convo_imageupload",{"partyID":5,"imageData":{"_placeholder":true,"num":0},"requestId":"r"}]'
+    );
+    expect(sent[1]).toBe(image);
+
+    latest().receive('430[{"ok":true,"accepted":true}]');
+    await expect(reply).resolves.toEqual({ ok: true, accepted: true });
   });
 
   it("emits events and resolves acks", async () => {

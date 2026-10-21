@@ -1,3 +1,4 @@
+import { transferEvent } from "../../../test-utils/transferEvent";
 import { FakeConvoSocket } from "../../../test-utils/FakeConvoSocket";
 import { ChatDock, DEFAULT_DOCK_STATE, OpenChat, shortTime } from "./ChatDock";
 import { GlobalChatWindow } from "./GlobalChatWindow";
@@ -40,6 +41,7 @@ class FakeClient {
   loadOlder = jest.fn(async () => false);
   markRead = jest.fn();
   setTyping = jest.fn();
+  sendImage = jest.fn(async () => ({ requestId: "req" }));
   createRequestId = () => "req";
 
   /** Add messages as the socket would and notify the dock. */
@@ -224,6 +226,67 @@ describe("ChatDock bubbles", () => {
     expect(document.getElementById("hfx-chat-dock")!.classList).not.toContain(
       "hfx-chat-left"
     );
+  });
+});
+
+describe("ChatDock images", () => {
+  const chatWindow = () =>
+    document.querySelector<HTMLElement>(
+      `.hfx-chat-window[data-party="${PARTY}"]`
+    )!;
+  const notice = () =>
+    chatWindow().querySelector<HTMLElement>(":scope > .hfx-chat-notice")!;
+  const file = (type = "image/png") =>
+    new File([new Uint8Array([1, 2, 3])], "shot", { type });
+
+  let confirmSpy: jest.SpyInstance;
+  beforeEach(() => {
+    confirmSpy = jest.spyOn(window, "confirm").mockReturnValue(true);
+  });
+  afterEach(() => confirmSpy.mockRestore());
+
+  it("uploads a pasted image after HF's confirmation", async () => {
+    await mount(true);
+    chatWindow().dispatchEvent(transferEvent("paste", [file()]));
+    await flush();
+    await flush();
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Do you want to upload this image?"
+    );
+    expect(client.sendImage).toHaveBeenCalledTimes(1);
+    const [partyId, bytes, requestId] = client.sendImage.mock
+      .calls[0] as unknown as [number, ArrayBuffer, string];
+    expect(partyId).toBe(PARTY);
+    expect(Array.from(new Uint8Array(bytes))).toEqual([1, 2, 3]);
+    expect(requestId).toBe("req");
+  });
+
+  it("refuses other file types with HF's message", async () => {
+    await mount(true);
+    chatWindow().dispatchEvent(transferEvent("drop", [file("image/webp")]));
+    await flush();
+    expect(client.sendImage).not.toHaveBeenCalled();
+    expect(notice().textContent).toBe(
+      "Invalid image type. Please use PNG, GIF, or JPG format."
+    );
+  });
+
+  it("shows the upload as pending until it's acked", async () => {
+    await mount(true);
+    let ack!: () => void;
+    client.sendImage.mockImplementation(
+      () =>
+        new Promise((resolve) => (ack = () => resolve({ requestId: "req" })))
+    );
+    chatWindow().dispatchEvent(transferEvent("drop", [file()]));
+    await flush();
+    await flush();
+    expect(chatWindow().querySelector(".hfx-chat-pending")!.textContent).toBe(
+      "Sending image…"
+    );
+    ack();
+    await flush();
+    expect(chatWindow().querySelector(".hfx-chat-pending")).toBeNull();
   });
 });
 

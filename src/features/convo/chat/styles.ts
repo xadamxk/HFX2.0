@@ -371,7 +371,24 @@ export const CHAT_DOCK_CSS = `
   text-align: center;
 }
 
+/* Dragging an image over a chat window */
+.hfx-chat-window.hfx-chat-dropping::after {
+  content: "Drop image to upload";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--hfx-chat-text);
+  border-radius: 8px 8px 0 0;
+  background: rgba(31, 31, 31, 0.88);
+  color: #fff;
+  font-weight: bold;
+  pointer-events: none;
+}
 .hfx-chat-window {
+  position: relative;
   width: 320px;
   height: 440px;
   max-height: calc(100vh - 80px);

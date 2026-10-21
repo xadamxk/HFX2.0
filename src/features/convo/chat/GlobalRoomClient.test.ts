@@ -201,6 +201,17 @@ describe("GlobalRoomClient", () => {
     await expect(client.send("hi")).rejects.toThrow("disconnected");
   });
 
+  it("uploads images to party -1", async () => {
+    await ready();
+    const image = new ArrayBuffer(4);
+    socket.ackReplies.convo_imageupload = () => ({ ok: true });
+    await client.sendImage(image, "req-img");
+    expect(socket.acked).toContainEqual([
+      "convo_imageupload",
+      { partyID: -1, imageData: image, requestId: "req-img" },
+    ]);
+  });
+
   it("reports an unconfirmed send", async () => {
     await ready();
     socket.ackReplies.convo_newmessage = () => {

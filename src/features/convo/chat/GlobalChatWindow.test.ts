@@ -1,3 +1,4 @@
+import { transferEvent } from "../../../test-utils/transferEvent";
 import { FakeConvoSocket } from "../../../test-utils/FakeConvoSocket";
 import { GlobalChatWindow, groupTime, typingText } from "./GlobalChatWindow";
 import { GlobalRoomClient } from "./GlobalRoomClient";
@@ -225,6 +226,45 @@ describe("GlobalChatWindow", () => {
     expect(groups()).toEqual(["Me: hello room"]);
     ack({ ok: true });
     await flush();
+  });
+
+  it("uploads a dropped image to the room", async () => {
+    await open();
+    socket.ackReplies.convo_imageupload = () => ({ ok: true });
+    const file = new File([new Uint8Array([7, 8])], "a.gif", {
+      type: "image/gif",
+    });
+    win.root.dispatchEvent(transferEvent("drop", [file]));
+    await flush();
+    await flush();
+
+    const upload = socket.acked.find(
+      ([event]) => event === "convo_imageupload"
+    );
+    expect(upload).toBeDefined();
+    const data = upload![1] as {
+      partyID: number;
+      imageData: ArrayBuffer;
+      requestId: string;
+    };
+    expect(data.partyID).toBe(-1);
+    expect(Array.from(new Uint8Array(data.imageData))).toEqual([7, 8]);
+    expect(data.requestId).toBe("req-1");
+    // Acked, so the pending line is gone even before an echo
+    expect(win.root.querySelector(".hfx-gc-pending")).toBeNull();
+  });
+
+  it("refuses images that are too big", async () => {
+    await open();
+    const big = new File([new Uint8Array(3000001)], "big.png", {
+      type: "image/png",
+    });
+    win.root.dispatchEvent(transferEvent("drop", [big]));
+    await flush();
+    expect(socket.acked.some(([event]) => event === "convo_imageupload")).toBe(
+      false
+    );
+    expect(notice().textContent).toBe("Images cannot exceed 3MB in size.");
   });
 
   it("shows who's typing", async () => {

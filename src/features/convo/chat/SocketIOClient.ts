@@ -2,12 +2,16 @@
  * Minimal Socket.IO v4 client (Engine.IO v4, websocket transport only).
  *
  * Supports what Convo needs: the open handshake, ping/pong, connecting the
- * default namespace with an auth payload, events, acks, and reconnecting with
- * backoff. Binary packets and namespaces other than "/" are not supported.
+ * default namespace with an auth payload, events, acks, sending binary data
+ * (image uploads), and reconnecting with backoff. Receiving binary packets and
+ * namespaces other than "/" are not supported.
  *
  * Packet format (text frames): Engine.IO type digit, then for messages ("4")
  * the Socket.IO type digit, an optional ack id and a JSON payload, e.g.
  * `42["event",data]`, `421["event",data]` (wants ack 1) and `431[result]`.
+ * An event carrying binary data is `45<n>-` + ack id + JSON with each buffer
+ * replaced by `{"_placeholder":true,"num":i}`, followed by the n buffers as
+ * binary frames.
  */
 
 // Engine.IO packet types
@@ -23,6 +27,36 @@ const SIO_DISCONNECT = "1";
 const SIO_EVENT = "2";
 const SIO_ACK = "3";
 const SIO_CONNECT_ERROR = "4";
+const SIO_BINARY_EVENT = "5";
+
+type Binary = ArrayBuffer | ArrayBufferView;
+
+const isBinary = (value: unknown): value is Binary =>
+  value instanceof ArrayBuffer || ArrayBuffer.isView(value);
+
+/**
+ * Replace binary values with Socket.IO placeholders, collecting the buffers
+ * in order (socket.io-parser's deconstructPacket).
+ */
+export function deconstructBinary(
+  data: unknown,
+  buffers: Binary[] = []
+): { data: unknown; buffers: Binary[] } {
+  const walk = (value: unknown): unknown => {
+    if (isBinary(value)) {
+      buffers.push(value);
+      return { _placeholder: true, num: buffers.length - 1 };
+    }
+    if (Array.isArray(value)) return value.map(walk);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, inner]) => [key, walk(inner)])
+      );
+    }
+    return value;
+  };
+  return { data: walk(data), buffers };
+}
 
 export type DisconnectReason =
   | "io server disconnect"
@@ -34,7 +68,7 @@ export type DisconnectReason =
 /** The parts of WebSocket the client uses, so tests can pass a fake. */
 export interface WebSocketLike {
   readyState: number;
-  send(data: string): void;
+  send(data: string | ArrayBuffer | ArrayBufferView): void;
   close(): void;
   onopen: ((event: any) => void) | null;
   onmessage: ((event: { data: unknown }) => void) | null;
@@ -153,7 +187,7 @@ export class SocketIOClient {
   /** Send an event without waiting for a reply. Dropped when not connected. */
   emit(event: string, ...args: unknown[]): boolean {
     if (!this.connected) return false;
-    this.write(EIO_MESSAGE + SIO_EVENT + JSON.stringify([event, ...args]));
+    this.writeEvent([event, ...args]);
     return true;
   }
 
@@ -180,8 +214,28 @@ export class SocketIOClient {
         if (error) reject(error);
         else resolve(result as T);
       });
-      this.write(EIO_MESSAGE + SIO_EVENT + id + JSON.stringify([event, data]));
+      this.writeEvent([event, data], id);
     });
+  }
+
+  /** Write an event packet, as a binary event when it carries buffers. */
+  private writeEvent(payload: unknown[], ackId?: number): void {
+    const id = ackId === undefined ? "" : String(ackId);
+    const { data, buffers } = deconstructBinary(payload);
+    if (!buffers.length) {
+      this.write(EIO_MESSAGE + SIO_EVENT + id + JSON.stringify(payload));
+      return;
+    }
+    this.write(
+      EIO_MESSAGE +
+        SIO_BINARY_EVENT +
+        buffers.length +
+        "-" +
+        id +
+        JSON.stringify(data)
+    );
+    // Engine.IO v4 sends each attachment as its own binary websocket frame
+    buffers.forEach((buffer) => this.write(buffer));
   }
 
   private async open(): Promise<void> {
@@ -301,7 +355,7 @@ export class SocketIOClient {
     }
   }
 
-  private write(data: string): void {
+  private write(data: string | Binary): void {
     // 1 = WebSocket.OPEN
     if (this.socket && this.socket.readyState === 1) this.socket.send(data);
   }

@@ -9,6 +9,7 @@ import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
+import { acceptImages, imageUploadError, readBytes } from "./images";
 import {
   convoNiceTime,
   createTimestamp,
@@ -77,6 +78,8 @@ interface PendingSend {
   text: string;
   requestId: string;
   failed?: string;
+  /** An image upload's bytes, kept so it can be retried. */
+  image?: ArrayBuffer;
 }
 
 interface ChatWindow {
@@ -792,6 +795,7 @@ export class ChatDock {
       this.autoGrow(input);
       this.onOwnTyping(win);
     });
+    acceptImages(root, (file) => this.uploadImage(win, file));
 
     this.renderHeader(win);
     this.renderTyping(win);
@@ -990,7 +994,8 @@ export class ChatDock {
       retry.addEventListener("click", () => {
         if (!window.confirm(UNCONFIRMED_RETRY)) return;
         win.pending = win.pending.filter((p) => p !== pending);
-        this.send(win, pending.text);
+        if (pending.image) this.sendImage(win, pending.image);
+        else this.send(win, pending.text);
       });
       const discard = el("button", { type: "button" }, "Discard");
       discard.addEventListener("click", () => {
@@ -1030,12 +1035,69 @@ export class ChatDock {
       text,
       requestId: this.client.createRequestId(),
     };
+    await this.deliver(
+      win,
+      pending,
+      () => this.client.send(win.partyId, text, pending.requestId),
+      // Never reached the server: put the text back
+      () => {
+        if (!win.input.value) win.input.value = text;
+      }
+    );
+  }
+
+  /** A pasted or dropped image: HF's checks, then upload it like a message. */
+  private async uploadImage(win: ChatWindow, file: File): Promise<void> {
+    const error = imageUploadError(file);
+    if (error) {
+      this.showNotice(win, error);
+      return;
+    }
+    let image: ArrayBuffer;
+    try {
+      image = await readBytes(file);
+    } catch {
+      this.showNotice(win, "Couldn't read the image.");
+      return;
+    }
+    await this.sendImage(win, image);
+  }
+
+  private async sendImage(win: ChatWindow, image: ArrayBuffer): Promise<void> {
+    if (this.client.isSending) {
+      this.showNotice(win, "Please wait for the pending send to finish.");
+      return;
+    }
+    if (this.client.status !== "ready") {
+      this.showNotice(win, "Convo is disconnected. Your image was not sent.");
+      return;
+    }
+    const pending: PendingSend = {
+      text: "Sending image…",
+      image,
+      requestId: this.client.createRequestId(),
+    };
+    await this.deliver(win, pending, () =>
+      this.client.sendImage(win.partyId, image, pending.requestId)
+    );
+  }
+
+  /**
+   * Show a send as pending until it's acked, then rely on the echo. Failures
+   * that never reached the server are undone; unconfirmed ones offer a retry.
+   */
+  private async deliver(
+    win: ChatWindow,
+    pending: PendingSend,
+    run: () => Promise<unknown>,
+    undo?: () => void
+  ): Promise<void> {
     win.pending.push(pending);
     this.renderPending(win);
     this.scrollToBottom(win);
 
     try {
-      await this.client.send(win.partyId, text, pending.requestId);
+      await run();
       const echoed = this.client
         .getMessages(win.partyId)
         .some((message) => message.requestId === pending.requestId);
@@ -1046,9 +1108,8 @@ export class ChatDock {
     } catch (error: any) {
       const message = String(error?.message || "Message failed.");
       if (/not sent|pending send|empty/i.test(message)) {
-        // Never reached the server: put the text back
         win.pending = win.pending.filter((p) => p !== pending);
-        if (!win.input.value) win.input.value = text;
+        undo?.();
         this.showNotice(win, message);
       } else {
         pending.failed = message;

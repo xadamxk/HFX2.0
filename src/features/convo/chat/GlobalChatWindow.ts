@@ -2,6 +2,7 @@ import { el } from "../../../core/Dom";
 import { convoNiceTime } from "../common/timestamps";
 import type { ConvoStatus } from "./ConvoClient";
 import { avatarUrl, renderMessage } from "./formatMessage";
+import { acceptImages, imageUploadError, readBytes } from "./images";
 import {
   GLOBAL_PARTY,
   GlobalRoomClient,
@@ -228,6 +229,7 @@ export class GlobalChatWindow {
       ]
     );
 
+    acceptImages(this.root, (file) => this.uploadImage(file));
     this.bindClient();
     if (!this.minimized) this.client.connect();
   }
@@ -486,21 +488,66 @@ export class GlobalChatWindow {
     this.input.style.height = "";
     this.stopOwnTyping();
 
+    await this.deliver(
+      `Sending: ${text}`,
+      (requestId) => this.client.send(text, requestId),
+      // Never reached the server: put the text back
+      () => {
+        if (!this.input.value) this.input.value = text;
+      }
+    );
+  }
+
+  /** A pasted or dropped image: HF's checks, then upload it to the room. */
+  private async uploadImage(file: File): Promise<void> {
+    const error = imageUploadError(file);
+    if (error) {
+      this.showNotice(error);
+      return;
+    }
+    if (this.client.isSending) {
+      this.showNotice("Please wait for the pending send to finish.");
+      return;
+    }
+    if (this.client.status !== "ready") {
+      this.showNotice("Global chat is disconnected. Your image was not sent.");
+      return;
+    }
+    let image: ArrayBuffer;
+    try {
+      image = await readBytes(file);
+    } catch {
+      this.showNotice("Couldn't read the image.");
+      return;
+    }
+    await this.deliver("Sending image…", (requestId) =>
+      this.client.sendImage(image, requestId)
+    );
+  }
+
+  /** Show a pending line until the echo or the ack arrives. */
+  private async deliver(
+    label: string,
+    run: (requestId: string) => Promise<void>,
+    undo?: () => void
+  ): Promise<void> {
     const requestId = this.client.createRequestId();
-    const node = el("div", { class: "hfx-gc-pending" }, ["Sending: ", text]);
+    const node = el("div", { class: "hfx-gc-pending" }, label);
     this.pending.push({ requestId, node });
     this.pendingBox.appendChild(node);
     this.scrollToBottom();
-    try {
-      await this.client.send(text, requestId);
-    } catch (error: any) {
-      const message = String(error?.message || "Message failed.");
+    const clear = () => {
       this.pending = this.pending.filter((pending) => pending.node !== node);
       node.remove();
-      if (/not sent|pending send|empty/i.test(message) && !this.input.value) {
-        // Never reached the server: put the text back
-        this.input.value = text;
-      }
+    };
+    try {
+      await run(requestId);
+      // The echo normally replaced it already
+      clear();
+    } catch (error: any) {
+      const message = String(error?.message || "Message failed.");
+      clear();
+      if (/not sent|pending send|empty/i.test(message)) undo?.();
       this.showNotice(message);
     }
   }

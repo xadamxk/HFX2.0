@@ -286,6 +286,37 @@ export class ConvoClient {
   ): Promise<{ requestId: string }> {
     const message = text.trim();
     if (!message) throw new Error("Message is empty.");
+    await this.mutate(partyId, "convo_newmessage", {
+      partyID: partyId,
+      message,
+      requestId,
+    });
+    return { requestId };
+  }
+
+  /**
+   * Upload an image (PNG, JPG or GIF bytes), as HF's own paste and drop do.
+   * Same one-pending-send rule as messages; it comes back as an image message.
+   */
+  async sendImage(
+    partyId: number,
+    imageData: ArrayBuffer,
+    requestId = this.createRequestId()
+  ): Promise<{ requestId: string }> {
+    await this.mutate(partyId, "convo_imageupload", {
+      partyID: partyId,
+      imageData,
+      requestId,
+    });
+    return { requestId };
+  }
+
+  /** Send something that adds to a conversation, waiting for the server's ack. */
+  private async mutate(
+    partyId: number,
+    event: string,
+    data: Record<string, unknown>
+  ): Promise<void> {
     if (this.sending)
       throw new Error("Please wait for the pending send to finish.");
     if (!this.socket.connected || this.status !== "ready") {
@@ -294,11 +325,7 @@ export class ConvoClient {
     this.sending = true;
     try {
       const result = await this.socket
-        .emitWithAck(
-          "convo_newmessage",
-          { partyID: partyId, message, requestId },
-          SEND_TIMEOUT
-        )
+        .emitWithAck(event, data, SEND_TIMEOUT)
         .catch((error: Error) => {
           throw new Error(
             error.message === "Timed out waiting for a reply." ||
@@ -310,7 +337,6 @@ export class ConvoClient {
       if (!result?.ok)
         throw new Error(result?.error || "Convo request failed.");
       this.setTyping(partyId, false);
-      return { requestId };
     } finally {
       this.sending = false;
     }

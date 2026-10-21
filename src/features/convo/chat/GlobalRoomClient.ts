@@ -205,6 +205,30 @@ export class GlobalRoomClient {
         "Commands like /flip only work on convo.php. Your message was not sent."
       );
     }
+    await this.mutate("convo_newmessage", {
+      partyID: GLOBAL_PARTY,
+      message,
+      requestId,
+    });
+  }
+
+  /** Upload an image (PNG, JPG or GIF bytes) to the room, as HF's paste and drop do. */
+  async sendImage(
+    imageData: ArrayBuffer,
+    requestId = this.createRequestId()
+  ): Promise<void> {
+    await this.mutate("convo_imageupload", {
+      partyID: GLOBAL_PARTY,
+      imageData,
+      requestId,
+    });
+  }
+
+  /** Send something to the room, waiting for the server's ack. One at a time. */
+  private async mutate(
+    event: string,
+    data: Record<string, unknown>
+  ): Promise<void> {
     if (this.sending)
       throw new Error("Please wait for the pending send to finish.");
     if (!this.socket.connected || this.status !== "ready") {
@@ -215,11 +239,7 @@ export class GlobalRoomClient {
     this.sending = true;
     try {
       const result = await this.socket
-        .emitWithAck(
-          "convo_newmessage",
-          { partyID: GLOBAL_PARTY, message, requestId },
-          SEND_TIMEOUT
-        )
+        .emitWithAck(event, data, SEND_TIMEOUT)
         .catch((error: Error) => {
           throw new Error(
             error.message === "Timed out waiting for a reply." ||

@@ -317,6 +317,25 @@ describe("ConvoClient", () => {
     expect(client.isSending).toBe(false);
   });
 
+  it("uploads images with a requestId, one pending send at a time", async () => {
+    await ready();
+    const image = new ArrayBuffer(4);
+    let ack!: (value: unknown) => void;
+    socket.ackReplies.convo_imageupload = () =>
+      new Promise((resolve) => (ack = resolve));
+
+    const upload = client.sendImage(PARTY, image);
+    await expect(client.send(PARTY, "hi")).rejects.toThrow("pending send");
+    await flush();
+    expect(socket.acked).toContainEqual([
+      "convo_imageupload",
+      { partyID: PARTY, imageData: image, requestId: "req-1" },
+    ]);
+    ack({ ok: true, accepted: true });
+    await expect(upload).resolves.toEqual({ requestId: "req-1" });
+    expect(client.isSending).toBe(false);
+  });
+
   it("reports an unconfirmed send", async () => {
     await ready();
     socket.ackReplies.convo_newmessage = () => {

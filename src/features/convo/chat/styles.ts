@@ -185,9 +185,6 @@ export const CHAT_DOCK_CSS = `
 }
 .hfx-chat-row-time { flex: none; color: var(--hfx-chat-muted); font-size: 11px; }
 .hfx-chat-row-preview {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -200,7 +197,9 @@ export const CHAT_DOCK_CSS = `
 .hfx-chat-row-badge { position: static; flex: none; }
 .hfx-chat-head-typing.hfx-chat-row-typing {
   position: static;
-  flex: none;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 4px;
   height: 12px;
   border: none;
   padding: 0;

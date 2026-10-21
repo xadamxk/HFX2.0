@@ -42,6 +42,7 @@ describe("MessageSound", () => {
       origin: "https://hackforums.net",
       locks,
       canPlay: () => canPlay,
+      isHidden: () => false,
       createAudio: (src) => ({
         currentTime: 5,
         play: () => void played.push(src),
@@ -79,6 +80,27 @@ describe("MessageSound", () => {
     tab(locks).play("500:9");
     await flush();
     expect(played).toHaveLength(1);
+  });
+
+  it("lets a visible tab play before hidden ones", async () => {
+    const locks = new FakeLocks();
+    const audible: string[] = [];
+    const make = (name: string, hidden: boolean) =>
+      new MessageSound({
+        locks,
+        isHidden: () => hidden,
+        createAudio: () => ({
+          currentTime: 0,
+          play: () => void audible.push(name),
+        }),
+      });
+    // The hidden tab gets the message first, but waits
+    make("hidden", true).play("500:9");
+    make("visible", false).play("500:9");
+    await flush();
+    jest.advanceTimersByTime(200);
+    await flush();
+    expect(audible).toEqual(["visible"]);
   });
 
   it("stays quiet when the browser blocks playback", async () => {

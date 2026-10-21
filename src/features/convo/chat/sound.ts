@@ -7,6 +7,8 @@
 export const SOUND_PATH = "/sounds/convo-blip.mp3";
 // How long a tab keeps a message's lock, so other tabs don't play it too
 const CLAIM_MS = 3000;
+// How long a hidden tab waits before claiming, so a visible tab plays it
+const HIDDEN_DELAY_MS = 150;
 
 /** Something that can play the new-message sound for a message. */
 export interface MessageSoundPlayer {
@@ -47,6 +49,8 @@ export interface MessageSoundOptions {
   locks?: LockManagerLike | null;
   /** Whether this tab may play audio (browsers block it until the user interacts). */
   canPlay?: () => boolean;
+  /** Whether this tab is hidden (document.hidden). */
+  isHidden?: () => boolean;
   createAudio?: (src: string) => {
     play(): Promise<void> | void;
     currentTime: number;
@@ -64,6 +68,7 @@ export class MessageSound implements MessageSoundPlayer {
   private readonly src: string;
   private readonly locks: LockManagerLike | null;
   private readonly canPlay: () => boolean;
+  private readonly isHidden: () => boolean;
   private readonly createAudio: NonNullable<MessageSoundOptions["createAudio"]>;
 
   constructor(options: MessageSoundOptions = {}) {
@@ -72,6 +77,7 @@ export class MessageSound implements MessageSoundPlayer {
       options.locks !== undefined
         ? options.locks
         : (((navigator as any).locks as LockManagerLike | undefined) ?? null);
+    this.isHidden = options.isHidden ?? (() => document.hidden);
     // A tab the user hasn't interacted with can't play audio, so let another tab claim it
     this.canPlay =
       options.canPlay ??
@@ -87,21 +93,26 @@ export class MessageSound implements MessageSoundPlayer {
 
   play(key: string): void {
     if (!this.canPlay()) return;
-    if (!this.locks) {
+    const locks = this.locks;
+    if (!locks) {
       this.playNow();
       return;
     }
-    this.locks
-      .request(
-        `hfx-convo-sound:${key}`,
-        { ifAvailable: true },
-        async (lock) => {
-          if (!lock) return;
-          this.playNow();
-          await new Promise((resolve) => setTimeout(resolve, CLAIM_MS));
-        }
-      )
-      .catch(() => undefined);
+    const claim = () =>
+      locks
+        .request(
+          `hfx-convo-sound:${key}`,
+          { ifAvailable: true },
+          async (lock) => {
+            if (!lock) return;
+            this.playNow();
+            await new Promise((resolve) => setTimeout(resolve, CLAIM_MS));
+          }
+        )
+        .catch(() => undefined);
+    // Give a visible tab the first chance: hidden tabs may hold back media
+    if (this.isHidden()) setTimeout(claim, HIDDEN_DELAY_MS);
+    else claim();
   }
 
   private playNow(): void {

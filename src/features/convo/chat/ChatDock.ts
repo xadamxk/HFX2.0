@@ -18,6 +18,7 @@ import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
 import type { GroupInfo } from "./groupList";
 import { acceptImages, imageUploadError, readBytes } from "./images";
+import { mirrorSiteScrollbar } from "./siteScrollbar";
 import { MessageSoundPlayer, mutedParties } from "./sound";
 import {
   convoNiceTime,
@@ -263,6 +264,7 @@ export class ChatDock {
 
   mount(parent: HTMLElement = document.body): void {
     parent.appendChild(this.root);
+    mirrorSiteScrollbar(this.root);
     // Statuses come from last-active times, so they age (online → away → offline)
     this.presenceTimer = setInterval(() => this.renderHeads(), 60000);
   }

@@ -14,6 +14,9 @@ export const CHAT_DOCK_CSS = `
   --hfx-chat-online: rgb(63, 160, 63);
   --hfx-chat-away: #a8923a;
   --hfx-chat-offline: gray;
+  /* HF's scrollbar colors; replaced at runtime by mirrorSiteScrollbar */
+  --hfx-chat-scroll-thumb: #111;
+  --hfx-chat-scroll-track: #222;
   position: fixed;
   right: 16px;
   bottom: 0;
@@ -656,8 +659,6 @@ export const CHAT_DOCK_CSS = `
   max-height: 200px;
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #555 transparent;
   padding: 4px 0;
   border: 1px solid var(--hfx-chat-border);
   border-radius: 6px;
@@ -665,5 +666,14 @@ export const CHAT_DOCK_CSS = `
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.5);
 }
 .hfx-gc-mentions .hfx-gc-user { box-sizing: border-box; }
+/* Every scrolling area: thin, in HF's scrollbar colors */
+#hfx-chat-dock .hfx-chat-messages,
+#hfx-chat-dock .hfx-chat-list-rows,
+#hfx-chat-dock .hfx-gc-online,
+#hfx-chat-dock .hfx-gc-mentions,
+#hfx-chat-dock .hfx-chat-compose textarea {
+  scrollbar-width: thin;
+  scrollbar-color: var(--hfx-chat-scroll-thumb) var(--hfx-chat-scroll-track);
+}
 .hfx-gc-mentions .hfx-gc-mention-active { background: rgba(255, 255, 255, 0.12); }
 `;

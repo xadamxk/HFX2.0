@@ -1,5 +1,5 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
-import { Dropdown } from "../../configuration/configurables/Dropdown";
+import { RadioGroup } from "../../configuration/configurables/RadioGroup";
 import { Stepper } from "../../configuration/configurables/Stepper";
 import { Feature } from "../../core/Feature";
 import { Section } from "../../core/Section";
@@ -35,7 +35,7 @@ class ChatBubbles extends Feature {
       description:
         "Chat from any page: avatar bubbles or a conversation list (bottom corner) for recent and unread Convo conversations open small chat windows. Avatar borders show the user's status (green online, yellow away, gray offline).",
       configurables: [
-        new Dropdown({
+        new RadioGroup({
           id: "layout",
           label: "Layout",
           description:
@@ -46,7 +46,7 @@ class ChatBubbles extends Feature {
             { label: "List", value: "list" },
           ],
         }),
-        new Dropdown({
+        new RadioGroup({
           id: "side",
           label: "Dock side",
           description:

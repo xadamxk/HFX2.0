@@ -266,6 +266,14 @@ export class ConvoClient {
     return this;
   }
 
+  off<K extends keyof ConvoClientEvents>(
+    event: K,
+    listener: Listener<K>
+  ): this {
+    this.listeners.get(event)?.delete(listener);
+    return this;
+  }
+
   connect(): void {
     this.setStatus("connecting");
     this.socket.connect();
@@ -404,6 +412,14 @@ export class ConvoClient {
   /** Tell a group we're typing; same rule as setTyping. */
   setGroupTyping(gid: number, typing: boolean): void {
     this.typing(chatKey(true, gid), typing);
+  }
+
+  /**
+   * Whether this chat was the last one convo_loadmessages loaded. Typing
+   * notices carry no party id, and the server may scope them to that chat.
+   */
+  isLastLoaded(group: boolean, id: number): boolean {
+    return this.loadedParty === chatKey(group, id);
   }
 
   private async loadNewer(group: boolean, id: number): Promise<void> {

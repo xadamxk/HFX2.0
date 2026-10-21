@@ -1,46 +1,28 @@
 import { el } from "../../../core/Dom";
-import { convoNiceTime } from "../common/timestamps";
 import type { ConvoStatus } from "./ConvoClient";
-import { avatarUrl, renderMessage } from "./formatMessage";
-import { acceptImages, imageUploadError, readBytes } from "./images";
-import { MessageSoundPlayer, mutedParties } from "./sound";
 import {
   GLOBAL_PARTY,
   GlobalRoomClient,
-  isCommand,
   RANK_NAMES,
   RoomMessage,
+  RoomUser,
 } from "./GlobalRoomClient";
+import { RoomChatWindow, RoomWindowOptions } from "./RoomChatWindow";
+import { MessageSoundPlayer, mutedParties } from "./sound";
+
+export { groupTime, typingText } from "./RoomChatWindow";
 
 /**
- * The global (public) room's chat window, laid out like Discord: messages
- * grouped under the sender's avatar, username (in their HF group style) and
- * time. Its socket is only connected while the window is open and expanded,
- * so the user only shows in the room's online list while they're looking.
+ * The global (public) room's window. Its socket is only connected while the
+ * window is open and expanded, so the user only shows in the room's online
+ * list while they're looking.
  */
 
-// Messages from one sender within this many seconds share a group
-const GROUP_SECONDS = 5 * 60;
-const OWN_TYPING_TIMEOUT = 30000;
-
-export interface GlobalChatWindowOptions {
+export interface GlobalChatWindowOptions extends RoomWindowOptions {
   postKey: string;
-  minimized: boolean;
-  typingIndicators: boolean;
-  /** The window was closed (×). */
-  onClose: () => void;
-  /** The window was minimized or expanded. */
-  onChange: () => void;
-  origin?: string;
   createClient?: () => GlobalRoomClient;
   /** Plays HF's sound for new messages that mention the user. */
   sound?: MessageSoundPlayer;
-}
-
-interface Group {
-  uid: number;
-  dateline: number;
-  lines: HTMLElement;
 }
 
 export const GLOBE_ICON = () => {
@@ -63,73 +45,18 @@ export const GLOBE_ICON = () => {
   return svg;
 };
 
-/** A group's time: just the time today, otherwise the date too. */
-export function groupTime(dateline: number, now = new Date()): string {
-  const date = new Date(dateline * 1000);
-  const time = date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return date.toDateString() === now.toDateString()
-    ? time
-    : `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
-}
-
-/** "Nova is typing…", "Nova and Kestrel are typing…", "Several people are typing…". */
-export function typingText(names: string[]): string {
-  if (names.length === 0) return "";
-  if (names.length === 1) return `${names[0]} is typing…`;
-  if (names.length === 2) return `${names[0]} and ${names[1]} are typing…`;
-  return "Several people are typing…";
-}
-
-export class GlobalChatWindow {
+export class GlobalChatWindow extends RoomChatWindow {
   readonly partyId = GLOBAL_PARTY;
-  readonly root: HTMLElement;
-  minimized: boolean;
   readonly client: GlobalRoomClient;
-  private readonly origin: string;
-  private readonly status: HTMLElement;
   private readonly onlineButton: HTMLButtonElement;
-  private readonly list: HTMLElement;
-  private readonly pendingBox: HTMLElement;
-  private readonly online: HTMLElement;
-  private readonly notice: HTMLElement;
-  private readonly typing: HTMLElement;
-  private readonly input: HTMLTextAreaElement;
-  private readonly lines = new Map<string, HTMLElement>();
-  private lastGroup: Group | null = null;
-  private pending: { requestId: string; node: HTMLElement }[] = [];
-  private noticeTimer?: ReturnType<typeof setTimeout>;
-  private ownTypingTimer?: ReturnType<typeof setTimeout>;
+  private readonly sound?: MessageSoundPlayer;
 
-  constructor(private readonly options: GlobalChatWindowOptions) {
-    this.origin = options.origin ?? location.origin;
-    this.minimized = options.minimized;
-    this.client =
+  constructor(options: GlobalChatWindowOptions) {
+    const origin = options.origin ?? location.origin;
+    const client =
       options.createClient?.() ??
-      new GlobalRoomClient({ postKey: options.postKey, origin: this.origin });
-
-    const action = (label: string, title: string, onClick: () => void) => {
-      const button = el(
-        "button",
-        {
-          type: "button",
-          class: "hfx-chat-action",
-          title,
-          "aria-label": title,
-        },
-        label
-      );
-      button.addEventListener("click", (event) => {
-        event.stopPropagation();
-        onClick();
-      });
-      return button;
-    };
-
-    this.status = el("span", { class: "hfx-chat-status" });
-    this.onlineButton = el(
+      new GlobalRoomClient({ postKey: options.postKey, origin });
+    const onlineButton = el(
       "button",
       {
         type: "button",
@@ -140,469 +67,73 @@ export class GlobalChatWindow {
       },
       "0 online"
     );
-    this.onlineButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      this.toggleOnline();
-    });
-    const header = el("div", { class: "hfx-chat-header" }, [
-      el("span", { class: "hfx-gc-icon" }, GLOBE_ICON()),
-      el("div", { class: "hfx-chat-title" }, [
-        el(
-          "a",
-          {
-            href: `${this.origin}/convo.php?action=all`,
-            title: "Open in Convo",
-          },
-          "Global chat"
-        ),
-        this.status,
-      ]),
-      this.onlineButton,
-      el(
-        "a",
-        {
-          class: "hfx-chat-action",
-          href: `${this.origin}/convo.php?action=all`,
-          title: "Open in Convo",
-          "aria-label": "Open in Convo",
-        },
-        "↗"
-      ),
-      action("–", "Minimize", () => this.setMinimized(!this.minimized)),
-      action("×", "Close", () => options.onClose()),
-    ]);
-    header.addEventListener("click", (event) => {
-      if ((event.target as Element).closest("a, button")) return;
-      this.setMinimized(!this.minimized);
-    });
-
-    this.pendingBox = el("div", { style: "display: contents" });
-    this.list = el(
-      "div",
-      {
-        class: "hfx-chat-messages hfx-gc-messages",
-        role: "log",
-        "aria-live": "polite",
-      },
-      [
-        el(
-          "div",
-          { class: "hfx-chat-notice" },
-          "Recent messages since the room last restarted"
-        ),
-        this.pendingBox,
-      ]
-    );
-    this.online = el("div", { class: "hfx-gc-online", hidden: true });
-    this.notice = el("div", { class: "hfx-chat-notice", hidden: true });
-    this.typing = el("div", {
-      class: "hfx-chat-typing",
-      "aria-live": "polite",
-    });
-    this.input = el("textarea", {
-      rows: 1,
+    super(client, options, {
+      partyAttr: String(GLOBAL_PARTY),
+      title: "Global chat",
+      href: `${origin}/convo.php?action=all`,
+      icon: GLOBE_ICON,
       placeholder: "Message global chat",
-      "aria-label": "Message global chat",
-      maxlength: 5000,
+      historyNote: "Recent messages since the room last restarted",
+      headerExtras: [onlineButton],
     });
-    this.input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
-        event.preventDefault();
-        this.send();
-      }
-    });
-    this.input.addEventListener("input", () => {
-      this.input.style.height = "";
-      this.input.style.height = `${Math.min(this.input.scrollHeight, 110)}px`;
-      this.onOwnTyping();
-    });
+    this.client = client;
+    this.onlineButton = onlineButton;
+    this.sound = options.sound;
 
-    this.root = el(
-      "section",
-      {
-        class: `hfx-chat-window hfx-gc-window${this.minimized ? " hfx-chat-minimized" : ""}`,
-        "data-party": GLOBAL_PARTY,
-      },
-      [
-        header,
-        el("div", { class: "hfx-gc-body" }, [this.list, this.online]),
-        this.notice,
-        this.typing,
-        el("div", { class: "hfx-chat-compose" }, this.input),
-      ]
-    );
-
-    acceptImages(this.root, (file) => this.uploadImage(file));
-    this.bindClient();
-    if (!this.minimized) this.client.connect();
+    onlineButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (this.togglePanel()) this.renderOnline();
+    });
+    client.on("status", (status: ConvoStatus) => {
+      if (status !== "ready") onlineButton.hidden = true;
+    });
+    client.on("online", () => {
+      onlineButton.hidden = false;
+      onlineButton.textContent = `${client.onlineCount} online`;
+      if (!this.panel.hidden) this.renderOnline();
+    });
+    if (!this.minimized) client.connect();
   }
 
-  focus(): void {
-    if (!this.minimized) this.input.focus();
+  /** Leave the room by disconnecting. */
+  destroy(): void {
+    super.destroy();
+    this.client.disconnect();
   }
 
   /** Minimizing leaves the room; expanding rejoins it. */
-  setMinimized(minimized: boolean): void {
-    if (this.minimized === minimized) return;
-    this.minimized = minimized;
-    this.root.classList.toggle("hfx-chat-minimized", minimized);
-    if (minimized) {
-      this.stopOwnTyping();
-      this.client.disconnect();
-    } else {
-      this.client.connect();
-      this.scrollToBottom();
-    }
-    this.options.onChange();
+  protected onMinimizedChange(minimized: boolean): void {
+    if (minimized) this.client.disconnect();
+    else this.client.connect();
   }
 
-  destroy(): void {
-    this.stopOwnTyping();
-    clearTimeout(this.noticeTimer);
-    this.client.disconnect();
-    this.root.remove();
+  protected statusText(status: ConvoStatus): string {
+    return status === "connecting" ? "Joining…" : super.statusText(status);
   }
 
-  private bindClient(): void {
-    const client = this.client;
-    client.on("status", (status) => this.onStatus(status));
-    client.on("messages", (added, reset) => {
-      if (reset) this.clearMessages();
-      this.appendMessages(added);
-    });
-    client.on("online", () => {
-      this.onlineButton.hidden = false;
-      this.onlineButton.textContent = `${client.onlineCount} online`;
-      if (!this.online.hidden) this.renderOnline();
-    });
-    client.on("typing", () => {
-      if (!this.options.typingIndicators) return;
-      this.typing.textContent = typingText(Array.from(client.typing.values()));
-    });
-    client.on("error", (message) => this.showNotice(message));
-  }
-
-  private onStatus(status: ConvoStatus): void {
-    const text: Record<ConvoStatus, string> = {
-      connecting: "Joining…",
-      ready: "",
-      disconnected: "Reconnecting…",
-      ended: "Disconnected. Reload to rejoin.",
-    };
-    // Expected when minimized: the socket is closed on purpose
-    this.status.textContent = this.minimized ? "" : text[status];
-    if (status !== "ready") this.onlineButton.hidden = true;
-  }
-
-  private clearMessages(): void {
-    this.list
-      .querySelectorAll(".hfx-gc-group")
-      .forEach((group) => group.remove());
-    this.lines.clear();
-    this.lastGroup = null;
-  }
-
-  /** Add new messages at the bottom, grouped Discord-style. */
-  private appendMessages(added: RoomMessage[]): void {
-    const nearBottom =
-      this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight <
-      60;
-    for (const message of added) {
-      if (this.lines.has(message.key)) continue;
-      const line = this.renderLine(message);
-      this.lines.set(message.key, line);
-      if (line.classList.contains("hfx-gc-mention"))
-        this.playMentionSound(message);
-      const group = this.lastGroup;
-      if (
-        group &&
-        group.uid === message.uid &&
-        message.dateline - group.dateline <= GROUP_SECONDS
-      ) {
-        group.lines.appendChild(line);
-        group.dateline = message.dateline;
-      } else {
-        this.lastGroup = this.renderGroup(message, line);
-      }
-      // The echo of our own send replaces its pending line
-      if (message.requestId) {
-        this.pending = this.pending.filter((pending) => {
-          if (pending.requestId !== message.requestId) return true;
-          pending.node.remove();
-          return false;
-        });
-      }
-    }
-    this.trimLines();
-    if (
-      nearBottom ||
-      added.some((message) => message.uid === this.client.me?.uid)
-    ) {
-      this.scrollToBottom();
-    }
-  }
-
-  private renderGroup(message: RoomMessage, firstLine: HTMLElement): Group {
-    const user = this.client.users.get(message.uid);
-    const username = user?.username ?? `User ${message.uid}`;
-    const nameButton = el(
-      "button",
-      { type: "button", class: "hfx-gc-name", title: `Mention ${username}` },
-      el("span", { class: user?.group ? `group${user.group}` : null }, username)
-    );
-    nameButton.addEventListener("click", () => this.insertMention(username));
-    const lines = el("div", { class: "hfx-gc-lines" }, firstLine);
-    const group = el(
-      "div",
-      { class: "hfx-gc-group", "data-uid": message.uid },
-      [
-        el(
-          "a",
-          {
-            class: "hfx-gc-avatar",
-            href: `${this.origin}/member.php?action=profile&uid=${message.uid}`,
-            target: "_blank",
-            rel: "noopener",
-            title: `${username}'s profile`,
-          },
-          el("img", {
-            src: avatarUrl(user?.avatar ?? "", this.origin),
-            alt: "",
-          })
-        ),
-        el("div", { class: "hfx-gc-content" }, [
-          el("div", { class: "hfx-gc-meta" }, [
-            nameButton,
-            el(
-              "span",
-              { class: "hfx-gc-time", title: convoNiceTime(message.dateline) },
-              groupTime(message.dateline)
-            ),
-          ]),
-          lines,
-        ]),
-      ]
-    );
-    this.list.insertBefore(group, this.pendingBox);
-    return { uid: message.uid, dateline: message.dateline, lines };
-  }
-
-  private renderLine(message: RoomMessage): HTMLElement {
-    const me = this.client.me;
-    const mention =
-      me &&
-      message.uid !== me.uid &&
-      message.text.toLowerCase().includes(`@${me.username.toLowerCase()}@`);
-    return el(
-      "div",
-      {
-        class: `hfx-gc-line${mention ? " hfx-gc-mention" : ""}`,
-        title: convoNiceTime(message.dateline),
-        "data-key": message.key,
-      },
-      renderMessage(message)
-    );
-  }
-
-  /** Drop the oldest lines once the client has dropped them. */
-  private trimLines(): void {
-    const kept = new Set(this.client.messages.map((message) => message.key));
-    for (const [key, line] of this.lines) {
-      if (kept.has(key)) continue;
-      const group = line.closest(".hfx-gc-group");
-      line.remove();
-      this.lines.delete(key);
-      if (group && !group.querySelector(".hfx-gc-line")) group.remove();
-    }
-  }
-
-  private toggleOnline(): void {
-    const open = this.online.hidden;
-    this.online.hidden = !open;
+  protected onPanelToggle(open: boolean): void {
     this.onlineButton.setAttribute("aria-expanded", String(open));
-    if (open) this.renderOnline();
   }
 
   /** Who's in the room, in HF's rank sections. */
   private renderOnline(): void {
-    const back = el(
-      "button",
-      { type: "button", class: "hfx-gc-online-back" },
-      `← ${this.client.onlineCount} online`
-    );
-    back.addEventListener("click", () => this.toggleOnline());
-    const rows: HTMLElement[] = [back];
-    let rank = 0;
+    const sections: { label: string; users: RoomUser[] }[] = [];
     for (const user of this.client.online) {
-      if (user.rank !== rank) {
-        rank = user.rank;
-        rows.push(
-          el("div", { class: "hfx-gc-rank" }, RANK_NAMES[rank] ?? "Other")
-        );
-      }
-      const row = el(
-        "button",
-        {
-          type: "button",
-          class: "hfx-gc-user",
-          title: `Mention ${user.username}`,
-        },
-        [
-          el("img", { src: avatarUrl(user.avatar, this.origin), alt: "" }),
-          el(
-            "span",
-            { class: user.group ? `group${user.group}` : null },
-            user.username
-          ),
-        ]
-      );
-      row.addEventListener("click", () => {
-        this.toggleOnline();
-        this.insertMention(user.username);
-      });
-      rows.push(row);
+      const label = RANK_NAMES[user.rank] ?? "Other";
+      if (sections[sections.length - 1]?.label !== label)
+        sections.push({ label, users: [] });
+      sections[sections.length - 1].users.push(user);
     }
-    this.online.replaceChildren(...rows);
-  }
-
-  /** HF's mention syntax is @username@. */
-  private insertMention(username: string): void {
-    const value = this.input.value;
-    this.input.value = `${value}${value.trim() ? " " : ""}@${username}@ `;
-    this.input.focus();
-  }
-
-  private async send(): Promise<void> {
-    const text = this.input.value.trim();
-    if (!text) return;
-    if (isCommand(text)) {
-      this.showNotice("Commands like /flip only work on convo.php.");
-      return;
-    }
-    if (this.client.isSending) {
-      this.showNotice("Please wait for the pending send to finish.");
-      return;
-    }
-    if (this.client.status !== "ready") {
-      this.showNotice(
-        "Global chat is disconnected. Your message was not sent."
-      );
-      return;
-    }
-    this.input.value = "";
-    this.input.style.height = "";
-    this.stopOwnTyping();
-
-    await this.deliver(
-      `Sending: ${text}`,
-      (requestId) => this.client.send(text, requestId),
-      // Never reached the server: put the text back
-      () => {
-        if (!this.input.value) this.input.value = text;
-      }
-    );
-  }
-
-  /** A pasted or dropped image: HF's checks, then upload it to the room. */
-  private async uploadImage(file: File): Promise<void> {
-    const error = imageUploadError(file);
-    if (error) {
-      this.showNotice(error);
-      return;
-    }
-    if (this.client.isSending) {
-      this.showNotice("Please wait for the pending send to finish.");
-      return;
-    }
-    if (this.client.status !== "ready") {
-      this.showNotice("Global chat is disconnected. Your image was not sent.");
-      return;
-    }
-    let image: ArrayBuffer;
-    try {
-      image = await readBytes(file);
-    } catch {
-      this.showNotice("Couldn't read the image.");
-      return;
-    }
-    await this.deliver("Sending image…", (requestId) =>
-      this.client.sendImage(image, requestId)
-    );
-  }
-
-  /** Show a pending line until the echo or the ack arrives. */
-  private async deliver(
-    label: string,
-    run: (requestId: string) => Promise<void>,
-    undo?: () => void
-  ): Promise<void> {
-    const requestId = this.client.createRequestId();
-    const node = el("div", { class: "hfx-gc-pending" }, label);
-    this.pending.push({ requestId, node });
-    this.pendingBox.appendChild(node);
-    this.scrollToBottom();
-    const clear = () => {
-      this.pending = this.pending.filter((pending) => pending.node !== node);
-      node.remove();
-    };
-    try {
-      await run(requestId);
-      // The echo normally replaced it already
-      clear();
-    } catch (error: any) {
-      const message = String(error?.message || "Message failed.");
-      clear();
-      if (/not sent|pending send|empty/i.test(message)) undo?.();
-      this.showNotice(message);
-    }
-  }
-
-  private onOwnTyping(): void {
-    if (!this.options.typingIndicators) return;
-    const length = this.input.value.length;
-    if (length === 0) {
-      this.stopOwnTyping();
-    } else if (length > 1 && !this.ownTypingTimer) {
-      this.client.setTyping(true);
-      this.ownTypingTimer = setTimeout(
-        () => this.stopOwnTyping(),
-        OWN_TYPING_TIMEOUT
-      );
-    }
-  }
-
-  private stopOwnTyping(): void {
-    if (!this.ownTypingTimer) return;
-    clearTimeout(this.ownTypingTimer);
-    this.ownTypingTimer = undefined;
-    this.client.setTyping(false);
-  }
-
-  private showNotice(text: string): void {
-    clearTimeout(this.noticeTimer);
-    this.notice.textContent = text;
-    this.notice.hidden = false;
-    this.noticeTimer = setTimeout(() => {
-      this.notice.hidden = true;
-    }, 6000);
+    this.renderPeople(`${this.client.onlineCount} online`, sections);
   }
 
   /**
    * The room is busy, so only mentions make a sound: new ones (history comes
    * marked noSound), unless the room is muted on convo.php or being looked at.
    */
-  private playMentionSound(message: RoomMessage): void {
-    const sound = this.options.sound;
-    if (!sound || message.quiet || mutedParties().has(GLOBAL_PARTY)) return;
-    const looking =
-      !this.minimized &&
-      !document.hidden &&
-      document.hasFocus() &&
-      this.root.contains(document.activeElement);
-    if (!looking) sound.play(`global:${message.key}`);
-  }
-
-  private scrollToBottom(): void {
-    this.list.scrollTop = this.list.scrollHeight;
+  protected onNewMessage(message: RoomMessage, mentionsMe: boolean): void {
+    if (!this.sound || !mentionsMe || message.quiet) return;
+    if (mutedParties().has(GLOBAL_PARTY) || this.isActive()) return;
+    this.sound.play(`global:${message.key}`);
   }
 }

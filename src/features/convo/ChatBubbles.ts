@@ -5,6 +5,7 @@ import { Feature } from "../../core/Feature";
 import { Section } from "../../core/Section";
 import { SectionArray } from "../../core/SectionArray";
 import { Util } from "../../core/Util";
+import { GROUP_MAP_TTL, groupIdOf, resolveGroupMap } from "../../core/GroupMap";
 import Convo from "../../sections/Convo";
 import Global from "../../sections/Global";
 import { ChatDock, DEFAULT_DOCK_STATE, DockState } from "./chat/ChatDock";
@@ -13,6 +14,9 @@ import { GlobalChatWindow } from "./chat/GlobalChatWindow";
 import { MessageSound } from "./chat/sound";
 import { CHAT_DOCK_CSS } from "./chat/styles";
 import MessageTimestamps from "./MessageTimestamps";
+import WhosOnlineSorting, {
+  STORAGE_KEYS as GROUP_MAP_KEYS,
+} from "../global/WhosOnlineSorting";
 
 interface ChatBubblesSettings {
   enabled: boolean;
@@ -22,10 +26,19 @@ interface ChatBubblesSettings {
   sound: boolean;
   side: "left" | "right";
   layout: "bubbles" | "list";
+  groupChats: boolean;
+  groupSound: "mentions" | "all";
   storage_dockState?: DockState;
+  storage_groupMembers?: GroupMembers | null;
+}
+
+interface GroupMembers {
+  gids: number[];
+  checkedAt: number;
 }
 
 const DOCK_STATE = "dockState";
+const GROUP_MEMBERS = "groupMembers";
 
 class ChatBubbles extends Feature {
   constructor() {
@@ -84,19 +97,43 @@ class ChatBubbles extends Feature {
           default: true,
         }),
         new Checkbox({
+          id: "groupChats",
+          label: "Group chats",
+          description:
+            "Include your private group convos (Comrades on convo.php) alongside your DMs.",
+          default: true,
+        }),
+        new Checkbox({
           id: "sound",
           label: "Message sound",
           description:
             "Play Convo's sound for new messages, and for global chat messages that mention you. Conversations muted on convo.php stay silent.",
           default: false,
         }),
+        new RadioGroup({
+          id: "groupSound",
+          label: "Group chat sound",
+          description:
+            "With Message sound on: which new group chat messages play it.",
+          default: "mentions",
+          options: [
+            { label: "Mentions only", value: "mentions" },
+            { label: "Every message", value: "all" },
+          ],
+        }),
       ],
       storageItems: [
         {
           id: DOCK_STATE,
           description:
-            "Which chat windows are open or minimized (this browser only).",
+            "Which chat windows are open or minimized, and group chat activity (this browser only).",
           defaultValue: DEFAULT_DOCK_STATE,
+        },
+        {
+          id: GROUP_MEMBERS,
+          description:
+            "Which group chats you're in, rechecked daily (this browser only).",
+          defaultValue: null,
         },
       ],
     });
@@ -122,6 +159,22 @@ class ChatBubbles extends Feature {
       maxBubbles: Number(settings.maxBubbles) || 5,
       typingIndicators: settings.typingIndicators !== false,
       sound,
+      groups:
+        settings.groupChats !== false
+          ? {
+              names: () => this.groupNames(),
+              members: freshMembers(settings.storage_groupMembers),
+              saveMembers: (gids) => {
+                this.settingsService
+                  .setStorageItem(this, GROUP_MEMBERS, {
+                    gids,
+                    checkedAt: Date.now(),
+                  })
+                  .catch(() => undefined);
+              },
+              sound: settings.groupSound === "all" ? "all" : "mentions",
+            }
+          : undefined,
       createGlobal:
         settings.globalChat !== false
           ? ({ minimized, onClose, onChange }) =>
@@ -159,6 +212,57 @@ class ChatBubbles extends Feature {
     client.connect();
     window.addEventListener("pagehide", () => client.disconnect());
   }
+
+  /**
+   * Group names by id. Uses the group map WhosOnlineSorting keeps (from
+   * showgroups.php), fetching and storing it there when it's missing or stale.
+   */
+  private async groupNames(): Promise<Record<number, string>> {
+    const storage = this.settingsService;
+    const map = await resolveGroupMap({
+      stored: await storage.getStorageItem(
+        WhosOnlineSorting,
+        GROUP_MAP_KEYS.GROUP_MAP
+      ),
+      nextFetch:
+        Number(
+          await storage.getStorageItem(
+            WhosOnlineSorting,
+            GROUP_MAP_KEYS.NEXT_FETCH
+          )
+        ) || 0,
+      save: async (fetched, nextFetch) => {
+        if (fetched) {
+          await storage.setStorageItem(
+            WhosOnlineSorting,
+            GROUP_MAP_KEYS.GROUP_MAP,
+            fetched
+          );
+        }
+        await storage.setStorageItem(
+          WhosOnlineSorting,
+          GROUP_MAP_KEYS.NEXT_FETCH,
+          nextFetch
+        );
+      },
+    });
+    const names: Record<number, string> = {};
+    for (const [className, name] of Object.entries(map ?? {})) {
+      const gid = groupIdOf(className);
+      if (gid) names[gid] = name;
+    }
+    return names;
+  }
+}
+
+/** The cached group membership while it's under a day old, else null (check again). */
+function freshMembers(
+  cached: GroupMembers | null | undefined
+): number[] | null {
+  if (!cached || !Array.isArray(cached.gids)) return null;
+  return Date.now() - Number(cached.checkedAt) < GROUP_MAP_TTL
+    ? cached.gids
+    : null;
 }
 
 export default new ChatBubbles();

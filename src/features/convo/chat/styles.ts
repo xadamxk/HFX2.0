@@ -229,6 +229,59 @@ export const CHAT_DOCK_CSS = `
 }
 .hfx-chat-row-globe svg { width: 22px; height: 22px; }
 
+/* Group convos: a rounded square tells a group from a person (circle) */
+.hfx-chat-head.hfx-chat-head-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: var(--hfx-chat-accent);
+  color: #fff;
+}
+.hfx-chat-head-group svg { width: 24px; height: 24px; }
+.hfx-chat-row-group-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: var(--hfx-chat-accent);
+  color: #fff;
+}
+.hfx-chat-row-group-icon svg { width: 20px; height: 20px; }
+/* HF's group name styles come from its own stylesheet; keep them row-sized */
+#hfx-chat-dock .hfx-chat-row-name > span[class^="group"] {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: normal !important;
+}
+.hfx-chat-filters {
+  display: flex;
+  gap: 6px;
+  padding: 6px 12px 2px;
+}
+.hfx-chat-filter {
+  padding: 2px 10px;
+  border: 1px solid #555;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--hfx-chat-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.hfx-chat-filter:hover { background: rgba(255, 255, 255, 0.08); }
+.hfx-chat-filter.hfx-chat-filter-on {
+  background: var(--hfx-chat-mine);
+  border-color: var(--hfx-chat-mine);
+  color: #fff;
+}
+.hfx-gc-group-window .hfx-gc-icon {
+  padding: 3px;
+  border-radius: 7px;
+  background: var(--hfx-chat-accent);
+  color: #fff;
+}
+.hfx-gc-group-window .hfx-gc-icon svg { width: 18px; height: 18px; }
+
 /* Global chat window: Discord-style groups */
 .hfx-gc-window { width: 340px; }
 .hfx-gc-icon { display: flex; flex: none; color: var(--hfx-chat-text); }

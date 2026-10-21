@@ -1,7 +1,8 @@
-import { appendChildren, el } from "../../../core/Dom";
+import { appendChildren, el, ElChild } from "../../../core/Dom";
 import type {
   ChatMessage,
   Conversation,
+  GroupChat,
   ConvoClient,
   ConvoStatus,
 } from "./ConvoClient";
@@ -9,6 +10,7 @@ import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
+import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { MessageSoundPlayer, mutedParties } from "./sound";
 import {
@@ -23,15 +25,51 @@ import {
  */
 
 export interface OpenChat {
+  /** The DM party, the group id (kind "group"), or -1 for the global chat. */
   partyId: number;
   minimized: boolean;
+  kind?: "group";
 }
+
+export type DockFilter = "all" | "dm" | "group";
 
 /** Which chats are open, kept per browser so they survive page navigation. */
 export interface DockState {
   open: OpenChat[];
   collapsed: boolean;
+  /** The list layout's All / Direct / Groups filter. */
+  filter?: DockFilter;
+  /**
+   * Group activity HFX tracks itself (HF sends no group list or read state):
+   * last message time and unread count by group id.
+   */
+  groups?: Record<string, { dateline: number; unread: number }>;
 }
+
+/** What the dock needs to show the user's private group convos. */
+export interface DockGroups {
+  /** Group names by id, from the shared group map (WhosOnlineSorting's cache). */
+  names: () => Promise<Record<number, string>>;
+  /** The group ids from the last membership check, or null when it's due again. */
+  members: number[] | null;
+  saveMembers: (gids: number[]) => void;
+  /** Which new group messages make the message sound. */
+  sound: "mentions" | "all";
+}
+
+type DockItem =
+  | { kind: "dm"; conversation: Conversation }
+  | { kind: "group"; group: GroupChat };
+
+const itemDateline = (item: DockItem) =>
+  item.kind === "dm" ? item.conversation.dateline : item.group.dateline;
+
+const itemUnread = (item: DockItem) =>
+  item.kind === "dm" ? item.conversation.unread : item.group.unread;
+
+const unreadBadge = (unread: number) =>
+  unread > 0 &&
+  el("span", { class: "hfx-chat-badge" }, unread > 9 ? "9+" : unread);
 
 export const DEFAULT_DOCK_STATE: DockState = { open: [], collapsed: false };
 
@@ -64,6 +102,8 @@ export interface ChatDockOptions {
   layout?: "bubbles" | "list";
   /** Plays HF's sound for new messages; leave out for no sound. */
   sound?: MessageSoundPlayer;
+  /** Private group convos; leave out to hide them. */
+  groups?: DockGroups;
   /** Builds the global chat window; leave out to hide the global chat entry. */
   createGlobal?: (options: {
     minimized: boolean;
@@ -153,6 +193,8 @@ export class ChatDock {
   private state: DockState;
   private inboxLoaded = false;
   private restored = false;
+  /** Saved windows are back open, so saving state is safe. */
+  private windowsRestored = false;
   private ended = false;
   private lastActive = 0;
   /** Users typing right now, with the timer that expires their notice. */
@@ -162,17 +204,22 @@ export class ChatDock {
   >();
   private presenceTimer?: ReturnType<typeof setInterval>;
   private global: GlobalChatWindow | null = null;
+  private readonly groupWindows = new Map<number, GroupChatWindow>();
+  private groupNames: Record<number, string> = {};
 
   constructor(private readonly options: ChatDockOptions) {
     this.client = options.client;
     this.origin = options.origin ?? location.origin;
     this.state = {
-      open: (options.state?.open ?? []).filter(
-        (chat) =>
-          Number(chat?.partyId) > 0 ||
-          (chat?.partyId === GLOBAL_PARTY && Boolean(options.createGlobal))
+      open: (options.state?.open ?? []).filter((chat) =>
+        chat?.kind === "group"
+          ? Boolean(options.groups) && Number(chat.partyId) > 0
+          : Number(chat?.partyId) > 0 ||
+            (chat?.partyId === GLOBAL_PARTY && Boolean(options.createGlobal))
       ),
       collapsed: Boolean(options.state?.collapsed),
+      filter: options.state?.filter,
+      groups: options.state?.groups,
     };
     this.heads = el("div", {
       class: options.layout === "list" ? "hfx-chat-list" : "hfx-chat-heads",
@@ -198,6 +245,8 @@ export class ChatDock {
   destroy(): void {
     this.global?.destroy();
     this.global = null;
+    this.groupWindows.forEach((win) => win.destroy());
+    this.groupWindows.clear();
     clearInterval(this.presenceTimer);
     this.typingUsers.forEach((timer) => clearTimeout(timer));
     this.typingUsers.clear();
@@ -226,6 +275,14 @@ export class ChatDock {
       if (!win) return;
       this.renderMessages(win);
       if (live && this.isActive(win)) client.markRead(partyId);
+    });
+    client.on("groups", () => {
+      this.applyGroupNames();
+      this.saveGroupActivity();
+      this.renderHeads();
+    });
+    client.on("groupMessages", (gid, live) => {
+      if (live) this.playGroupSound(gid);
     });
     client.on("typing", (uid, typing) => {
       if (this.options.typingIndicators) this.setUserTyping(uid, typing);
@@ -258,63 +315,170 @@ export class ChatDock {
 
     if (!this.restored) {
       this.restored = true;
-      // Oldest first, so the newest ends up next to the bubbles
-      [...this.state.open].reverse().forEach((chat) =>
-        this.openChat(chat.partyId, {
-          minimized: chat.minimized,
-          restore: true,
-        })
-      );
+      this.firstReady();
     } else {
       // Catch up on what was missed while disconnected
       this.windows.forEach((win) => {
         if (win.loaded)
           this.client.loadHistory(win.partyId).catch(() => undefined);
       });
+      this.groupWindows.forEach((win) =>
+        this.client.loadGroupHistory(win.gid).catch(() => undefined)
+      );
     }
+  }
+
+  /**
+   * On the first connection: set up groups, then reopen the saved windows.
+   * Groups go first because the membership check moves the server's idea of
+   * the open chat, and loading the windows' history afterwards sets it back.
+   */
+  private async firstReady(): Promise<void> {
+    // Saving before the windows are back would drop them from the saved state
+    const toRestore = [...this.state.open];
+    try {
+      await this.setupGroups();
+    } catch {
+      // Groups are optional; DMs still work
+    }
+    // Oldest first, so the newest ends up next to the bubbles
+    toRestore.reverse().forEach((chat) => {
+      const restore = { minimized: chat.minimized, restore: true };
+      if (chat.kind === "group") this.openGroup(chat.partyId, restore);
+      else this.openChat(chat.partyId, restore);
+    });
+    this.windowsRestored = true;
+    this.saveGroupActivity();
+  }
+
+  /**
+   * The user's groups: names from the shared group map, membership from a
+   * cached check (redone when due), and HFX's own saved activity per group.
+   */
+  private async setupGroups(): Promise<void> {
+    const groups = this.options.groups;
+    if (!groups) return;
+    this.groupNames = await groups.names().catch(() => ({}));
+    let members = groups.members;
+    if (!members) {
+      const candidates = Object.keys(this.groupNames).map(Number);
+      members = candidates.length
+        ? await this.client.checkGroupMembership(candidates)
+        : [];
+      groups.saveMembers(members);
+    }
+    const saved = this.state.groups ?? {};
+    this.client.setGroups(
+      members.map((gid) => ({
+        gid,
+        name: this.groupNames[gid] ?? `Group ${gid}`,
+        dateline: saved[gid]?.dateline ?? 0,
+        unread: saved[gid]?.unread ?? 0,
+      }))
+    );
+  }
+
+  /** Name groups that were only known by id (e.g. found through a message). */
+  private applyGroupNames(): void {
+    for (const group of this.client.groups.values()) {
+      const name = this.groupNames[group.gid];
+      if (name && group.name !== name) group.name = name;
+    }
+  }
+
+  /** Keep each group's last activity and unread count across page loads. */
+  private saveGroupActivity(): void {
+    if (!this.options.groups || !this.windowsRestored) return;
+    const groups: NonNullable<DockState["groups"]> = {};
+    for (const group of this.client.groups.values()) {
+      groups[group.gid] = { dateline: group.dateline, unread: group.unread };
+    }
+    const before = JSON.stringify(this.state.groups ?? {});
+    if (JSON.stringify(groups) === before) return;
+    this.state.groups = groups;
+    this.save();
+  }
+
+  /**
+   * The message sound for a new group message, per the group sound setting
+   * (mentions only, or every message), unless it's yours, quiet, muted on
+   * convo.php, or the group's window is being looked at.
+   */
+  private playGroupSound(gid: number): void {
+    const sound = this.options.sound;
+    const groups = this.options.groups;
+    if (!sound || !groups) return;
+    const last = this.client.getGroupMessages(gid).slice(-1)[0];
+    const me = this.client.me;
+    if (!last || last.quiet || !me || last.uid === me.uid) return;
+    const mentionsMe = last.text
+      .toLowerCase()
+      .includes(`@${me.username.toLowerCase()}@`);
+    if (groups.sound === "mentions" && !mentionsMe) return;
+    if (this.groupWindows.get(gid)?.isActive()) return;
+    if (mutedParties().has(gid)) return;
+    sound.play(`group:${gid}:${last.mid}`);
   }
 
   // ---- Bubbles -------------------------------------------------------------
 
-  /** Recent conversations, always including unread and open ones, newest first. */
-  private visibleConversations(limit: number): Conversation[] {
-    const all = this.client.getConversations();
+  /** DMs and (when enabled) groups, newest first. */
+  private items(): DockItem[] {
+    const dms: DockItem[] = this.client
+      .getConversations()
+      .map((conversation) => ({ kind: "dm", conversation }));
+    const groups: DockItem[] = this.options.groups
+      ? this.client.getGroups().map((group) => ({ kind: "group", group }))
+      : [];
+    return [...dms, ...groups].sort(
+      (a, b) => itemDateline(b) - itemDateline(a)
+    );
+  }
+
+  private isOpen(item: DockItem): boolean {
+    return item.kind === "dm"
+      ? this.windows.has(item.conversation.partyId)
+      : this.groupWindows.has(item.group.gid);
+  }
+
+  /** Recent chats, always including unread and open ones, newest first. */
+  private visibleItems(limit: number, filter: DockFilter = "all"): DockItem[] {
+    const all = this.items().filter(
+      (item) => filter === "all" || item.kind === filter
+    );
     const max = Math.max(
       1,
       Math.min(limit, Math.round(this.options.maxBubbles) || 5)
     );
-    const picked = new Set<Conversation>();
-    for (const conversation of all) {
+    const picked = new Set<DockItem>();
+    for (const item of all) {
       if (picked.size >= max) break;
-      if (conversation.unread > 0 || this.windows.has(conversation.partyId)) {
-        picked.add(conversation);
-      }
+      if (itemUnread(item) > 0 || this.isOpen(item)) picked.add(item);
     }
-    for (const conversation of all) {
+    for (const item of all) {
       if (picked.size >= max) break;
-      picked.add(conversation);
+      picked.add(item);
     }
-    return all.filter((conversation) => picked.has(conversation));
+    return all.filter((item) => picked.has(item));
   }
 
   /** Render the bubbles or the list, whichever layout is configured. */
   private renderHeads(): void {
     if (this.ended) return;
-    const conversations =
+    const items =
       this.options.layout === "list" ? this.renderList() : this.renderBubbles();
     // The global chat entry is always there when enabled
     this.root.hidden =
       !this.inboxLoaded ||
-      (conversations.length === 0 &&
+      (items.length === 0 &&
         this.windows.size === 0 &&
+        this.groupWindows.size === 0 &&
         !this.options.createGlobal);
   }
 
-  /** Conversations with unread messages, for the launcher and list header. */
+  /** Chats with unread messages, for the launcher and list header. */
   private unreadCount(): number {
-    return this.client
-      .getConversations()
-      .filter((conversation) => conversation.unread > 0).length;
+    return this.items().filter((item) => itemUnread(item) > 0).length;
   }
 
   private toggleCollapsed(): void {
@@ -323,8 +487,8 @@ export class ChatDock {
     this.renderHeads();
   }
 
-  private renderBubbles(): Conversation[] {
-    const conversations = this.visibleConversations(10);
+  private renderBubbles(): DockItem[] {
+    const items = this.visibleItems(10);
     const totalUnread = this.unreadCount();
 
     const launcher = el(
@@ -344,50 +508,11 @@ export class ChatDock {
 
     const heads = this.state.collapsed
       ? []
-      : conversations.map((conversation) => {
-          const { other } = conversation;
-          const preview = previewText(conversation.lastMessage);
-          const status = presence(other.lastActive);
-          const typing = this.typingUsers.has(other.uid);
-          const head = el(
-            "button",
-            {
-              type: "button",
-              class: [
-                "hfx-chat-head",
-                this.windows.has(conversation.partyId) && "hfx-chat-head-open",
-              ]
-                .filter(Boolean)
-                .join(" "),
-              title: [
-                `${other.username} (${status})`,
-                typing ? "typing…" : preview,
-              ]
-                .filter(Boolean)
-                .join(": "),
-              "aria-label": `Chat with ${other.username}, ${status}${typing ? ", typing" : ""}`,
-              "data-party": conversation.partyId,
-              "data-presence": status,
-            },
-            [
-              el("img", {
-                src: avatarUrl(other.avatar, this.origin),
-                alt: "",
-              }),
-              statusDot(status, typing),
-              conversation.unread > 0 &&
-                el(
-                  "span",
-                  { class: "hfx-chat-badge" },
-                  conversation.unread > 9 ? "9+" : conversation.unread
-                ),
-            ]
-          );
-          head.addEventListener("click", () =>
-            this.openChat(conversation.partyId, { focus: true })
-          );
-          return head;
-        });
+      : items.map((item) =>
+          item.kind === "dm"
+            ? this.dmHead(item.conversation)
+            : this.groupHead(item.group)
+        );
 
     // Global chat is pinned just above the launcher
     const global =
@@ -395,7 +520,78 @@ export class ChatDock {
         ? [this.globalHead()]
         : [];
     this.heads.replaceChildren(launcher, ...global, ...heads);
-    return conversations;
+    return items;
+  }
+
+  private dmHead(conversation: Conversation): HTMLElement {
+    const { other } = conversation;
+    const preview = previewText(conversation.lastMessage);
+    const status = presence(other.lastActive);
+    const typing = this.typingUsers.has(other.uid);
+    const head = el(
+      "button",
+      {
+        type: "button",
+        class: [
+          "hfx-chat-head",
+          this.windows.has(conversation.partyId) && "hfx-chat-head-open",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        title: [`${other.username} (${status})`, typing ? "typing…" : preview]
+          .filter(Boolean)
+          .join(": "),
+        "aria-label": `Chat with ${other.username}, ${status}${typing ? ", typing" : ""}`,
+        "data-party": conversation.partyId,
+        "data-presence": status,
+      },
+      [
+        el("img", { src: avatarUrl(other.avatar, this.origin), alt: "" }),
+        statusDot(status, typing),
+        unreadBadge(conversation.unread),
+      ]
+    );
+    head.addEventListener("click", () =>
+      this.openChat(conversation.partyId, { focus: true })
+    );
+    return head;
+  }
+
+  /** A group's bubble: a rounded square with the group icon, no status dot. */
+  private groupHead(group: GroupChat): HTMLElement {
+    const preview = this.groupPreview(group);
+    const head = el(
+      "button",
+      {
+        type: "button",
+        class: [
+          "hfx-chat-head hfx-chat-head-group",
+          this.groupWindows.has(group.gid) && "hfx-chat-head-open",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        title: preview ? `${group.name}: ${preview}` : group.name,
+        "aria-label": `Open ${group.name} group chat`,
+        "data-group": group.gid,
+      },
+      [GROUP_ICON(), unreadBadge(group.unread)]
+    );
+    head.addEventListener("click", () =>
+      this.openGroup(group.gid, { focus: true })
+    );
+    return head;
+  }
+
+  /** "Name: message" for a group's latest message ("You: …" for your own). */
+  private groupPreview(group: GroupChat): string {
+    const last = group.lastMessage;
+    if (!last) return "";
+    const sender =
+      last.uid === this.client.me?.uid
+        ? "You"
+        : this.client.users.get(last.uid)?.username;
+    const text = previewText(last);
+    return sender ? `${sender}: ${text}` : text;
   }
 
   /** The pinned bubble that opens the global room. */
@@ -451,12 +647,47 @@ export class ChatDock {
     return el("li", null, row);
   }
 
+  /** All / Direct / Groups chips for the list. */
+  private filterChips(): HTMLElement {
+    const current = this.state.filter ?? "all";
+    const chips = (
+      [
+        ["all", "All"],
+        ["dm", "Direct"],
+        ["group", "Groups"],
+      ] as [DockFilter, string][]
+    ).map(([value, label]) => {
+      const chip = el(
+        "button",
+        {
+          type: "button",
+          class: `hfx-chat-filter${value === current ? " hfx-chat-filter-on" : ""}`,
+          "aria-pressed": String(value === current),
+          "data-filter": value,
+        },
+        label
+      );
+      chip.addEventListener("click", () => {
+        this.state.filter = value;
+        this.save();
+        this.renderHeads();
+      });
+      return chip;
+    });
+    return el(
+      "div",
+      { class: "hfx-chat-filters", role: "group", "aria-label": "Show" },
+      chips
+    );
+  }
+
   /**
    * Messenger-style list: a "Chats" panel docked at the bottom edge, with a
-   * row per conversation (avatar, name, time, last message or typing).
+   * row per chat (avatar, name, time, last message or typing).
    */
-  private renderList(): Conversation[] {
-    const conversations = this.visibleConversations(20);
+  private renderList(): DockItem[] {
+    const filter = this.options.groups ? (this.state.filter ?? "all") : "all";
+    const items = this.visibleItems(20, filter);
     const totalUnread = this.unreadCount();
     const now = Math.floor(Date.now() / 1000);
 
@@ -481,77 +712,145 @@ export class ChatDock {
     );
     header.addEventListener("click", () => this.toggleCollapsed());
 
-    const rows = conversations.map((conversation) => {
-      const { other, lastMessage } = conversation;
-      const status = presence(other.lastActive);
-      const typing = this.typingUsers.has(other.uid);
-      const unread = conversation.unread > 0;
-      const mine = lastMessage && lastMessage.uid === this.client.me?.uid;
-      // The avatar's dot animates while they type; the preview says so too
-      const preview = typing
-        ? "typing…"
-        : [mine && "You: ", previewText(lastMessage)];
-
-      const row = el(
-        "button",
-        {
-          type: "button",
-          class: [
-            "hfx-chat-row",
-            unread && "hfx-chat-row-unread",
-            this.windows.has(conversation.partyId) && "hfx-chat-row-open",
-          ]
-            .filter(Boolean)
-            .join(" "),
-          title: `${other.username} (${status})`,
-          "data-party": conversation.partyId,
-          "data-presence": status,
-        },
-        [
-          el("span", { class: "hfx-chat-row-avatar" }, [
-            el("img", { src: avatarUrl(other.avatar, this.origin), alt: "" }),
-            statusDot(status, typing),
-          ]),
-          el("span", { class: "hfx-chat-row-body" }, [
-            el("span", { class: "hfx-chat-row-top" }, [
-              el("span", { class: "hfx-chat-row-name" }, other.username),
-              conversation.dateline > 0 &&
-                el(
-                  "span",
-                  {
-                    class: "hfx-chat-row-time",
-                    title: convoNiceTime(conversation.dateline),
-                  },
-                  shortTime(conversation.dateline, now)
-                ),
-            ]),
-            el("span", { class: "hfx-chat-row-preview" }, preview),
-          ]),
-          unread &&
-            el(
-              "span",
-              { class: "hfx-chat-badge hfx-chat-row-badge" },
-              conversation.unread > 9 ? "9+" : conversation.unread
-            ),
-        ]
-      );
-      row.addEventListener("click", () =>
-        this.openChat(conversation.partyId, { focus: true })
-      );
-      return el("li", null, row);
-    });
+    const rows = items.map((item) =>
+      item.kind === "dm"
+        ? this.dmRow(item.conversation, now)
+        : this.groupRow(item.group, now)
+    );
 
     this.heads.replaceChildren();
     appendChildren(this.heads, [
       header,
+      !this.state.collapsed && this.options.groups && this.filterChips(),
       !this.state.collapsed &&
         el(
           "ul",
           { class: "hfx-chat-list-rows", "aria-label": "Convo conversations" },
-          [this.options.createGlobal && this.globalRow(), ...rows]
+          [
+            this.options.createGlobal && filter !== "dm" && this.globalRow(),
+            ...rows,
+          ]
         ),
     ]);
-    return conversations;
+    return items;
+  }
+
+  private dmRow(conversation: Conversation, now: number): HTMLElement {
+    const { other, lastMessage } = conversation;
+    const status = presence(other.lastActive);
+    const typing = this.typingUsers.has(other.uid);
+    const unread = conversation.unread > 0;
+    const mine = lastMessage && lastMessage.uid === this.client.me?.uid;
+    // The avatar's dot animates while they type; the preview says so too
+    const preview = typing
+      ? "typing…"
+      : [mine && "You: ", previewText(lastMessage)];
+
+    const row = el(
+      "button",
+      {
+        type: "button",
+        class: [
+          "hfx-chat-row",
+          unread && "hfx-chat-row-unread",
+          this.windows.has(conversation.partyId) && "hfx-chat-row-open",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        title: `${other.username} (${status})`,
+        "data-party": conversation.partyId,
+        "data-presence": status,
+      },
+      [
+        el("span", { class: "hfx-chat-row-avatar" }, [
+          el("img", { src: avatarUrl(other.avatar, this.origin), alt: "" }),
+          statusDot(status, typing),
+        ]),
+        this.rowBody(
+          el("span", { class: "hfx-chat-row-name" }, other.username),
+          conversation.dateline,
+          now,
+          preview
+        ),
+        unread &&
+          el(
+            "span",
+            { class: "hfx-chat-badge hfx-chat-row-badge" },
+            conversation.unread > 9 ? "9+" : conversation.unread
+          ),
+      ]
+    );
+    row.addEventListener("click", () =>
+      this.openChat(conversation.partyId, { focus: true })
+    );
+    return el("li", null, row);
+  }
+
+  private groupRow(group: GroupChat, now: number): HTMLElement {
+    const unread = group.unread > 0;
+    const row = el(
+      "button",
+      {
+        type: "button",
+        class: [
+          "hfx-chat-row hfx-chat-row-group",
+          unread && "hfx-chat-row-unread",
+          this.groupWindows.has(group.gid) && "hfx-chat-row-open",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        title: `${group.name} (group)`,
+        "data-group": group.gid,
+      },
+      [
+        el(
+          "span",
+          { class: "hfx-chat-row-avatar hfx-chat-row-group-icon" },
+          GROUP_ICON()
+        ),
+        this.rowBody(
+          // The group's name in its HF style
+          el(
+            "span",
+            { class: "hfx-chat-row-name" },
+            el("span", { class: `group${group.gid}` }, group.name)
+          ),
+          group.dateline,
+          now,
+          this.groupPreview(group) || "Group chat"
+        ),
+        unread &&
+          el(
+            "span",
+            { class: "hfx-chat-badge hfx-chat-row-badge" },
+            group.unread > 9 ? "9+" : group.unread
+          ),
+      ]
+    );
+    row.addEventListener("click", () =>
+      this.openGroup(group.gid, { focus: true })
+    );
+    return el("li", null, row);
+  }
+
+  private rowBody(
+    name: HTMLElement,
+    dateline: number,
+    now: number,
+    preview: ElChild | ElChild[]
+  ): HTMLElement {
+    return el("span", { class: "hfx-chat-row-body" }, [
+      el("span", { class: "hfx-chat-row-top" }, [
+        name,
+        dateline > 0 &&
+          el(
+            "span",
+            { class: "hfx-chat-row-time", title: convoNiceTime(dateline) },
+            shortTime(dateline, now)
+          ),
+      ]),
+      el("span", { class: "hfx-chat-row-preview" }, preview),
+    ]);
   }
 
   // ---- Windows -------------------------------------------------------------
@@ -637,10 +936,53 @@ export class ChatDock {
   private closeWindowsThatDontFit(): void {
     const roots = this.openWindowRoots();
     while (roots.length > this.maxWindows()) {
-      const partyId = Number(roots.pop()!.dataset.party);
-      if (partyId === GLOBAL_PARTY) this.closeGlobal();
-      else this.closeChat(partyId);
+      const chat = openChatOf(roots.pop()!);
+      if (chat.kind === "group") this.closeGroup(chat.partyId);
+      else if (chat.partyId === GLOBAL_PARTY) this.closeGlobal();
+      else this.closeChat(chat.partyId);
     }
+  }
+
+  /** Open a group's window; it loads the group's history once expanded. */
+  private openGroup(
+    gid: number,
+    { focus = false, minimized = false, restore = false } = {}
+  ): void {
+    if (!this.options.groups) return;
+    let win = this.groupWindows.get(gid);
+    if (!win) {
+      const group = this.client.groups.get(gid);
+      win = new GroupChatWindow({
+        client: this.client,
+        gid,
+        name: group?.name ?? this.groupNames[gid] ?? `Group ${gid}`,
+        minimized,
+        typingIndicators: this.options.typingIndicators,
+        origin: this.origin,
+        onClose: () => this.closeGroup(gid),
+        onChange: () => this.save(),
+      });
+      this.groupWindows.set(gid, win);
+      this.heads.after(win.root);
+      this.closeWindowsThatDontFit();
+    } else if (!restore) {
+      win.setMinimized(false);
+    }
+    if (!restore) this.save();
+    this.renderHeads();
+    if (focus) {
+      win.focus();
+      this.client.markGroupRead(gid);
+    }
+  }
+
+  private closeGroup(gid: number): void {
+    const win = this.groupWindows.get(gid);
+    if (!win) return;
+    win.destroy();
+    this.groupWindows.delete(gid);
+    this.save();
+    this.renderHeads();
   }
 
   closeChat(partyId: number): void {
@@ -1221,11 +1563,17 @@ export class ChatDock {
 
   private save(): void {
     // Newest first, matching the dock order
-    const open = this.openWindowRoots().map((root) => ({
-      partyId: Number(root.dataset.party),
-      minimized: root.classList.contains("hfx-chat-minimized"),
-    }));
-    this.state = { open, collapsed: this.state.collapsed };
+    const open = this.openWindowRoots().map(openChatOf);
+    this.state = { ...this.state, open };
     this.options.saveState(this.state);
   }
+}
+
+/** The saved form of an open window, from its element (`data-party`, e.g. "500", "-1" or "g48"). */
+function openChatOf(root: HTMLElement): OpenChat {
+  const party = root.dataset.party ?? "";
+  const minimized = root.classList.contains("hfx-chat-minimized");
+  return party.startsWith("g")
+    ? { partyId: Number(party.slice(1)), minimized, kind: "group" }
+    : { partyId: Number(party), minimized };
 }

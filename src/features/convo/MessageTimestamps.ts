@@ -14,7 +14,7 @@ class MessageTimestamps extends Feature {
       name: "Message Timestamps",
       enabled: true,
       description:
-        "Add timestamps to convo messages, including Chat Bubbles windows.",
+        "Add timestamps to convo messages, including Convo Anywhere windows.",
     });
   }
 

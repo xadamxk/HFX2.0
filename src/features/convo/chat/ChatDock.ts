@@ -5,7 +5,7 @@ import type {
   ConvoClient,
   ConvoStatus,
 } from "./ConvoClient";
-import { HISTORY_PAGE_SIZE, presence } from "./ConvoClient";
+import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import {
   convoNiceTime,
@@ -99,6 +99,21 @@ const TYPING_TIMEOUT = 35000;
 const OWN_TYPING_TIMEOUT = 30000;
 const UNCONFIRMED_RETRY =
   "Delivery of this message is unconfirmed. Check the conversation first: sending it again may create a duplicate.\n\nSend it again?";
+
+/**
+ * Discord-style status dot for the avatar's top-right corner. While the user
+ * types it stretches into a pill with animated dots, in the same color.
+ */
+function statusDot(status: Presence, typing: boolean): HTMLElement {
+  return el(
+    "span",
+    {
+      class: `hfx-chat-dot hfx-chat-presence-${status}${typing ? " hfx-chat-dot-typing" : ""}`,
+      "aria-hidden": "true",
+    },
+    typing ? [el("i"), el("i"), el("i")] : null
+  );
+}
 
 const CHAT_ICON = () => {
   const ns = "http://www.w3.org/2000/svg";
@@ -317,7 +332,6 @@ export class ChatDock {
               type: "button",
               class: [
                 "hfx-chat-head",
-                `hfx-chat-presence-${status}`,
                 this.windows.has(conversation.partyId) && "hfx-chat-head-open",
               ]
                 .filter(Boolean)
@@ -337,12 +351,7 @@ export class ChatDock {
                 src: avatarUrl(other.avatar, this.origin),
                 alt: "",
               }),
-              typing &&
-                el(
-                  "span",
-                  { class: "hfx-chat-head-typing", "aria-hidden": "true" },
-                  [el("i"), el("i"), el("i")]
-                ),
+              statusDot(status, typing),
               conversation.unread > 0 &&
                 el(
                   "span",
@@ -397,18 +406,9 @@ export class ChatDock {
       const typing = this.typingUsers.has(other.uid);
       const unread = conversation.unread > 0;
       const mine = lastMessage && lastMessage.uid === this.client.me?.uid;
+      // The avatar's dot animates while they type; the preview says so too
       const preview = typing
-        ? [
-            el(
-              "span",
-              {
-                class: "hfx-chat-head-typing hfx-chat-row-typing",
-                "aria-hidden": "true",
-              },
-              [el("i"), el("i"), el("i")]
-            ),
-            "typing…",
-          ]
+        ? "typing…"
         : [mine && "You: ", previewText(lastMessage)];
 
       const row = el(
@@ -427,11 +427,10 @@ export class ChatDock {
           "data-presence": status,
         },
         [
-          el(
-            "span",
-            { class: `hfx-chat-row-avatar hfx-chat-presence-${status}` },
-            [el("img", { src: avatarUrl(other.avatar, this.origin), alt: "" })]
-          ),
+          el("span", { class: "hfx-chat-row-avatar" }, [
+            el("img", { src: avatarUrl(other.avatar, this.origin), alt: "" }),
+            statusDot(status, typing),
+          ]),
           el("span", { class: "hfx-chat-row-body" }, [
             el("span", { class: "hfx-chat-row-top" }, [
               el("span", { class: "hfx-chat-row-name" }, other.username),

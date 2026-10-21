@@ -120,7 +120,9 @@ describe("ChatDock bubbles", () => {
       other.lastActive = now() - ago;
       client.fire("conversations");
       expect(head().dataset.presence).toBe(status);
-      expect(head().classList).toContain(`hfx-chat-presence-${status}`);
+      expect(head().querySelector(".hfx-chat-dot")!.classList).toContain(
+        `hfx-chat-presence-${status}`
+      );
       expect(head().title).toContain(`Charlie (${status})`);
     }
   });
@@ -143,7 +145,7 @@ describe("ChatDock bubbles", () => {
     await mount(true);
     client.fire("conversations");
     client.fire("typing", OTHER.uid, true);
-    expect(head().querySelector(".hfx-chat-head-typing")).not.toBeNull();
+    expect(head().querySelector(".hfx-chat-dot-typing")).not.toBeNull();
     expect(document.querySelector(".hfx-chat-typing")!.textContent).toBe(
       "Charlie is typing…"
     );
@@ -151,10 +153,19 @@ describe("ChatDock bubbles", () => {
     client.conversations.get(PARTY)!.unread = 2;
     client.fire("conversations");
     expect(head().querySelector(".hfx-chat-badge")!.textContent).toBe("2");
-    expect(head().querySelector(".hfx-chat-head-typing")).not.toBeNull();
+    expect(head().querySelector(".hfx-chat-dot-typing")).not.toBeNull();
+
+    // The status dot itself turns into the typing pill: one indicator, same status color
+    expect(head().querySelectorAll(".hfx-chat-dot")).toHaveLength(1);
+    expect(head().querySelector(".hfx-chat-dot")!.classList).toContain(
+      "hfx-chat-presence-offline"
+    );
+    expect(head().querySelectorAll(".hfx-chat-dot i")).toHaveLength(3);
 
     client.add({ uid: OTHER.uid });
-    expect(head().querySelector(".hfx-chat-head-typing")).toBeNull();
+    expect(head().querySelector(".hfx-chat-dot-typing")).toBeNull();
+    expect(head().querySelectorAll(".hfx-chat-dot")).toHaveLength(1);
+    expect(head().querySelectorAll(".hfx-chat-dot i")).toHaveLength(0);
     expect(document.querySelector(".hfx-chat-typing")!.textContent).toBe("");
   });
 
@@ -164,9 +175,9 @@ describe("ChatDock bubbles", () => {
       await mount(true, { open: false });
       client.fire("conversations");
       client.fire("typing", OTHER.uid, true);
-      expect(head().querySelector(".hfx-chat-head-typing")).not.toBeNull();
+      expect(head().querySelector(".hfx-chat-dot-typing")).not.toBeNull();
       jest.advanceTimersByTime(35000);
-      expect(head().querySelector(".hfx-chat-head-typing")).toBeNull();
+      expect(head().querySelector(".hfx-chat-dot-typing")).toBeNull();
     } finally {
       jest.useRealTimers();
     }
@@ -257,9 +268,9 @@ describe("ChatDock list layout", () => {
     );
     expect(theirs.classList).toContain("hfx-chat-row-unread");
     expect(theirs.querySelector(".hfx-chat-row-badge")!.textContent).toBe("3");
-    expect(theirs.querySelector(".hfx-chat-row-avatar")!.classList).toContain(
-      "hfx-chat-presence-online"
-    );
+    expect(
+      theirs.querySelector(".hfx-chat-row-avatar .hfx-chat-dot")!.classList
+    ).toContain("hfx-chat-presence-online");
     // Header counts conversations with unread messages
     expect(
       document.querySelector(".hfx-chat-list-header .hfx-chat-badge")!
@@ -274,7 +285,9 @@ describe("ChatDock list layout", () => {
     expect(row().querySelector(".hfx-chat-row-preview")!.textContent).toBe(
       "typing…"
     );
-    expect(row().querySelector(".hfx-chat-row-typing")).not.toBeNull();
+    expect(
+      row().querySelector(".hfx-chat-row-avatar .hfx-chat-dot-typing")
+    ).not.toBeNull();
   });
 
   it("opens a chat window from a row", async () => {

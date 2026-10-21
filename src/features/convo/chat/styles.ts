@@ -62,39 +62,50 @@ export const CHAT_DOCK_CSS = `
   object-fit: cover;
   display: block;
 }
-/* The border shows the user's status */
-.hfx-chat-head { border-width: 3px; border-color: var(--hfx-chat-offline); }
-.hfx-chat-head.hfx-chat-presence-online { border-color: var(--hfx-chat-online); }
-.hfx-chat-head.hfx-chat-presence-away { border-color: var(--hfx-chat-away); }
-/* An open chat gets an outer ring, outside the status border */
+/* An open chat gets an outer ring */
 .hfx-chat-head.hfx-chat-head-open {
   box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--hfx-chat-text), 0 2px 8px rgba(0, 0, 0, 0.6);
 }
-.hfx-chat-head-typing {
+/* Unread count at the bottom right; the status dot has the top right */
+.hfx-chat-head .hfx-chat-badge { top: auto; bottom: -4px; right: -4px; }
+
+/* Discord-style status dot, cut out of the avatar by a ring in the surface color */
+.hfx-chat-dot {
+  --hfx-chat-dot-size: 14px;
   position: absolute;
-  top: -5px;
-  left: -7px;
+  top: -1px;
+  right: -1px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: var(--hfx-chat-header);
-  border: 1px solid var(--hfx-chat-border);
+  min-width: var(--hfx-chat-dot-size);
+  height: var(--hfx-chat-dot-size);
+  box-sizing: border-box;
+  border-radius: calc(var(--hfx-chat-dot-size) / 2);
+  background: var(--hfx-chat-offline);
+  box-shadow: 0 0 0 3px var(--hfx-chat-dot-ring, #1f1f1f);
+  transition: min-width 0.15s ease;
 }
-.hfx-chat-head-typing i {
-  width: 4px;
-  height: 4px;
+.hfx-chat-dot.hfx-chat-presence-online { background: var(--hfx-chat-online); }
+.hfx-chat-dot.hfx-chat-presence-away { background: var(--hfx-chat-away); }
+/* Typing: the dot stretches into a pill with bouncing dots */
+.hfx-chat-dot.hfx-chat-dot-typing {
+  min-width: calc(var(--hfx-chat-dot-size) * 2);
+  padding: 0 3px;
+}
+.hfx-chat-dot i {
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
-  background: var(--hfx-chat-text);
+  background: #fff;
   animation: hfx-chat-typing 1.2s infinite ease-in-out;
 }
-.hfx-chat-head-typing i:nth-child(2) { animation-delay: 0.15s; }
-.hfx-chat-head-typing i:nth-child(3) { animation-delay: 0.3s; }
+.hfx-chat-dot i:nth-child(2) { animation-delay: 0.15s; }
+.hfx-chat-dot i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes hfx-chat-typing {
-  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
-  30% { opacity: 1; transform: translateY(-2px); }
+  0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-1px); }
 }
 /* List layout: a Messenger-style "Chats" panel docked at the bottom edge */
 .hfx-chat-list {
@@ -151,15 +162,19 @@ export const CHAT_DOCK_CSS = `
 .hfx-chat-row:hover { background: rgba(255, 255, 255, 0.06); }
 .hfx-chat-row.hfx-chat-row-open { background: rgba(255, 255, 255, 0.1); }
 .hfx-chat-row-avatar {
+  position: relative;
   flex: none;
   width: 40px;
   height: 40px;
-  box-sizing: border-box;
-  border: 3px solid var(--hfx-chat-offline);
-  border-radius: 50%;
 }
-.hfx-chat-row-avatar.hfx-chat-presence-online { border-color: var(--hfx-chat-online); }
-.hfx-chat-row-avatar.hfx-chat-presence-away { border-color: var(--hfx-chat-away); }
+.hfx-chat-row-avatar .hfx-chat-dot {
+  --hfx-chat-dot-size: 12px;
+  --hfx-chat-dot-ring: var(--hfx-chat-bg);
+  top: -1px;
+  right: -1px;
+}
+.hfx-chat-row:hover .hfx-chat-dot { --hfx-chat-dot-ring: #2a2a2a; }
+.hfx-chat-row.hfx-chat-row-open .hfx-chat-dot { --hfx-chat-dot-ring: #343434; }
 .hfx-chat-row-avatar img {
   width: 100%;
   height: 100%;
@@ -195,19 +210,10 @@ export const CHAT_DOCK_CSS = `
 .hfx-chat-row-unread .hfx-chat-row-preview { font-weight: bold; color: #fff; }
 .hfx-chat-row-unread .hfx-chat-row-time { color: var(--hfx-chat-text); }
 .hfx-chat-row-badge { position: static; flex: none; }
-.hfx-chat-head-typing.hfx-chat-row-typing {
-  position: static;
-  display: inline-flex;
-  vertical-align: middle;
-  margin-right: 4px;
-  height: 12px;
-  border: none;
-  padding: 0;
-  background: none;
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .hfx-chat-head-typing i { animation: none; opacity: 0.8; }
+  .hfx-chat-dot { transition: none; }
+  .hfx-chat-dot i { animation: none; opacity: 0.9; }
 }
 .hfx-chat-head:hover,
 .hfx-chat-launcher:hover { filter: brightness(1.15); }

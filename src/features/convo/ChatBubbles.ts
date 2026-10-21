@@ -33,7 +33,7 @@ class ChatBubbles extends Feature {
       name: "Chat Bubbles",
       enabled: true,
       description:
-        "Chat from any page: avatar bubbles or a conversation list (bottom corner) for recent and unread Convo conversations open small chat windows. Avatar borders show the user's status (green online, yellow away, gray offline).",
+        "Chat from any page: avatar bubbles or a conversation list (bottom corner) for recent and unread Convo conversations open small chat windows. A dot on each avatar shows the user's status (green online, yellow away, gray offline) and animates while they type.",
       configurables: [
         new RadioGroup({
           id: "layout",

@@ -47,7 +47,7 @@ class ChatBubbles extends Feature {
       name: "Convo Anywhere",
       enabled: true,
       description:
-        "Chat in Convo from any page. A Messenger-style dock for your conversations, group chats and the global chat, with online status, typing indicators, unread badges, @mentions and image pasting. Hidden on convo.php itself.",
+        "Chat in Convo from anywhere. A Messenger-style dock for your conversations, group chats and the global chat, with online status, typing indicators, and all the features you love from Convo. Hidden on convo.php itself.",
       configurables: [
         new RadioGroup({
           id: "layout",

@@ -68,6 +68,21 @@ export interface ChatMessage {
   requestId?: string;
   /** The server sent it with noSound (history, system notices): HF plays no sound for it. */
   quiet?: boolean;
+  /** A private group convo message; `partyId` is then the group id. */
+  group?: boolean;
+}
+
+/** A private group convo ("Comrades" on convo.php). Group ids are HF usergroup ids. */
+export interface GroupChat {
+  gid: number;
+  /** From the shared group map; "Group <gid>" when unknown. */
+  name: string;
+  lastMessage?: ChatMessage;
+  dateline: number;
+  /** HF has no read receipts for groups, so this is HFX's own count. */
+  unread: number;
+  /** Members seen in loaded messages (HF sends no member list for groups). */
+  members: Set<number>;
 }
 
 export interface Conversation {
@@ -85,6 +100,10 @@ export interface ConvoClientEvents {
   conversations: () => void;
   /** Messages for a party were added (history or live). `live` is true for new arrivals. */
   messages: (partyId: number, live: boolean) => void;
+  /** The group list or a group's unread/latest message changed. */
+  groups: () => void;
+  /** Messages for a group were added. `live` is true for new arrivals. */
+  groupMessages: (gid: number, live: boolean) => void;
   typing: (uid: number, typing: boolean) => void;
   error: (message: string) => void;
 }
@@ -160,13 +179,16 @@ export async function fetchConvoTicket(
   return data.ticket;
 }
 
-/** Normalize a message from `convo_receivemessage(_bulk)`. Null if it isn't a 1:1 message. */
+/**
+ * Normalize a message from `convo_receivemessage(_bulk)`: a 1:1 message, or a
+ * group message (`group: true`). Null for the public room and anything else.
+ */
 export function parseMessage(raw: any): ChatMessage | null {
   if (!raw || typeof raw.message !== "string") return null;
   const partyId = toInt(raw.party_id);
   const mid = toInt(raw.mid);
-  // Public room (-1) and group messages aren't shown in bubbles
-  if (partyId <= 0 || raw.is_group) return null;
+  // The public room (-1) has its own client (GlobalRoomClient)
+  if (partyId <= 0) return null;
   const message: ChatMessage = {
     mid,
     partyId,
@@ -186,15 +208,27 @@ export function parseMessage(raw: any): ChatMessage | null {
   if (message.uid === HELPBOT_UID && raw.trustedHtml) message.html = true;
   if (typeof raw.requestId === "string") message.requestId = raw.requestId;
   if ("noSound" in raw) message.quiet = true;
+  if (raw.is_group) message.group = true;
   return message;
 }
+
+// Group membership check: asks for messages after an id no group has reached,
+// which a member gets an empty "ok" for and anyone else "No permission".
+const MEMBERSHIP_CHECK_MID = 99999999;
+
+/** The key the typing guard and history requests use; DM and group ids overlap. */
+const chatKey = (group: boolean, id: number) =>
+  `${group ? "group" : "dm"}:${id}`;
 
 export class ConvoClient {
   me: ChatUser | null = null;
   status: ConvoStatus = "connecting";
   readonly users = new Map<number, ChatUser>();
   readonly conversations = new Map<number, Conversation>();
+  /** The user's private group convos, by group id. */
+  readonly groups = new Map<number, GroupChat>();
   private readonly messages = new Map<number, ChatMessage[]>();
+  private readonly groupMessages = new Map<number, ChatMessage[]>();
   private readonly seen = new Set<string>();
   private readonly listeners = new Map<string, Set<(...args: any[]) => void>>();
   private readonly socket: SocketIOClient;
@@ -202,9 +236,12 @@ export class ConvoClient {
   private readonly origin: string;
   private readonly randomUUID: () => string;
   private sending = false;
-  /** The party convo_loadmessages last loaded; the server may scope typing notices to it. */
-  private loadedParty = 0;
-  private typingParty = 0;
+  /**
+   * The chat (see chatKey) convo_loadmessages last loaded; the server may scope
+   * typing notices to it. Empty when unknown.
+   */
+  private loadedParty = "";
+  private typingParty = "";
 
   constructor(private readonly options: ConvoClientOptions) {
     this.origin = options.origin ?? location.origin;
@@ -260,22 +297,133 @@ export class ConvoClient {
    * already loaded (e.g. after a reconnect).
    */
   async loadHistory(partyId: number): Promise<void> {
-    let cursor = this.lastMid(partyId);
+    await this.loadNewer(false, partyId);
+  }
+
+  /** Load the page before the oldest loaded message. Resolves false when there is nothing older. */
+  async loadOlder(partyId: number): Promise<boolean> {
+    return this.loadOlderPage(false, partyId);
+  }
+
+  /** Loaded messages for a group, oldest first. */
+  getGroupMessages(gid: number): ChatMessage[] {
+    return this.groupMessages.get(gid) ?? [];
+  }
+
+  /** Groups, most recent activity first; ones with no known activity last, by name. */
+  getGroups(): GroupChat[] {
+    return Array.from(this.groups.values()).sort(
+      (a, b) => b.dateline - a.dateline || a.name.localeCompare(b.name)
+    );
+  }
+
+  /**
+   * Set the user's groups (names from the shared group map). Keeps what's
+   * already known about each, e.g. unread counts and the latest message.
+   */
+  setGroups(
+    list: { gid: number; name: string; dateline?: number; unread?: number }[]
+  ): void {
+    for (const { gid, name, dateline = 0, unread = 0 } of list) {
+      const existing = this.groups.get(gid);
+      if (existing) {
+        existing.name = name;
+        existing.dateline = Math.max(existing.dateline, dateline);
+        existing.unread = Math.max(existing.unread, unread);
+      } else {
+        this.groups.set(gid, {
+          gid,
+          name,
+          dateline,
+          unread,
+          members: new Set(),
+        });
+      }
+    }
+    this.fire("groups");
+  }
+
+  /**
+   * Which of these group ids the user can chat in. HF sends no group list, so
+   * each is checked with a history request that can't return any messages.
+   */
+  async checkGroupMembership(gids: number[]): Promise<number[]> {
+    const results = await Promise.all(
+      gids.map((gid) =>
+        this.socket
+          .emitWithAck("convo_loadmessages", {
+            party: gid,
+            mid: MEMBERSHIP_CHECK_MID,
+            position: "new",
+            bulk: true,
+            is_group: true,
+          })
+          .then((result) => (result?.ok ? gid : 0))
+          .catch(() => 0)
+      )
+    );
+    // These requests moved the server's idea of the open chat; don't send typing until a real load
+    this.loadedParty = "";
+    return results.filter((gid) => gid > 0);
+  }
+
+  /** Load a group's newest messages, or the ones after what's loaded. */
+  async loadGroupHistory(gid: number): Promise<void> {
+    await this.loadNewer(true, gid);
+  }
+
+  /** Load the page of group messages before the oldest loaded. False when there's nothing older. */
+  async loadOlderGroup(gid: number): Promise<boolean> {
+    return this.loadOlderPage(true, gid);
+  }
+
+  /** Send a message to a group (convo_newmessage_group), with the same one-pending rule. */
+  async sendGroup(
+    gid: number,
+    text: string,
+    requestId = this.createRequestId()
+  ): Promise<{ requestId: string }> {
+    const message = text.trim();
+    if (!message) throw new Error("Message is empty.");
+    await this.mutate(chatKey(true, gid), "convo_newmessage_group", {
+      partyID: gid,
+      message,
+      requestId,
+    });
+    return { requestId };
+  }
+
+  /** Clear a group's unread count. Local only: HF has no read receipts for groups. */
+  markGroupRead(gid: number): void {
+    const group = this.groups.get(gid);
+    if (!group || !group.unread) return;
+    group.unread = 0;
+    this.fire("groups");
+  }
+
+  /** Tell a group we're typing; same rule as setTyping. */
+  setGroupTyping(gid: number, typing: boolean): void {
+    this.typing(chatKey(true, gid), typing);
+  }
+
+  private async loadNewer(group: boolean, id: number): Promise<void> {
+    const list = group ? this.getGroupMessages(id) : this.getMessages(id);
+    let cursor = list.length ? list[list.length - 1].mid : 0;
     // Cap the catch-up loop; each page can be hundreds of KB
     for (let page = 0; page < 5; page++) {
-      const result = await this.loadMessages(partyId, cursor, "new");
+      const result = await this.loadMessages(group, id, cursor, "new");
       if (!result?.hasMore || !toInt(result.lastMid)) return;
       cursor = toInt(result.lastMid);
     }
   }
 
-  /** Load the page before the oldest loaded message. Resolves false when there is nothing older. */
-  async loadOlder(partyId: number): Promise<boolean> {
-    const loaded = this.getMessages(partyId);
+  private async loadOlderPage(group: boolean, id: number): Promise<boolean> {
+    const loaded = group ? this.getGroupMessages(id) : this.getMessages(id);
     if (!loaded.length) return false;
     const before = loaded.length;
-    await this.loadMessages(partyId, loaded[0].mid, "old");
-    return this.getMessages(partyId).length - before >= HISTORY_PAGE_SIZE;
+    await this.loadMessages(group, id, loaded[0].mid, "old");
+    const after = group ? this.getGroupMessages(id) : this.getMessages(id);
+    return after.length - before >= HISTORY_PAGE_SIZE;
   }
 
   /**
@@ -289,7 +437,7 @@ export class ConvoClient {
   ): Promise<{ requestId: string }> {
     const message = text.trim();
     if (!message) throw new Error("Message is empty.");
-    await this.mutate(partyId, "convo_newmessage", {
+    await this.mutate(chatKey(false, partyId), "convo_newmessage", {
       partyID: partyId,
       message,
       requestId,
@@ -306,7 +454,7 @@ export class ConvoClient {
     imageData: ArrayBuffer,
     requestId = this.createRequestId()
   ): Promise<{ requestId: string }> {
-    await this.mutate(partyId, "convo_imageupload", {
+    await this.mutate(chatKey(false, partyId), "convo_imageupload", {
       partyID: partyId,
       imageData,
       requestId,
@@ -316,7 +464,7 @@ export class ConvoClient {
 
   /** Send something that adds to a conversation, waiting for the server's ack. */
   private async mutate(
-    partyId: number,
+    key: string,
     event: string,
     data: Record<string, unknown>
   ): Promise<void> {
@@ -339,7 +487,7 @@ export class ConvoClient {
         });
       if (!result?.ok)
         throw new Error(result?.error || "Convo request failed.");
-      this.setTyping(partyId, false);
+      this.typing(key, false);
     } finally {
       this.sending = false;
     }
@@ -371,37 +519,37 @@ export class ConvoClient {
    * id, so only send them for the party convo_loadmessages last loaded.
    */
   setTyping(partyId: number, typing: boolean): void {
+    this.typing(chatKey(false, partyId), typing);
+  }
+
+  private typing(key: string, typing: boolean): void {
     if (typing) {
-      if (partyId !== this.loadedParty || this.typingParty === partyId) return;
-      this.typingParty = partyId;
+      if (key !== this.loadedParty || this.typingParty === key) return;
+      this.typingParty = key;
       this.socket.emit("type_notice_start", true);
-    } else if (this.typingParty === partyId) {
-      this.typingParty = 0;
+    } else if (this.typingParty === key) {
+      this.typingParty = "";
       this.socket.emit("type_notice_stop", true);
     }
   }
 
   private async loadMessages(
-    partyId: number,
+    group: boolean,
+    id: number,
     mid: number,
     position: "new" | "old"
   ): Promise<{ ok: boolean; hasMore?: boolean; lastMid?: number } | undefined> {
-    this.loadedParty = partyId;
+    this.loadedParty = chatKey(group, id);
     const result = await this.socket.emitWithAck("convo_loadmessages", {
-      party: partyId,
+      party: id,
       mid,
       position,
       bulk: true,
-      is_group: false,
+      is_group: group,
     });
     if (!result?.ok)
       throw new Error(result?.error || "Couldn't load messages.");
     return result;
-  }
-
-  private lastMid(partyId: number): number {
-    const loaded = this.getMessages(partyId);
-    return loaded.length ? loaded[loaded.length - 1].mid : 0;
   }
 
   private bindSocket(): void {
@@ -425,11 +573,13 @@ export class ConvoClient {
     socket.on("convo_receivemessage_bulk", (data: any) => {
       if (!Array.isArray(data)) return;
       const parties = new Set<number>();
+      const groups = new Set<number>();
       for (const raw of data) {
         const message = this.add(raw);
-        if (message) parties.add(message.partyId);
+        if (message) (message.group ? groups : parties).add(message.partyId);
       }
       parties.forEach((partyId) => this.fire("messages", partyId, false));
+      groups.forEach((gid) => this.fire("groupMessages", gid, false));
     });
     socket.on("convo_read_notice", (data: any) => {
       const conversation = this.conversations.get(toInt(data?.partyID));
@@ -474,7 +624,7 @@ export class ConvoClient {
       this.setStatus("disconnected", error?.message);
       return;
     }
-    this.typingParty = 0;
+    this.typingParty = "";
     this.setStatus("ready");
     this.loadInbox(0);
   }
@@ -535,14 +685,18 @@ export class ConvoClient {
   private receive(raw: any, live: boolean): void {
     const message = this.add(raw);
     if (!message) return;
-    this.fire("messages", message.partyId, live);
+    this.fire(
+      message.group ? "groupMessages" : "messages",
+      message.partyId,
+      live
+    );
   }
 
-  /** Store a message (deduped by party:mid) and update its conversation. */
+  /** Store a message (deduped by kind:party:mid) and update its conversation. */
   private add(raw: any): ChatMessage | null {
     const message = parseMessage(raw);
     if (!message || !message.mid) return null;
-    const key = `private:${message.partyId}:${message.mid}`;
+    const key = `${message.group ? "group" : "private"}:${message.partyId}:${message.mid}`;
     if (this.seen.has(key)) return null;
     this.seen.add(key);
     if (this.seen.size > SEEN_LIMIT)
@@ -557,15 +711,42 @@ export class ConvoClient {
       sender.lastActive = Math.max(sender.lastActive, message.dateline);
     }
 
-    const list = this.messages.get(message.partyId) ?? [];
+    const store = message.group ? this.groupMessages : this.messages;
+    const list = store.get(message.partyId) ?? [];
     // Usually appended in order; insert in place for older pages
     let index = list.length;
     while (index > 0 && list[index - 1].mid > message.mid) index--;
     list.splice(index, 0, message);
-    this.messages.set(message.partyId, list);
+    store.set(message.partyId, list);
 
-    this.updateConversation(message, raw);
+    if (message.group) this.updateGroup(message, raw);
+    else this.updateConversation(message, raw);
     return message;
+  }
+
+  private updateGroup(message: ChatMessage, raw: any): void {
+    let group = this.groups.get(message.partyId);
+    if (!group) {
+      // A message from a group we didn't know about: the user is in it
+      group = {
+        gid: message.partyId,
+        name: `Group ${message.partyId}`,
+        dateline: 0,
+        unread: 0,
+        members: new Set(),
+      };
+      this.groups.set(message.partyId, group);
+    }
+    for (const uid of Object.keys(raw.users ?? {})) {
+      if (toInt(uid)) group.members.add(toInt(uid));
+    }
+    if (message.dateline < group.dateline) return;
+    group.lastMessage = message;
+    group.dateline = message.dateline;
+    if (!message.quiet && !raw.history && message.uid !== this.me?.uid) {
+      group.unread++;
+    }
+    this.fire("groups");
   }
 
   private updateConversation(message: ChatMessage, raw: any): void {

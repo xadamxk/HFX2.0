@@ -78,10 +78,14 @@ const live = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe("parseMessage", () => {
-  it("skips public room and group messages", () => {
+  it("skips the public room", () => {
     expect(parseMessage({ ...live(), party_id: -1 })).toBeNull();
-    expect(parseMessage({ ...live(), is_group: true })).toBeNull();
     expect(parseMessage({ party_id: 1 })).toBeNull();
+  });
+
+  it("flags group messages", () => {
+    expect(parseMessage({ ...live(), is_group: true })?.group).toBe(true);
+    expect(parseMessage(live())?.group).toBeUndefined();
   });
 
   it("parses image messages", () => {
@@ -420,6 +424,125 @@ describe("ConvoClient", () => {
       [OTHER.uid, true],
       [OTHER.uid, false],
     ]);
+  });
+
+  describe("groups", () => {
+    const GID = 48;
+    const groupMessage = (overrides: Record<string, unknown> = {}) =>
+      live({ party_id: GID, is_group: true, mid: 7001, ...overrides });
+
+    it("checks membership with a history request that returns nothing", async () => {
+      await ready();
+      socket.ackReplies.convo_loadmessages = (data) =>
+        data.party === GID
+          ? { ok: true, hasMore: false, lastMid: 0 }
+          : { ok: false, error: "No permission for this group chat." };
+      await expect(client.checkGroupMembership([GID, 46])).resolves.toEqual([
+        GID,
+      ]);
+      expect(socket.acked).toContainEqual([
+        "convo_loadmessages",
+        {
+          party: 46,
+          mid: 99999999,
+          position: "new",
+          bulk: true,
+          is_group: true,
+        },
+      ]);
+    });
+
+    it("keeps group and DM messages apart even with the same id", async () => {
+      await ready();
+      const onGroup = jest.fn();
+      const onDm = jest.fn();
+      client.on("groupMessages", onGroup);
+      client.on("messages", onDm);
+
+      socket.fire(
+        "convo_receivemessage",
+        groupMessage({ party_id: PARTY, mid: 1 })
+      );
+      socket.fire("convo_receivemessage", live({ mid: 1 }));
+
+      expect(client.getGroupMessages(PARTY).map((m) => m.mid)).toEqual([1]);
+      expect(client.getMessages(PARTY).map((m) => m.mid)).toEqual([1]);
+      expect(onGroup).toHaveBeenCalledWith(PARTY, true);
+      expect(onDm).toHaveBeenCalledWith(PARTY, true);
+    });
+
+    it("tracks groups, members and local unread counts", async () => {
+      await ready();
+      client.setGroups([{ gid: GID, name: "Brotherhood" }]);
+      socket.fire("convo_receivemessage", groupMessage());
+      socket.fire(
+        "convo_receivemessage",
+        groupMessage({ mid: 7002, uid: ME.uid })
+      );
+
+      const group = client.groups.get(GID)!;
+      expect(group.name).toBe("Brotherhood");
+      expect(group.unread).toBe(1);
+      expect(group.lastMessage?.mid).toBe(7002);
+      expect(Array.from(group.members).sort()).toEqual([ME.uid, OTHER.uid]);
+
+      client.markGroupRead(GID);
+      expect(group.unread).toBe(0);
+      // No read receipt is sent for groups
+      expect(socket.acked.some(([event]) => event === "mark_read")).toBe(false);
+    });
+
+    it("adds a group it hadn't heard of when a message arrives", async () => {
+      await ready();
+      socket.fire("convo_receivemessage", groupMessage({ party_id: 99 }));
+      expect(client.groups.get(99)?.name).toBe("Group 99");
+    });
+
+    it("doesn't count history as unread", async () => {
+      await ready();
+      client.setGroups([{ gid: GID, name: "Brotherhood" }]);
+      socket.fire("convo_receivemessage_bulk", [
+        groupMessage({ noSound: true, history: true }),
+      ]);
+      expect(client.groups.get(GID)!.unread).toBe(0);
+    });
+
+    it("loads group history with is_group", async () => {
+      await ready();
+      await client.loadGroupHistory(GID);
+      expect(socket.acked).toContainEqual([
+        "convo_loadmessages",
+        { party: GID, mid: 0, position: "new", bulk: true, is_group: true },
+      ]);
+    });
+
+    it("sends with convo_newmessage_group", async () => {
+      await ready();
+      socket.ackReplies.convo_newmessage_group = () => ({ ok: true });
+      await client.sendGroup(GID, " hi all ");
+      expect(socket.acked).toContainEqual([
+        "convo_newmessage_group",
+        { partyID: GID, message: "hi all", requestId: "req-1" },
+      ]);
+    });
+
+    it("keeps the typing guard per chat, not per id", async () => {
+      await ready();
+      await client.loadGroupHistory(PARTY);
+      // The DM with the same id wasn't the last load
+      client.setTyping(PARTY, true);
+      expect(socket.emitted).not.toContainEqual(["type_notice_start", true]);
+      client.setGroupTyping(PARTY, true);
+      expect(socket.emitted).toContainEqual(["type_notice_start", true]);
+    });
+
+    it("doesn't send typing after a membership check until a real load", async () => {
+      await ready();
+      await client.loadHistory(PARTY);
+      await client.checkGroupMembership([GID]);
+      client.setTyping(PARTY, true);
+      expect(socket.emitted).not.toContainEqual(["type_notice_start", true]);
+    });
   });
 
   it("reports server disconnects as ended", async () => {

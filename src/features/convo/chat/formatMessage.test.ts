@@ -5,6 +5,7 @@ import {
   renderImage,
   renderMessage,
   renderText,
+  renderTrustedHtml,
 } from "./formatMessage";
 import type { ChatMessage } from "./ConvoClient";
 
@@ -90,10 +91,90 @@ describe("renderImage", () => {
   });
 });
 
+describe("renderTrustedHtml", () => {
+  const origin = "https://hackforums.net";
+  const icon = `<i class='far fa-link' aria-hidden='true' style='margin-left: 3px; color: #00ff00;'></i>`;
+  // A real Stanley notice from the global room (2026-10-20)
+  const notice =
+    `<span style='color:yellow'>&#x1F514;</span><a href='showthread.php?tid=6334366'> Looking for new Twitter accounts with Blue Check${icon}</a>` +
+    ` by <a href="https://hackforums.net/member.php?action=profile&amp;uid=5787185"><span class="group2">gaincityy</span></a>${icon}</a>` +
+    ` in <a href='forumdisplay.php?fid=44'>Buyers Bay${icon}</a>`;
+
+  it("keeps a Stanley notice's thread, author and forum links", () => {
+    const fragment = renderTrustedHtml(notice, origin);
+    const links = Array.from(fragment.querySelectorAll("a"));
+    expect(
+      links.map((a) => [a.textContent!.trim(), a.getAttribute("href")])
+    ).toEqual([
+      [
+        "Looking for new Twitter accounts with Blue Check",
+        "https://hackforums.net/showthread.php?tid=6334366",
+      ],
+      [
+        "gaincityy",
+        "https://hackforums.net/member.php?action=profile&uid=5787185",
+      ],
+      ["Buyers Bay", "https://hackforums.net/forumdisplay.php?fid=44"],
+    ]);
+    links.forEach((a) => {
+      expect(a.getAttribute("target")).toBe("_blank");
+      expect(a.getAttribute("rel")).toBe("noopener noreferrer");
+    });
+    expect(fragment.textContent).toBe(
+      "🔔 Looking for new Twitter accounts with Blue Check by gaincityy in Buyers Bay"
+    );
+    // The author keeps HF's username style; the icons keep only their classes
+    expect(fragment.querySelector("a span")!.className).toBe("group2");
+    const icons = fragment.querySelectorAll("i");
+    expect(icons.length).toBeGreaterThan(0);
+    icons.forEach((i) => {
+      expect(i.className).toBe("far fa-link hfx-chat-icon");
+      expect(i.hasAttribute("style")).toBe(false);
+    });
+    expect(fragment.querySelector("[style]")).toBeNull();
+  });
+
+  it("drops scripts, handlers and unsafe links", () => {
+    const fragment = renderTrustedHtml(
+      `<script>alert(1)</script><img src=x onerror="alert(2)"><a href="javascript:alert(3)">click</a>` +
+        `<a href="https://ok.test/" onclick="alert(4)">ok</a><b onmouseover="alert(5)">bold</b>` +
+        `<span class="evil group2">x</span><i class="fa-link" onclick="x"></i><iframe src="https://evil.test"></iframe>`,
+      origin
+    );
+    const container = document.createElement("div");
+    container.appendChild(fragment);
+    const out = container.innerHTML;
+    expect(out).not.toMatch(
+      /script|onerror|onclick|onmouseover|javascript|iframe|<img/
+    );
+    expect(container.textContent).toBe("clickokboldx");
+    expect(container.querySelector("a")!.getAttribute("href")).toBe(
+      "https://ok.test/"
+    );
+    expect(container.querySelector("b")!.attributes).toHaveLength(0);
+    expect(container.querySelector("span")).toBeNull();
+  });
+
+  it("turns non-icon <i> into emphasis", () => {
+    expect(html(renderTrustedHtml("<i>hello</i>", origin))).toBe(
+      "<em>hello</em>"
+    );
+  });
+});
+
 describe("renderMessage", () => {
-  it("renders Helpbot HTML as text", () => {
-    const node = renderMessage(message({ text: "<i>hello</i>", html: true }));
-    expect(html(node)).toBe("hello");
+  it("renders Helpbot HTML through the allowlist", () => {
+    const node = renderMessage(
+      message({ text: "<a href='showthread.php?tid=1'>t</a>", html: true })
+    );
+    expect((node as DocumentFragment).querySelector("a")!.href).toBe(
+      `${location.origin}/showthread.php?tid=1`
+    );
+  });
+
+  it("never treats user text as HTML", () => {
+    const node = renderMessage(message({ text: "<a href='x'>t</a>" }));
+    expect((node as DocumentFragment).querySelector("a")).toBeNull();
   });
 
   it("falls back to [Image] for bad images", () => {

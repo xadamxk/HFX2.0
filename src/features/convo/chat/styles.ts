@@ -293,6 +293,8 @@ export const CHAT_DOCK_CSS = `
 }
 .hfx-gc-line:hover { background: rgba(255, 255, 255, 0.04); }
 .hfx-gc-line a { color: #9ecbff; text-decoration: underline; }
+/* Font Awesome link icons in Helpbot notices, like HF draws them */
+.hfx-chat-icon { margin-left: 3px; font-size: 10px; color: #7fd67f; vertical-align: super; }
 .hfx-gc-line img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 2px 0; }
 .hfx-gc-line.hfx-gc-mention {
   background: rgba(77, 47, 93, 0.45);

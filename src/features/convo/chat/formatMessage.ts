@@ -1,4 +1,4 @@
-import { el } from "../../../core/Dom";
+import { el, safeHttpUrl } from "../../../core/Dom";
 import type { ChatImage, ChatMessage } from "./ConvoClient";
 
 /** The parts of a DM or global room message that rendering needs. */
@@ -56,6 +56,89 @@ export function htmlToText(html: string): string {
   return doc.body.textContent ?? "";
 }
 
+// Helpbot HTML: tags kept as-is (without attributes) and tags dropped with their content
+const TRUSTED_FORMATTING = new Set(["b", "strong", "em", "u", "br"]);
+const TRUSTED_DROPPED = new Set([
+  "script",
+  "style",
+  "iframe",
+  "object",
+  "embed",
+  "template",
+  "noscript",
+]);
+// Font Awesome icons HF draws after links, e.g. "far fa-link"
+const ICON_CLASSES =
+  /^(?:fa[srlbd]?|fa-[a-z0-9-]+)(?:\s+(?:fa[srlbd]?|fa-[a-z0-9-]+))*$/;
+
+/**
+ * Helpbot (Stanley) messages the server marks as trusted HTML, e.g.
+ * `🔔 <a href='showthread.php?tid=1'>Title</a> by <a href=…><span class="group2">name</span></a>`.
+ * Rebuilt node by node from an allowlist rather than inserted: links (http(s)
+ * only, made absolute against HF), HF username styles (`groupN`), Font Awesome
+ * icons and basic formatting. Every other attribute is dropped, script-like
+ * elements are removed, and any other element is replaced by its contents.
+ */
+export function renderTrustedHtml(
+  html: string,
+  origin = location.origin
+): DocumentFragment {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const fragment = document.createDocumentFragment();
+  const copy = (from: Node, to: Node) => {
+    from.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        to.appendChild(document.createTextNode(node.textContent ?? ""));
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      const source = node as Element;
+      const tag = source.tagName.toLowerCase();
+      if (TRUSTED_DROPPED.has(tag)) return;
+
+      let target: Node | null = null;
+      if (tag === "a") {
+        const href = safeHttpUrl(
+          source.getAttribute("href") ?? "",
+          `${origin}/`
+        );
+        if (href) {
+          target = el("a", {
+            href: new URL(href, `${origin}/`).href,
+            target: "_blank",
+            rel: "noopener noreferrer",
+          });
+        }
+      } else if (tag === "span") {
+        const group = (source.getAttribute("class") ?? "").match(
+          /^group(\d+)$/
+        );
+        if (group) target = el("span", { class: `group${group[1]}` });
+      } else if (tag === "i") {
+        const iconClass = (source.getAttribute("class") ?? "").trim();
+        target = ICON_CLASSES.test(iconClass)
+          ? el("i", {
+              class: `${iconClass} hfx-chat-icon`,
+              "aria-hidden": "true",
+            })
+          : el("em");
+      } else if (TRUSTED_FORMATTING.has(tag)) {
+        target = document.createElement(tag);
+      }
+
+      if (target) {
+        copy(source, target);
+        to.appendChild(target);
+      } else {
+        // Unknown element (or an unsafe link): keep just its contents
+        copy(source, to);
+      }
+    });
+  };
+  copy(doc.body, fragment);
+  return fragment;
+}
+
 /** An inline image message, or null if its type or data looks wrong. */
 export function renderImage(image: ChatImage): HTMLImageElement | null {
   const type = image.type.toLowerCase();
@@ -77,7 +160,9 @@ export function renderMessage(message: RenderableMessage): Node {
   if (message.image) {
     return renderImage(message.image) ?? document.createTextNode("[Image]");
   }
-  return renderText(message.html ? htmlToText(message.text) : message.text);
+  return message.html
+    ? renderTrustedHtml(message.text)
+    : renderText(message.text);
 }
 
 /** One-line preview for a bubble's tooltip. */

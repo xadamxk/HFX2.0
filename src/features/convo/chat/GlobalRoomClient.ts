@@ -40,7 +40,7 @@ export interface RoomMessage {
   text: string;
   dateline: number;
   image?: ChatImage;
-  /** Helpbot HTML the server marked as trusted; render as plain text. */
+  /** Helpbot HTML the server marked as trusted; render with renderTrustedHtml. */
   html?: boolean;
   requestId?: string;
 }

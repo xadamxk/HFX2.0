@@ -241,12 +241,25 @@ export const CHAT_DOCK_CSS = `
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  background: var(--hfx-chat-accent);
+  /* Dark, like HF's own pages, so the group's colors show */
+  background: var(--hfx-chat-header);
+  border-color: var(--hfx-chat-border);
   color: #fff;
 }
 .hfx-chat-group-initials { font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
+/* The initials wear the group's HF style (class groupN); keep its size and spacing ours */
+#hfx-chat-dock .hfx-chat-group-initials > span {
+  font-size: inherit !important;
+  line-height: 1 !important;
+  letter-spacing: inherit !important;
+  padding: 0 !important;
+}
 /* The Groups bubble: one entry for all group chats, expanded on click */
 .hfx-chat-groups-toggle svg { width: 24px; height: 24px; }
+.hfx-chat-head.hfx-chat-groups-toggle {
+  background: var(--hfx-chat-accent);
+  border-color: transparent;
+}
 .hfx-chat-head.hfx-chat-groups-toggle.hfx-chat-groups-expanded {
   background: var(--hfx-chat-header);
   border-color: var(--hfx-chat-accent);
@@ -256,8 +269,10 @@ export const CHAT_DOCK_CSS = `
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  border: 1px solid var(--hfx-chat-border);
   border-radius: 11px;
-  background: var(--hfx-chat-accent);
+  background: var(--hfx-chat-header);
   color: #fff;
 }
 .hfx-chat-row-group-icon .hfx-chat-group-initials { font-size: 13px; }

@@ -72,6 +72,17 @@ export function groupInitials(name: string): string {
   return letters.join("").toUpperCase() || "?";
 }
 
+/**
+ * A group's initials in the group's own HF style: its username class is
+ * group<gid>, the same class showgroups.php uses for the group's name.
+ */
+const groupInitialsMark = (group: GroupChat) =>
+  el(
+    "span",
+    { class: "hfx-chat-group-initials", "aria-hidden": "true" },
+    el("span", { class: `group${group.gid}` }, groupInitials(group.name))
+  );
+
 const unreadBadge = (unread: number) =>
   unread > 0 &&
   el("span", { class: "hfx-chat-badge" }, unread > 9 ? "9+" : unread);
@@ -618,14 +629,7 @@ export class ChatDock {
         "aria-label": `Open ${group.name} group chat`,
         "data-group": group.gid,
       },
-      [
-        el(
-          "span",
-          { class: "hfx-chat-group-initials", "aria-hidden": "true" },
-          groupInitials(group.name)
-        ),
-        unreadBadge(group.unread),
-      ]
+      [groupInitialsMark(group), unreadBadge(group.unread)]
     );
     head.addEventListener("click", () =>
       this.openGroup(group.gid, { focus: true })
@@ -860,11 +864,7 @@ export class ChatDock {
         el(
           "span",
           { class: "hfx-chat-row-avatar hfx-chat-row-group-icon" },
-          el(
-            "span",
-            { class: "hfx-chat-group-initials", "aria-hidden": "true" },
-            groupInitials(group.name)
-          )
+          groupInitialsMark(group)
         ),
         this.rowBody(
           // The group's name in its HF style

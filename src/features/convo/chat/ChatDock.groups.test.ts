@@ -175,6 +175,10 @@ describe("ChatDock group chats", () => {
     )!;
     expect(quantum.querySelector(".hfx-chat-dot")).toBeNull();
     expect(quantum.textContent).toBe("Q");
+    // In the group's own HF style
+    expect(
+      quantum.querySelector(".hfx-chat-group-initials > span")!.className
+    ).toBe("group48");
     expect(saved[saved.length - 1].groupsExpanded).toBe(true);
 
     dock.destroy();
@@ -248,6 +252,9 @@ describe("ChatDock group chats", () => {
     expect(rows[0].querySelector(".hfx-chat-row-name span")!.className).toBe(
       "group48"
     );
+    expect(
+      rows[0].querySelector(".hfx-chat-group-initials > span")!.className
+    ).toBe("group48");
     expect(rows[0].querySelector(".hfx-chat-row-preview")!.textContent).toBe(
       "Nova: group hello"
     );

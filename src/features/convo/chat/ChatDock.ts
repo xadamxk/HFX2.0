@@ -1,4 +1,4 @@
-import { el } from "../../../core/Dom";
+import { appendChildren, el } from "../../../core/Dom";
 import type {
   ChatMessage,
   Conversation,
@@ -31,6 +31,23 @@ export interface DockState {
 
 export const DEFAULT_DOCK_STATE: DockState = { open: [], collapsed: false };
 
+/** Messenger-style short age of a message: now, 5m, 3h, 2d, 4w, 1y. */
+export function shortTime(
+  dateline: number,
+  now = Math.floor(Date.now() / 1000)
+): string {
+  const seconds = Math.max(0, now - dateline);
+  if (seconds < 60) return "now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  if (days < 365) return `${Math.floor(days / 7)}w`;
+  return `${Math.floor(days / 365)}y`;
+}
+
 export interface ChatDockOptions {
   client: ConvoClient;
   maxBubbles: number;
@@ -39,6 +56,8 @@ export interface ChatDockOptions {
   timestamps: boolean;
   /** Which side of the page the dock sits on (default right). */
   side?: "left" | "right";
+  /** Avatar bubbles (default) or a Messenger-style conversation list. */
+  layout?: "bubbles" | "list";
   state: DockState;
   saveState: (state: DockState) => void;
   /** Called once if Convo ends the session or the API looks different. */
@@ -123,7 +142,9 @@ export class ChatDock {
       ),
       collapsed: Boolean(options.state?.collapsed),
     };
-    this.heads = el("div", { class: "hfx-chat-heads" });
+    this.heads = el("div", {
+      class: options.layout === "list" ? "hfx-chat-list" : "hfx-chat-heads",
+    });
     this.root = el(
       "div",
       {
@@ -221,11 +242,11 @@ export class ChatDock {
   // ---- Bubbles -------------------------------------------------------------
 
   /** Recent conversations, always including unread and open ones, newest first. */
-  private bubbleConversations(): Conversation[] {
+  private visibleConversations(limit: number): Conversation[] {
     const all = this.client.getConversations();
     const max = Math.max(
       1,
-      Math.min(10, Math.round(this.options.maxBubbles) || 5)
+      Math.min(limit, Math.round(this.options.maxBubbles) || 5)
     );
     const picked = new Set<Conversation>();
     for (const conversation of all) {
@@ -241,15 +262,32 @@ export class ChatDock {
     return all.filter((conversation) => picked.has(conversation));
   }
 
+  /** Render the bubbles or the list, whichever layout is configured. */
   private renderHeads(): void {
     if (this.ended) return;
-    const conversations = this.bubbleConversations();
-    const totalUnread = this.client
+    const conversations =
+      this.options.layout === "list" ? this.renderList() : this.renderBubbles();
+    this.root.hidden =
+      !this.inboxLoaded ||
+      (conversations.length === 0 && this.windows.size === 0);
+  }
+
+  /** Conversations with unread messages, for the launcher and list header. */
+  private unreadCount(): number {
+    return this.client
       .getConversations()
-      .reduce(
-        (sum, conversation) => sum + (conversation.unread > 0 ? 1 : 0),
-        0
-      );
+      .filter((conversation) => conversation.unread > 0).length;
+  }
+
+  private toggleCollapsed(): void {
+    this.state.collapsed = !this.state.collapsed;
+    this.save();
+    this.renderHeads();
+  }
+
+  private renderBubbles(): Conversation[] {
+    const conversations = this.visibleConversations(10);
+    const totalUnread = this.unreadCount();
 
     const launcher = el(
       "button",
@@ -264,11 +302,7 @@ export class ChatDock {
         totalUnread > 0 && el("span", { class: "hfx-chat-badge" }, totalUnread),
       ]
     );
-    launcher.addEventListener("click", () => {
-      this.state.collapsed = !this.state.collapsed;
-      this.save();
-      this.renderHeads();
-    });
+    launcher.addEventListener("click", () => this.toggleCollapsed());
 
     const heads = this.state.collapsed
       ? []
@@ -324,15 +358,131 @@ export class ChatDock {
         });
 
     this.heads.replaceChildren(launcher, ...heads);
-    this.root.hidden =
-      !this.inboxLoaded ||
-      (conversations.length === 0 && this.windows.size === 0);
+    return conversations;
+  }
+
+  /**
+   * Messenger-style list: a "Chats" panel docked at the bottom edge, with a
+   * row per conversation (avatar, name, time, last message or typing).
+   */
+  private renderList(): Conversation[] {
+    const conversations = this.visibleConversations(20);
+    const totalUnread = this.unreadCount();
+    const now = Math.floor(Date.now() / 1000);
+
+    const header = el(
+      "button",
+      {
+        type: "button",
+        class: "hfx-chat-list-header",
+        title: this.state.collapsed ? "Show Convo chats" : "Hide Convo chats",
+        "aria-expanded": String(!this.state.collapsed),
+      },
+      [
+        CHAT_ICON(),
+        el("span", { class: "hfx-chat-list-title" }, "Chats"),
+        totalUnread > 0 && el("span", { class: "hfx-chat-badge" }, totalUnread),
+        el(
+          "span",
+          { class: "hfx-chat-list-chevron", "aria-hidden": "true" },
+          this.state.collapsed ? "▴" : "▾"
+        ),
+      ]
+    );
+    header.addEventListener("click", () => this.toggleCollapsed());
+
+    const rows = conversations.map((conversation) => {
+      const { other, lastMessage } = conversation;
+      const status = presence(other.lastActive);
+      const typing = this.typingUsers.has(other.uid);
+      const unread = conversation.unread > 0;
+      const mine = lastMessage && lastMessage.uid === this.client.me?.uid;
+      const preview = typing
+        ? [
+            el(
+              "span",
+              {
+                class: "hfx-chat-head-typing hfx-chat-row-typing",
+                "aria-hidden": "true",
+              },
+              [el("i"), el("i"), el("i")]
+            ),
+            "typing…",
+          ]
+        : [mine && "You: ", previewText(lastMessage)];
+
+      const row = el(
+        "button",
+        {
+          type: "button",
+          class: [
+            "hfx-chat-row",
+            unread && "hfx-chat-row-unread",
+            this.windows.has(conversation.partyId) && "hfx-chat-row-open",
+          ]
+            .filter(Boolean)
+            .join(" "),
+          title: `${other.username} (${status})`,
+          "data-party": conversation.partyId,
+          "data-presence": status,
+        },
+        [
+          el(
+            "span",
+            { class: `hfx-chat-row-avatar hfx-chat-presence-${status}` },
+            [el("img", { src: avatarUrl(other.avatar, this.origin), alt: "" })]
+          ),
+          el("span", { class: "hfx-chat-row-body" }, [
+            el("span", { class: "hfx-chat-row-top" }, [
+              el("span", { class: "hfx-chat-row-name" }, other.username),
+              conversation.dateline > 0 &&
+                el(
+                  "span",
+                  {
+                    class: "hfx-chat-row-time",
+                    title: convoNiceTime(conversation.dateline),
+                  },
+                  shortTime(conversation.dateline, now)
+                ),
+            ]),
+            el("span", { class: "hfx-chat-row-preview" }, preview),
+          ]),
+          unread &&
+            el(
+              "span",
+              { class: "hfx-chat-badge hfx-chat-row-badge" },
+              conversation.unread > 9 ? "9+" : conversation.unread
+            ),
+        ]
+      );
+      row.addEventListener("click", () =>
+        this.openChat(conversation.partyId, { focus: true })
+      );
+      return el("li", null, row);
+    });
+
+    this.heads.replaceChildren();
+    appendChildren(this.heads, [
+      header,
+      !this.state.collapsed &&
+        el(
+          "ul",
+          { class: "hfx-chat-list-rows", "aria-label": "Convo conversations" },
+          rows
+        ),
+    ]);
+    return conversations;
   }
 
   // ---- Windows -------------------------------------------------------------
 
   private maxWindows(): number {
-    return Math.max(1, Math.min(3, Math.floor((window.innerWidth - 90) / 330)));
+    // Leave room for the bubble column or the list panel
+    const reserved = this.options.layout === "list" ? 340 : 90;
+    return Math.max(
+      1,
+      Math.min(3, Math.floor((window.innerWidth - reserved) / 330))
+    );
   }
 
   openChat(

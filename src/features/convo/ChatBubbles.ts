@@ -17,6 +17,7 @@ interface ChatBubblesSettings {
   maxBubbles: number;
   typingIndicators: boolean;
   side: "left" | "right";
+  layout: "bubbles" | "list";
   storage_dockState?: DockState;
 }
 
@@ -32,13 +33,24 @@ class ChatBubbles extends Feature {
       name: "Chat Bubbles",
       enabled: true,
       description:
-        "Chat from any page: avatar bubbles (bottom corner) for recent and unread Convo conversations open small chat windows. A bubble's border shows the user's status (green online, yellow away, gray offline).",
+        "Chat from any page: avatar bubbles or a conversation list (bottom corner) for recent and unread Convo conversations open small chat windows. Avatar borders show the user's status (green online, yellow away, gray offline).",
       configurables: [
+        new Dropdown({
+          id: "layout",
+          label: "Layout",
+          description:
+            "Avatar bubbles, or a Messenger-style list of conversations with their latest message.",
+          default: "bubbles",
+          options: [
+            { label: "Bubbles", value: "bubbles" },
+            { label: "List", value: "list" },
+          ],
+        }),
         new Dropdown({
           id: "side",
           label: "Dock side",
           description:
-            "Which side of the page the chat bubbles and windows sit on.",
+            "Which side of the page the chat bubbles or list and the chat windows sit on.",
           default: "right",
           options: [
             { label: "Right", value: "right" },
@@ -47,9 +59,9 @@ class ChatBubbles extends Feature {
         }),
         new Stepper({
           id: "maxBubbles",
-          label: "Bubbles to show",
+          label: "Conversations to show",
           description:
-            "The most conversation bubbles to show (1-10). Unread conversations are shown first.",
+            "The most conversations to show: up to 10 bubbles, or up to 20 in the list. Unread conversations are shown first.",
           step: 1,
           default: 5,
         }),
@@ -91,6 +103,7 @@ class ChatBubbles extends Feature {
       maxBubbles: Number(settings.maxBubbles) || 5,
       typingIndicators: settings.typingIndicators !== false,
       side: settings.side === "left" ? "left" : "right",
+      layout: settings.layout === "list" ? "list" : "bubbles",
       timestamps: Boolean(timestamps),
       state: settings.storage_dockState ?? DEFAULT_DOCK_STATE,
       saveState: (state) => {

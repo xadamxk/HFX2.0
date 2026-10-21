@@ -1,4 +1,4 @@
-import { ChatDock, DEFAULT_DOCK_STATE } from "./ChatDock";
+import { ChatDock, DEFAULT_DOCK_STATE, shortTime } from "./ChatDock";
 import type { ChatMessage, Conversation, ConvoClient } from "./ConvoClient";
 import { convoNiceTime } from "../common/timestamps";
 
@@ -63,7 +63,11 @@ let dock: ChatDock | undefined;
 
 const mount = async (
   timestamps: boolean,
-  options: { side?: "left" | "right"; open?: boolean } = {}
+  options: {
+    side?: "left" | "right";
+    layout?: "bubbles" | "list";
+    open?: boolean;
+  } = {}
 ) => {
   dock = new ChatDock({
     client: client as unknown as ConvoClient,
@@ -71,6 +75,7 @@ const mount = async (
     typingIndicators: true,
     timestamps,
     side: options.side,
+    layout: options.layout,
     state: {
       ...DEFAULT_DOCK_STATE,
       open:
@@ -177,6 +182,122 @@ describe("ChatDock bubbles", () => {
     expect(document.getElementById("hfx-chat-dock")!.classList).not.toContain(
       "hfx-chat-left"
     );
+  });
+});
+
+describe("shortTime", () => {
+  const now = 10_000_000;
+  it("formats ages like Messenger", () => {
+    expect(shortTime(now - 30, now)).toBe("now");
+    expect(shortTime(now + 30, now)).toBe("now");
+    expect(shortTime(now - 5 * 60, now)).toBe("5m");
+    expect(shortTime(now - 3 * 3600, now)).toBe("3h");
+    expect(shortTime(now - 2 * 86400, now)).toBe("2d");
+    expect(shortTime(now - 15 * 86400, now)).toBe("2w");
+    expect(shortTime(now - 400 * 86400, now)).toBe("1y");
+  });
+});
+
+describe("ChatDock list layout", () => {
+  const now = () => Math.floor(Date.now() / 1000);
+  const row = (party = PARTY) =>
+    document.querySelector<HTMLElement>(
+      `.hfx-chat-row[data-party="${party}"]`
+    )!;
+
+  beforeEach(() => {
+    const conversation = client.conversations.get(PARTY)!;
+    conversation.dateline = now() - 2 * 3600;
+    conversation.lastMessage = {
+      mid: 1,
+      partyId: PARTY,
+      uid: ME.uid,
+      text: "see you\nlater",
+      dateline: conversation.dateline,
+    };
+    client.conversations.set(501, {
+      partyId: 501,
+      other: { uid: 7, username: "Seven", avatar: "", lastActive: now() },
+      dateline: now() - 60,
+      unread: 3,
+      lastMessage: {
+        mid: 2,
+        partyId: 501,
+        uid: 7,
+        text: "hey",
+        dateline: now() - 60,
+      },
+    });
+  });
+
+  it("lists conversations with name, time, preview and status", async () => {
+    await mount(true, { layout: "list", open: false });
+    client.fire("conversations");
+
+    expect(document.querySelector(".hfx-chat-list")).not.toBeNull();
+    expect(document.querySelector(".hfx-chat-head")).toBeNull();
+    expect(
+      document.querySelector(".hfx-chat-list-header")!.textContent
+    ).toContain("Chats");
+
+    const mine = row();
+    expect(mine.querySelector(".hfx-chat-row-name")!.textContent).toBe(
+      "Charlie"
+    );
+    expect(mine.querySelector(".hfx-chat-row-time")!.textContent).toBe("2h");
+    expect(mine.querySelector(".hfx-chat-row-preview")!.textContent).toBe(
+      "You: see you later"
+    );
+    expect(mine.dataset.presence).toBe("offline");
+    expect(mine.classList).not.toContain("hfx-chat-row-unread");
+
+    const theirs = row(501);
+    expect(theirs.querySelector(".hfx-chat-row-preview")!.textContent).toBe(
+      "hey"
+    );
+    expect(theirs.classList).toContain("hfx-chat-row-unread");
+    expect(theirs.querySelector(".hfx-chat-row-badge")!.textContent).toBe("3");
+    expect(theirs.querySelector(".hfx-chat-row-avatar")!.classList).toContain(
+      "hfx-chat-presence-online"
+    );
+    // Header counts conversations with unread messages
+    expect(
+      document.querySelector(".hfx-chat-list-header .hfx-chat-badge")!
+        .textContent
+    ).toBe("1");
+  });
+
+  it("shows typing in place of the preview", async () => {
+    await mount(true, { layout: "list", open: false });
+    client.fire("conversations");
+    client.fire("typing", OTHER.uid, true);
+    expect(row().querySelector(".hfx-chat-row-preview")!.textContent).toBe(
+      "typing…"
+    );
+    expect(row().querySelector(".hfx-chat-row-typing")).not.toBeNull();
+  });
+
+  it("opens a chat window from a row", async () => {
+    await mount(true, { layout: "list", open: false });
+    client.fire("conversations");
+    row().click();
+    await flush();
+    expect(
+      document.querySelector(`.hfx-chat-window[data-party="${PARTY}"]`)
+    ).not.toBeNull();
+    expect(row().classList).toContain("hfx-chat-row-open");
+  });
+
+  it("collapses to the header", async () => {
+    await mount(true, { layout: "list", open: false });
+    client.fire("conversations");
+    const header = () =>
+      document.querySelector<HTMLElement>(".hfx-chat-list-header")!;
+    header().click();
+    expect(document.querySelector(".hfx-chat-list-rows")).toBeNull();
+    expect(header().getAttribute("aria-expanded")).toBe("false");
+    header().click();
+    expect(document.querySelectorAll(".hfx-chat-row")).toHaveLength(2);
   });
 });
 

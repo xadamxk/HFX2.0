@@ -10,6 +10,7 @@ import Global from "../../sections/Global";
 import { ChatDock, DEFAULT_DOCK_STATE, DockState } from "./chat/ChatDock";
 import { ConvoClient } from "./chat/ConvoClient";
 import { GlobalChatWindow } from "./chat/GlobalChatWindow";
+import { MessageSound } from "./chat/sound";
 import { CHAT_DOCK_CSS } from "./chat/styles";
 import MessageTimestamps from "./MessageTimestamps";
 
@@ -18,6 +19,7 @@ interface ChatBubblesSettings {
   maxBubbles: number;
   typingIndicators: boolean;
   globalChat: boolean;
+  sound: boolean;
   side: "left" | "right";
   layout: "bubbles" | "list";
   storage_dockState?: DockState;
@@ -81,6 +83,13 @@ class ChatBubbles extends Feature {
             "Add a Global chat entry for HF's public Convo room. You only join the room, and show in its online list, while its window is open.",
           default: true,
         }),
+        new Checkbox({
+          id: "sound",
+          label: "Message sound",
+          description:
+            "Play Convo's sound for new messages, and for global chat messages that mention you. Conversations muted on convo.php stay silent.",
+          default: false,
+        }),
       ],
       storageItems: [
         {
@@ -107,10 +116,12 @@ class ChatBubbles extends Feature {
 
     Util.addCssToPage(CHAT_DOCK_CSS);
     const client = new ConvoClient({ postKey });
+    const sound = settings.sound ? new MessageSound() : undefined;
     const dock = new ChatDock({
       client,
       maxBubbles: Number(settings.maxBubbles) || 5,
       typingIndicators: settings.typingIndicators !== false,
+      sound,
       createGlobal:
         settings.globalChat !== false
           ? ({ minimized, onClose, onChange }) =>
@@ -118,6 +129,7 @@ class ChatBubbles extends Feature {
                 postKey,
                 minimized,
                 typingIndicators: settings.typingIndicators !== false,
+                sound,
                 onClose,
                 onChange,
               })

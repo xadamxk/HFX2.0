@@ -3,6 +3,7 @@ import { convoNiceTime } from "../common/timestamps";
 import type { ConvoStatus } from "./ConvoClient";
 import { avatarUrl, renderMessage } from "./formatMessage";
 import { acceptImages, imageUploadError, readBytes } from "./images";
+import { MessageSoundPlayer, mutedParties } from "./sound";
 import {
   GLOBAL_PARTY,
   GlobalRoomClient,
@@ -32,6 +33,8 @@ export interface GlobalChatWindowOptions {
   onChange: () => void;
   origin?: string;
   createClient?: () => GlobalRoomClient;
+  /** Plays HF's sound for new messages that mention the user. */
+  sound?: MessageSoundPlayer;
 }
 
 interface Group {
@@ -308,6 +311,8 @@ export class GlobalChatWindow {
       if (this.lines.has(message.key)) continue;
       const line = this.renderLine(message);
       this.lines.set(message.key, line);
+      if (line.classList.contains("hfx-gc-mention"))
+        this.playMentionSound(message);
       const group = this.lastGroup;
       if (
         group &&
@@ -580,6 +585,21 @@ export class GlobalChatWindow {
     this.noticeTimer = setTimeout(() => {
       this.notice.hidden = true;
     }, 6000);
+  }
+
+  /**
+   * The room is busy, so only mentions make a sound: new ones (history comes
+   * marked noSound), unless the room is muted on convo.php or being looked at.
+   */
+  private playMentionSound(message: RoomMessage): void {
+    const sound = this.options.sound;
+    if (!sound || message.quiet || mutedParties().has(GLOBAL_PARTY)) return;
+    const looking =
+      !this.minimized &&
+      !document.hidden &&
+      document.hasFocus() &&
+      this.root.contains(document.activeElement);
+    if (!looking) sound.play(`global:${message.key}`);
   }
 
   private scrollToBottom(): void {

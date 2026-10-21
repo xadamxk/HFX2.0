@@ -10,6 +10,7 @@ import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { acceptImages, imageUploadError, readBytes } from "./images";
+import { MessageSoundPlayer, mutedParties } from "./sound";
 import {
   convoNiceTime,
   createTimestamp,
@@ -61,6 +62,8 @@ export interface ChatDockOptions {
   side?: "left" | "right";
   /** Avatar bubbles (default) or a Messenger-style conversation list. */
   layout?: "bubbles" | "list";
+  /** Plays HF's sound for new messages; leave out for no sound. */
+  sound?: MessageSoundPlayer;
   /** Builds the global chat window; leave out to hide the global chat entry. */
   createGlobal?: (options: {
     minimized: boolean;
@@ -216,6 +219,7 @@ export class ChatDock {
         const last = client.getMessages(partyId).slice(-1)[0];
         if (last && last.uid !== client.me?.uid) {
           this.setUserTyping(last.uid, false);
+          this.playSound(partyId, last);
         }
       }
       const win = this.windows.get(partyId);
@@ -1173,6 +1177,19 @@ export class ChatDock {
   }
 
   /** Whether the user is looking at this window right now. */
+  /**
+   * HF's new-message sound, when enabled: not for messages HF marks quiet,
+   * conversations muted on convo.php, or a chat the user is looking at.
+   */
+  private playSound(partyId: number, message: ChatMessage): void {
+    const sound = this.options.sound;
+    if (!sound || message.quiet) return;
+    const win = this.windows.get(partyId);
+    if (win && this.isActive(win)) return;
+    if (mutedParties().has(partyId)) return;
+    sound.play(`${partyId}:${message.mid}`);
+  }
+
   private isActive(win: ChatWindow): boolean {
     return (
       !win.minimized &&

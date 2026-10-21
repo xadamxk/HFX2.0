@@ -66,6 +66,8 @@ export interface ChatMessage {
   /** Helpbot HTML the server marked as trusted; render with renderTrustedHtml. */
   html?: boolean;
   requestId?: string;
+  /** The server sent it with noSound (history, system notices): HF plays no sound for it. */
+  quiet?: boolean;
 }
 
 export interface Conversation {
@@ -183,6 +185,7 @@ export function parseMessage(raw: any): ChatMessage | null {
   }
   if (message.uid === HELPBOT_UID && raw.trustedHtml) message.html = true;
   if (typeof raw.requestId === "string") message.requestId = raw.requestId;
+  if ("noSound" in raw) message.quiet = true;
   return message;
 }
 

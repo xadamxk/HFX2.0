@@ -78,11 +78,13 @@ const mount = async (
     open?: boolean;
     global?: boolean;
     openChats?: OpenChat[];
+    sound?: { play: jest.Mock };
   } = {}
 ) => {
   saveState = jest.fn();
   dock = new ChatDock({
     client: client as unknown as ConvoClient,
+    sound: options.sound,
     maxBubbles: 5,
     typingIndicators: true,
     timestamps,
@@ -226,6 +228,52 @@ describe("ChatDock bubbles", () => {
     expect(document.getElementById("hfx-chat-dock")!.classList).not.toContain(
       "hfx-chat-left"
     );
+  });
+});
+
+describe("ChatDock sound", () => {
+  let sound: { play: jest.Mock };
+  beforeEach(() => {
+    sound = { play: jest.fn() };
+    document.cookie = "convoSoundData=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  });
+
+  it("plays for a new message from the other person", async () => {
+    await mount(true, { open: false, sound });
+    client.add({ uid: OTHER.uid });
+    expect(sound.play).toHaveBeenCalledWith(`${PARTY}:1`);
+  });
+
+  it("stays quiet for your own messages and ones HF marks quiet", async () => {
+    await mount(true, { open: false, sound });
+    client.add({ uid: ME.uid });
+    client.add({ uid: OTHER.uid, quiet: true });
+    expect(sound.play).not.toHaveBeenCalled();
+  });
+
+  it("stays quiet for conversations muted on convo.php", async () => {
+    document.cookie = `convoSoundData=${encodeURIComponent(JSON.stringify({ [PARTY]: true }))}`;
+    await mount(true, { open: false, sound });
+    client.add({ uid: OTHER.uid });
+    expect(sound.play).not.toHaveBeenCalled();
+  });
+
+  it("stays quiet while you're looking at that chat", async () => {
+    await mount(true, { sound });
+    const hasFocus = jest.spyOn(document, "hasFocus").mockReturnValue(true);
+    document
+      .querySelector<HTMLTextAreaElement>(
+        `.hfx-chat-window[data-party="${PARTY}"] textarea`
+      )!
+      .focus();
+    client.add({ uid: OTHER.uid });
+    expect(sound.play).not.toHaveBeenCalled();
+    hasFocus.mockRestore();
+  });
+
+  it("is off without a sound player", async () => {
+    await mount(true, { open: false });
+    expect(() => client.add({ uid: OTHER.uid })).not.toThrow();
   });
 });
 

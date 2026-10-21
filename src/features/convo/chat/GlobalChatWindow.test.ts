@@ -42,6 +42,8 @@ describe("GlobalChatWindow", () => {
   let onClose: jest.Mock;
   let onChange: jest.Mock;
 
+  let sound: { play: jest.Mock };
+
   const open = async (minimized = false) => {
     win = new GlobalChatWindow({
       postKey: "abc",
@@ -50,6 +52,7 @@ describe("GlobalChatWindow", () => {
       onClose,
       onChange,
       origin: "https://hackforums.net",
+      sound,
       createClient: () =>
         new GlobalRoomClient({
           postKey: "abc",
@@ -87,6 +90,7 @@ describe("GlobalChatWindow", () => {
     socket = new FakeConvoSocket();
     onClose = jest.fn();
     onChange = jest.fn();
+    sound = { play: jest.fn() };
   });
 
   afterEach(() => win?.destroy());
@@ -141,6 +145,19 @@ describe("GlobalChatWindow", () => {
     input().value = "hey";
     win.root.querySelector<HTMLElement>(".hfx-gc-name")!.click();
     expect(input().value).toBe("hey @Nova@ ");
+  });
+
+  it("plays a sound only for new messages that mention you", async () => {
+    await open();
+    // History arrives marked noSound
+    socket.fire("convo_receivemessage_bulk", [
+      room({ mid: 1, message: "old @me@", noSound: true, history: true }),
+    ]);
+    socket.fire("convo_receivemessage", room({ mid: 2, message: "hi all" }));
+    expect(sound.play).not.toHaveBeenCalled();
+
+    socket.fire("convo_receivemessage", room({ mid: 3, message: "hey @Me@" }));
+    expect(sound.play).toHaveBeenCalledWith("global:b:3");
   });
 
   it("highlights messages that mention you", async () => {

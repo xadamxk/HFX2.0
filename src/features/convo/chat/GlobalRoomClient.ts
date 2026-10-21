@@ -43,6 +43,8 @@ export interface RoomMessage {
   /** Helpbot HTML the server marked as trusted; render with renderTrustedHtml. */
   html?: boolean;
   requestId?: string;
+  /** The server sent it with noSound (history, system notices): HF plays no sound for it. */
+  quiet?: boolean;
 }
 
 export interface RoomUser extends ChatUser {
@@ -104,6 +106,7 @@ export function parseRoomMessage(raw: any): RoomMessage | null {
   }
   if (message.uid === HELPBOT_UID && raw.trustedHtml) message.html = true;
   if (typeof raw.requestId === "string") message.requestId = raw.requestId;
+  if ("noSound" in raw) message.quiet = true;
   return message;
 }
 

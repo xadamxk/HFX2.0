@@ -47,7 +47,7 @@ class ChatBubbles extends Feature {
       name: "Convo Anywhere",
       enabled: true,
       description:
-        "Chat from any page: avatar bubbles or a conversation list (bottom corner) for recent and unread Convo conversations open small chat windows. A dot on each avatar shows the user's status (green online, yellow away, gray offline) and animates while they type.",
+        "Chat in Convo from any page. A Messenger-style dock for your conversations, group chats and the global chat, with online status, typing indicators, unread badges, @mentions and image pasting. Hidden on convo.php itself.",
       configurables: [
         new RadioGroup({
           id: "layout",

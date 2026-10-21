@@ -207,6 +207,38 @@ describe("GlobalChatWindow", () => {
     expect(input().value).toBe("@Orbit@ ");
   });
 
+  it("offers who's online to mention on @, by name and without you", async () => {
+    await open();
+    const ARIA = { uid: 40, username: "aria", avatar: "", usergroup: 2 };
+    socket.fire("convo_group_count", {
+      count: 4,
+      users: { [ME.uid]: ME, [NOVA.uid]: NOVA, [ORBIT.uid]: ORBIT, 40: ARIA },
+    });
+    const field = input();
+    field.focus();
+    field.value = "@";
+    field.setSelectionRange(1, 1);
+    field.dispatchEvent(new Event("input"));
+    const picker = win.root.querySelector<HTMLElement>(".hfx-gc-mentions")!;
+    expect(
+      Array.from(picker.querySelectorAll('[role="option"]')).map(
+        (o) => o.textContent
+      )
+    ).toEqual(["aria", "Nova", "Orbit"]);
+
+    field.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowDown", cancelable: true })
+    );
+    field.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", cancelable: true })
+    );
+    await flush();
+    expect(field.value).toBe("@Nova@ ");
+    expect(socket.acked.some(([event]) => event === "convo_newmessage")).toBe(
+      false
+    );
+  });
+
   it("refuses commands without sending", async () => {
     await open();
     input().value = "/flip 500";

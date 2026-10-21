@@ -1,5 +1,5 @@
 import { el } from "../../../core/Dom";
-import type { ConvoStatus } from "./ConvoClient";
+import type { ChatUser, ConvoStatus } from "./ConvoClient";
 import {
   GLOBAL_PARTY,
   GlobalRoomClient,
@@ -113,6 +113,16 @@ export class GlobalChatWindow extends RoomChatWindow {
 
   protected onPanelToggle(open: boolean): void {
     this.onlineButton.setAttribute("aria-expanded", String(open));
+  }
+
+  /** Who's in the room now, other than you, by name. */
+  protected mentionCandidates(): ChatUser[] {
+    const me = this.client.me?.uid;
+    return this.client.online
+      .filter((user) => user.uid !== me)
+      .sort((a, b) =>
+        a.username.toLowerCase().localeCompare(b.username.toLowerCase())
+      );
   }
 
   /** Who's in the room, in HF's rank sections. */

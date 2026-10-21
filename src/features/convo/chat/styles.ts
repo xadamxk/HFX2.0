@@ -411,6 +411,9 @@ export const CHAT_DOCK_CSS = `
   flex-direction: column;
 }
 .hfx-chat-title a {
+  /* Only the name is a link, not the empty header beside it */
+  align-self: flex-start;
+  max-width: 100%;
   color: #fff;
   font-weight: bold;
   text-decoration: none;

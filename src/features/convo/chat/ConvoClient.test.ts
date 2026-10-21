@@ -1,4 +1,4 @@
-import { ConvoClient, parseMessage, partyUids } from "./ConvoClient";
+import { ConvoClient, parseMessage, partyUids, presence } from "./ConvoClient";
 import type { SocketIOClient } from "./SocketIOClient";
 
 const ME = {
@@ -108,6 +108,21 @@ describe("parseMessage", () => {
   });
 });
 
+describe("presence", () => {
+  const now = 1_000_000;
+  it("is online within 15 minutes, away within an hour, then offline", () => {
+    expect(presence(now, now)).toBe("online");
+    expect(presence(now - 15 * 60, now)).toBe("online");
+    expect(presence(now - 15 * 60 - 1, now)).toBe("away");
+    expect(presence(now - 60 * 60, now)).toBe("away");
+    expect(presence(now - 60 * 60 - 1, now)).toBe("offline");
+  });
+
+  it("is offline when last active is unknown", () => {
+    expect(presence(0, now)).toBe("offline");
+  });
+});
+
 describe("partyUids", () => {
   it("parses party strings", () => {
     expect(partyUids("1,574588")).toEqual([1, 574588]);
@@ -172,7 +187,7 @@ describe("ConvoClient", () => {
     expect(socket.acked[0]).toEqual(["convo_join", { publicRoom: false }]);
     expect(socket.emitted).toContainEqual(["load_more_inbox", 0]);
     expect(statuses).toEqual(["connecting", "ready"]);
-    expect(client.me).toEqual(ME);
+    expect(client.me).toMatchObject(ME);
   });
 
   it("stops when convo_ready has an unexpected shape", async () => {
@@ -211,7 +226,7 @@ describe("ConvoClient", () => {
 
     const conversations = client.getConversations();
     expect(conversations.map((c) => c.partyId)).toEqual([501, PARTY]);
-    expect(conversations[1].other).toEqual(OTHER);
+    expect(conversations[1].other).toMatchObject(OTHER);
     expect(conversations[1].unread).toBe(1);
     expect(conversations[0].unread).toBe(0);
     expect(conversations[1].lastMessage?.text).toBe("latest");
@@ -227,7 +242,7 @@ describe("ConvoClient", () => {
     socket.fire("convo_receivemessage", live({ mid: 1002, uid: ME.uid }));
 
     const conversation = client.conversations.get(PARTY)!;
-    expect(conversation.other).toEqual(OTHER);
+    expect(conversation.other).toMatchObject(OTHER);
     expect(conversation.unread).toBe(1);
     expect(client.getMessages(PARTY).map((m) => m.mid)).toEqual([1001, 1002]);
     expect(onMessages).toHaveBeenCalledTimes(2);
@@ -347,6 +362,32 @@ describe("ConvoClient", () => {
         ["type_notice_stop", true],
       ]
     );
+  });
+
+  it("tracks last-active times from inbox, messages and typing", async () => {
+    await ready();
+    socket.fire("convo_loaded_more_inbox", {
+      messages: { 900: inboxRow() },
+      users: { [ME.uid]: ME, [OTHER.uid]: { ...OTHER, lastactive: 500 } },
+    });
+    const other = client.conversations.get(PARTY)!.other;
+    expect(other.lastActive).toBe(500);
+
+    // A stale payload never moves it back; the conversation sees updates
+    socket.fire(
+      "convo_receivemessage",
+      live({
+        dateline: 400,
+        users: { [OTHER.uid]: { ...OTHER, lastactive: 300 } },
+      })
+    );
+    expect(other.lastActive).toBe(500);
+    socket.fire("convo_receivemessage", live({ mid: 1002, dateline: 2000 }));
+    expect(client.conversations.get(PARTY)!.other.lastActive).toBe(2000);
+
+    const before = Math.floor(Date.now() / 1000);
+    socket.fire("type_notice_add", { uid: OTHER.uid, username: "Charlie" });
+    expect(other.lastActive).toBeGreaterThanOrEqual(before);
   });
 
   it("relays typing notices from other users", async () => {

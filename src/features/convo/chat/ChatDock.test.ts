@@ -2,8 +2,8 @@ import { ChatDock, DEFAULT_DOCK_STATE } from "./ChatDock";
 import type { ChatMessage, Conversation, ConvoClient } from "./ConvoClient";
 import { convoNiceTime } from "../common/timestamps";
 
-const ME = { uid: 10, username: "Me", avatar: "" };
-const OTHER = { uid: 123, username: "Charlie", avatar: "" };
+const ME = { uid: 10, username: "Me", avatar: "", lastActive: 0 };
+const OTHER = { uid: 123, username: "Charlie", avatar: "", lastActive: 0 };
 const PARTY = 500;
 // A minute boundary, so +0..59 seconds share a minute
 const T = 1792540800;
@@ -14,7 +14,7 @@ class FakeClient {
   status = "connecting";
   isSending = false;
   conversations = new Map<number, Conversation>([
-    [PARTY, { partyId: PARTY, other: OTHER, dateline: T, unread: 0 }],
+    [PARTY, { partyId: PARTY, other: { ...OTHER }, dateline: T, unread: 0 }],
   ]);
   messages: ChatMessage[] = [];
   listeners = new Map<string, ((...args: any[]) => void)[]>();
@@ -54,31 +54,133 @@ class FakeClient {
   }
 }
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+// A real timer, so it also resolves in tests using fake timers
+const flush = () =>
+  new Promise((resolve) => jest.requireActual("timers").setImmediate(resolve));
+
+let client: FakeClient;
+let dock: ChatDock | undefined;
+
+const mount = async (
+  timestamps: boolean,
+  options: { side?: "left" | "right"; open?: boolean } = {}
+) => {
+  dock = new ChatDock({
+    client: client as unknown as ConvoClient,
+    maxBubbles: 5,
+    typingIndicators: true,
+    timestamps,
+    side: options.side,
+    state: {
+      ...DEFAULT_DOCK_STATE,
+      open:
+        options.open === false ? [] : [{ partyId: PARTY, minimized: false }],
+    },
+    saveState: jest.fn(),
+    origin: "https://hackforums.net",
+  });
+  dock.mount();
+  client.status = "ready";
+  client.fire("status", "ready");
+  await flush();
+  return dock;
+};
+
+beforeEach(() => {
+  document.body.innerHTML = "";
+  client = new FakeClient();
+});
+
+afterEach(() => {
+  dock?.destroy();
+  dock = undefined;
+});
+
+describe("ChatDock bubbles", () => {
+  const head = () =>
+    document.querySelector<HTMLElement>(
+      `.hfx-chat-head[data-party="${PARTY}"]`
+    )!;
+  const now = () => Math.floor(Date.now() / 1000);
+
+  it("colors the bubble by the user's last-active time", async () => {
+    await mount(true, { open: false });
+    const other = client.conversations.get(PARTY)!.other;
+
+    for (const [ago, status] of [
+      [60, "online"],
+      [30 * 60, "away"],
+      [3 * 60 * 60, "offline"],
+    ] as const) {
+      other.lastActive = now() - ago;
+      client.fire("conversations");
+      expect(head().dataset.presence).toBe(status);
+      expect(head().classList).toContain(`hfx-chat-presence-${status}`);
+      expect(head().title).toContain(`Charlie (${status})`);
+    }
+  });
+
+  it("ages statuses without new data", async () => {
+    jest.useFakeTimers({ now: Date.now() });
+    try {
+      await mount(true, { open: false });
+      client.conversations.get(PARTY)!.other.lastActive = now();
+      client.fire("conversations");
+      expect(head().dataset.presence).toBe("online");
+      jest.advanceTimersByTime(16 * 60 * 1000);
+      expect(head().dataset.presence).toBe("away");
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("shows typing on the bubble and in the window until they send", async () => {
+    await mount(true);
+    client.fire("conversations");
+    client.fire("typing", OTHER.uid, true);
+    expect(head().querySelector(".hfx-chat-head-typing")).not.toBeNull();
+    expect(document.querySelector(".hfx-chat-typing")!.textContent).toBe(
+      "Charlie is typing…"
+    );
+    // The unread badge keeps its own corner
+    client.conversations.get(PARTY)!.unread = 2;
+    client.fire("conversations");
+    expect(head().querySelector(".hfx-chat-badge")!.textContent).toBe("2");
+    expect(head().querySelector(".hfx-chat-head-typing")).not.toBeNull();
+
+    client.add({ uid: OTHER.uid });
+    expect(head().querySelector(".hfx-chat-head-typing")).toBeNull();
+    expect(document.querySelector(".hfx-chat-typing")!.textContent).toBe("");
+  });
+
+  it("expires a typing notice that never stops", async () => {
+    jest.useFakeTimers();
+    try {
+      await mount(true, { open: false });
+      client.fire("conversations");
+      client.fire("typing", OTHER.uid, true);
+      expect(head().querySelector(".hfx-chat-head-typing")).not.toBeNull();
+      jest.advanceTimersByTime(35000);
+      expect(head().querySelector(".hfx-chat-head-typing")).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("docks on the left when configured", async () => {
+    await mount(true, { side: "left", open: false });
+    expect(document.getElementById("hfx-chat-dock")!.classList).toContain(
+      "hfx-chat-left"
+    );
+    dock!.destroy();
+    await mount(true, { open: false });
+    expect(document.getElementById("hfx-chat-dock")!.classList).not.toContain(
+      "hfx-chat-left"
+    );
+  });
+});
 
 describe("ChatDock timestamps", () => {
-  let client: FakeClient;
-
-  const mount = async (timestamps: boolean) => {
-    const dock = new ChatDock({
-      client: client as unknown as ConvoClient,
-      maxBubbles: 5,
-      typingIndicators: true,
-      timestamps,
-      state: {
-        ...DEFAULT_DOCK_STATE,
-        open: [{ partyId: PARTY, minimized: false }],
-      },
-      saveState: jest.fn(),
-      origin: "https://hackforums.net",
-    });
-    dock.mount();
-    client.status = "ready";
-    client.fire("status", "ready");
-    await flush();
-    return dock;
-  };
-
   /** The window's messages and timestamps in order, e.g. ["1", "@", "2"]. */
   const layout = () =>
     Array.from(
@@ -90,11 +192,6 @@ describe("ChatDock timestamps", () => {
         ? `@${node.textContent}`
         : (node as HTMLElement).dataset.mid
     );
-
-  beforeEach(() => {
-    document.body.innerHTML = "";
-    client = new FakeClient();
-  });
 
   it("puts one timestamp under each same-sender, same-minute run", async () => {
     client.messages = [];

@@ -1,4 +1,5 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
+import { Dropdown } from "../../configuration/configurables/Dropdown";
 import { Stepper } from "../../configuration/configurables/Stepper";
 import { Feature } from "../../core/Feature";
 import { Section } from "../../core/Section";
@@ -15,6 +16,7 @@ interface ChatBubblesSettings {
   enabled: boolean;
   maxBubbles: number;
   typingIndicators: boolean;
+  side: "left" | "right";
   storage_dockState?: DockState;
 }
 
@@ -30,8 +32,19 @@ class ChatBubbles extends Feature {
       name: "Chat Bubbles",
       enabled: true,
       description:
-        "Chat from any page: avatar bubbles (bottom right) for recent and unread Convo conversations open small chat windows.",
+        "Chat from any page: avatar bubbles (bottom corner) for recent and unread Convo conversations open small chat windows. A bubble's border shows the user's status (green online, yellow away, gray offline).",
       configurables: [
+        new Dropdown({
+          id: "side",
+          label: "Dock side",
+          description:
+            "Which side of the page the chat bubbles and windows sit on.",
+          default: "right",
+          options: [
+            { label: "Right", value: "right" },
+            { label: "Left", value: "left" },
+          ],
+        }),
         new Stepper({
           id: "maxBubbles",
           label: "Bubbles to show",
@@ -77,6 +90,7 @@ class ChatBubbles extends Feature {
       client,
       maxBubbles: Number(settings.maxBubbles) || 5,
       typingIndicators: settings.typingIndicators !== false,
+      side: settings.side === "left" ? "left" : "right",
       timestamps: Boolean(timestamps),
       state: settings.storage_dockState ?? DEFAULT_DOCK_STATE,
       saveState: (state) => {

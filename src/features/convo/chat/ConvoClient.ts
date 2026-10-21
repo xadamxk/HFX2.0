@@ -22,6 +22,29 @@ export interface ChatUser {
   uid: number;
   username: string;
   avatar: string;
+  /** Unix time the user was last active on HF, 0 if unknown. */
+  lastActive: number;
+}
+
+export type Presence = "online" | "away" | "offline";
+
+// MyBB's "who's online" cutoff, which convo.php's online dots also follow
+const ONLINE_SECONDS = 15 * 60;
+const AWAY_SECONDS = 60 * 60;
+
+/**
+ * Online status from a user's last-active time: online within 15 minutes,
+ * away within an hour, offline after that. HF sends no explicit status, so
+ * (like convo.php) this can't tell invisible users apart.
+ */
+export function presence(
+  lastActive: number,
+  now = Math.floor(Date.now() / 1000)
+): Presence {
+  if (lastActive <= 0) return "offline";
+  const idle = now - lastActive;
+  if (idle <= ONLINE_SECONDS) return "online";
+  return idle <= AWAY_SECONDS ? "away" : "offline";
 }
 
 export interface ChatImage {
@@ -95,6 +118,7 @@ export function parseUser(raw: any): ChatUser | null {
     uid,
     username: raw.username,
     avatar: typeof raw.avatar === "string" ? raw.avatar : "",
+    lastActive: toInt(raw.lastactive),
   };
 }
 
@@ -373,7 +397,11 @@ export class ConvoClient {
     });
     socket.on("type_notice_add", (data: any) => {
       const uid = toInt(data?.uid);
-      if (uid && uid !== this.me?.uid) this.fire("typing", uid, true);
+      if (!uid || uid === this.me?.uid) return;
+      // Someone typing is active right now
+      const user = this.users.get(uid);
+      if (user) user.lastActive = Math.floor(Date.now() / 1000);
+      this.fire("typing", uid, true);
     });
     socket.on("type_notice_remove", (data: any) => {
       const uid = toInt(data?.uid);
@@ -392,8 +420,8 @@ export class ConvoClient {
       this.setStatus("ended", "unexpected convo_ready payload");
       return;
     }
-    this.me = me;
-    this.users.set(me.uid, me);
+    this.updateUser(data.user);
+    this.me = this.users.get(me.uid) ?? me;
     try {
       const joined = await this.socket.emitWithAck("convo_join", {
         publicRoom: false,
@@ -411,8 +439,7 @@ export class ConvoClient {
   private onInbox(data: any): void {
     if (!this.me || !data || typeof data.messages !== "object") return;
     for (const raw of Object.values<any>(data.users ?? {})) {
-      const user = parseUser(raw);
-      if (user) this.users.set(user.uid, user);
+      this.updateUser(raw);
     }
     for (const row of Object.values<any>(data.messages ?? {})) {
       const partyId = toInt(row?.party_id);
@@ -444,6 +471,23 @@ export class ConvoClient {
     this.fire("conversations");
   }
 
+  /**
+   * Store a user from a server payload. The same object is kept per uid (so
+   * conversations see updates), and last-active times only move forward.
+   */
+  private updateUser(raw: any): void {
+    const user = parseUser(raw);
+    if (!user) return;
+    const existing = this.users.get(user.uid);
+    if (!existing) {
+      this.users.set(user.uid, user);
+      return;
+    }
+    existing.username = user.username;
+    existing.avatar = user.avatar;
+    existing.lastActive = Math.max(existing.lastActive, user.lastActive);
+  }
+
   private receive(raw: any, live: boolean): void {
     const message = this.add(raw);
     if (!message) return;
@@ -461,8 +505,12 @@ export class ConvoClient {
       this.seen.delete(this.seen.values().next().value!);
 
     for (const user of Object.values<any>(raw.users ?? {})) {
-      const parsed = parseUser(user);
-      if (parsed) this.users.set(parsed.uid, parsed);
+      this.updateUser(user);
+    }
+    // Sending a message means the sender was active then
+    const sender = this.users.get(message.uid);
+    if (sender) {
+      sender.lastActive = Math.max(sender.lastActive, message.dateline);
     }
 
     const list = this.messages.get(message.partyId) ?? [];

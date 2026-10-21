@@ -10,6 +10,10 @@ export const CHAT_DOCK_CSS = `
   --hfx-chat-theirs: #2a2a2a;
   --hfx-chat-accent: #4d2f5d;
   --hfx-chat-badge: #d9534f;
+  /* Online matches convo.php's inbox dot */
+  --hfx-chat-online: rgb(63, 160, 63);
+  --hfx-chat-away: #a8923a;
+  --hfx-chat-offline: gray;
   position: fixed;
   right: 16px;
   bottom: 0;
@@ -24,6 +28,12 @@ export const CHAT_DOCK_CSS = `
   color: var(--hfx-chat-text);
 }
 #hfx-chat-dock > * { pointer-events: auto; }
+/* Left side: mirror the dock (bubbles at the edge, windows growing inward) */
+#hfx-chat-dock.hfx-chat-left {
+  right: auto;
+  left: 16px;
+  flex-direction: row;
+}
 #hfx-chat-dock button { font-family: inherit; }
 
 .hfx-chat-heads {
@@ -52,7 +62,43 @@ export const CHAT_DOCK_CSS = `
   object-fit: cover;
   display: block;
 }
-.hfx-chat-head.hfx-chat-head-open { border-color: var(--hfx-chat-text); }
+/* The border shows the user's status */
+.hfx-chat-head { border-width: 3px; border-color: var(--hfx-chat-offline); }
+.hfx-chat-head.hfx-chat-presence-online { border-color: var(--hfx-chat-online); }
+.hfx-chat-head.hfx-chat-presence-away { border-color: var(--hfx-chat-away); }
+/* An open chat gets an outer ring, outside the status border */
+.hfx-chat-head.hfx-chat-head-open {
+  box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--hfx-chat-text), 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+.hfx-chat-head-typing {
+  position: absolute;
+  top: -5px;
+  left: -7px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--hfx-chat-header);
+  border: 1px solid var(--hfx-chat-border);
+}
+.hfx-chat-head-typing i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--hfx-chat-text);
+  animation: hfx-chat-typing 1.2s infinite ease-in-out;
+}
+.hfx-chat-head-typing i:nth-child(2) { animation-delay: 0.15s; }
+.hfx-chat-head-typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes hfx-chat-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hfx-chat-head-typing i { animation: none; opacity: 0.8; }
+}
 .hfx-chat-head:hover,
 .hfx-chat-launcher:hover { filter: brightness(1.15); }
 .hfx-chat-launcher { color: var(--hfx-chat-text); }

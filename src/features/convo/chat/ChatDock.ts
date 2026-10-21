@@ -5,7 +5,7 @@ import type {
   ConvoClient,
   ConvoStatus,
 } from "./ConvoClient";
-import { HISTORY_PAGE_SIZE } from "./ConvoClient";
+import { HISTORY_PAGE_SIZE, presence } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import {
   convoNiceTime,
@@ -37,6 +37,8 @@ export interface ChatDockOptions {
   typingIndicators: boolean;
   /** Show timestamps under messages, as Message Timestamps does on convo.php. */
   timestamps: boolean;
+  /** Which side of the page the dock sits on (default right). */
+  side?: "left" | "right";
   state: DockState;
   saveState: (state: DockState) => void;
   /** Called once if Convo ends the session or the API looks different. */
@@ -70,7 +72,6 @@ interface ChatWindow {
   loaded: boolean;
   loading: boolean;
   hasOlder: boolean;
-  typingTimer?: ReturnType<typeof setTimeout>;
   ownTypingTimer?: ReturnType<typeof setTimeout>;
   noticeTimer?: ReturnType<typeof setTimeout>;
 }
@@ -106,6 +107,12 @@ export class ChatDock {
   private restored = false;
   private ended = false;
   private lastActive = 0;
+  /** Users typing right now, with the timer that expires their notice. */
+  private readonly typingUsers = new Map<
+    number,
+    ReturnType<typeof setTimeout>
+  >();
+  private presenceTimer?: ReturnType<typeof setInterval>;
 
   constructor(private readonly options: ChatDockOptions) {
     this.client = options.client;
@@ -117,15 +124,28 @@ export class ChatDock {
       collapsed: Boolean(options.state?.collapsed),
     };
     this.heads = el("div", { class: "hfx-chat-heads" });
-    this.root = el("div", { id: "hfx-chat-dock", hidden: true }, this.heads);
+    this.root = el(
+      "div",
+      {
+        id: "hfx-chat-dock",
+        class: options.side === "left" ? "hfx-chat-left" : null,
+        hidden: true,
+      },
+      this.heads
+    );
     this.bindClient();
   }
 
   mount(parent: HTMLElement = document.body): void {
     parent.appendChild(this.root);
+    // Statuses come from last-active times, so they age (online → away → offline)
+    this.presenceTimer = setInterval(() => this.renderHeads(), 60000);
   }
 
   destroy(): void {
+    clearInterval(this.presenceTimer);
+    this.typingUsers.forEach((timer) => clearTimeout(timer));
+    this.typingUsers.clear();
     this.root.remove();
     this.windows.clear();
   }
@@ -139,23 +159,20 @@ export class ChatDock {
       this.windows.forEach((win) => this.renderHeader(win));
     });
     client.on("messages", (partyId, live) => {
-      const win = this.windows.get(partyId);
-      if (!win) return;
-      this.renderMessages(win);
       if (live) {
         // A message from them ends their typing notice
         const last = client.getMessages(partyId).slice(-1)[0];
-        if (last && last.uid !== client.me?.uid) this.setTyping(win, false);
-        if (this.isActive(win)) client.markRead(partyId);
+        if (last && last.uid !== client.me?.uid) {
+          this.setUserTyping(last.uid, false);
+        }
       }
+      const win = this.windows.get(partyId);
+      if (!win) return;
+      this.renderMessages(win);
+      if (live && this.isActive(win)) client.markRead(partyId);
     });
     client.on("typing", (uid, typing) => {
-      if (!this.options.typingIndicators) return;
-      this.windows.forEach((win) => {
-        if (client.conversations.get(win.partyId)?.other.uid === uid) {
-          this.setTyping(win, typing);
-        }
-      });
+      if (this.options.typingIndicators) this.setUserTyping(uid, typing);
     });
     client.on("error", (message) => {
       const win =
@@ -256,23 +273,42 @@ export class ChatDock {
     const heads = this.state.collapsed
       ? []
       : conversations.map((conversation) => {
+          const { other } = conversation;
           const preview = previewText(conversation.lastMessage);
+          const status = presence(other.lastActive);
+          const typing = this.typingUsers.has(other.uid);
           const head = el(
             "button",
             {
               type: "button",
-              class: `hfx-chat-head${this.windows.has(conversation.partyId) ? " hfx-chat-head-open" : ""}`,
-              title: preview
-                ? `${conversation.other.username}: ${preview}`
-                : conversation.other.username,
-              "aria-label": `Chat with ${conversation.other.username}`,
+              class: [
+                "hfx-chat-head",
+                `hfx-chat-presence-${status}`,
+                this.windows.has(conversation.partyId) && "hfx-chat-head-open",
+              ]
+                .filter(Boolean)
+                .join(" "),
+              title: [
+                `${other.username} (${status})`,
+                typing ? "typing…" : preview,
+              ]
+                .filter(Boolean)
+                .join(": "),
+              "aria-label": `Chat with ${other.username}, ${status}${typing ? ", typing" : ""}`,
               "data-party": conversation.partyId,
+              "data-presence": status,
             },
             [
               el("img", {
-                src: avatarUrl(conversation.other.avatar, this.origin),
+                src: avatarUrl(other.avatar, this.origin),
                 alt: "",
               }),
+              typing &&
+                el(
+                  "span",
+                  { class: "hfx-chat-head-typing", "aria-hidden": "true" },
+                  [el("i"), el("i"), el("i")]
+                ),
               conversation.unread > 0 &&
                 el(
                   "span",
@@ -330,7 +366,6 @@ export class ChatDock {
     const win = this.windows.get(partyId);
     if (!win) return;
     this.stopOwnTyping(win);
-    clearTimeout(win.typingTimer);
     clearTimeout(win.noticeTimer);
     win.root.remove();
     this.windows.delete(partyId);
@@ -485,6 +520,7 @@ export class ChatDock {
     });
 
     this.renderHeader(win);
+    this.renderTyping(win);
     return win;
   }
 
@@ -756,15 +792,28 @@ export class ChatDock {
     }, 6000);
   }
 
-  private setTyping(win: ChatWindow, typing: boolean): void {
-    clearTimeout(win.typingTimer);
-    const username = this.client.conversations.get(win.partyId)?.other.username;
-    win.typing.textContent = typing && username ? `${username} is typing…` : "";
-    if (typing)
-      win.typingTimer = setTimeout(
-        () => this.setTyping(win, false),
-        TYPING_TIMEOUT
+  /** Track who's typing; shown in their window and on their bubble. */
+  private setUserTyping(uid: number, typing: boolean): void {
+    if (!typing && !this.typingUsers.has(uid)) return;
+    clearTimeout(this.typingUsers.get(uid));
+    this.typingUsers.delete(uid);
+    if (typing) {
+      // Typing notices can be missed; don't show one forever
+      this.typingUsers.set(
+        uid,
+        setTimeout(() => this.setUserTyping(uid, false), TYPING_TIMEOUT)
       );
+    }
+    this.windows.forEach((win) => this.renderTyping(win));
+    this.renderHeads();
+  }
+
+  private renderTyping(win: ChatWindow): void {
+    const other = this.client.conversations.get(win.partyId)?.other;
+    win.typing.textContent =
+      other && this.typingUsers.has(other.uid)
+        ? `${other.username} is typing…`
+        : "";
   }
 
   private onOwnTyping(win: ChatWindow): void {

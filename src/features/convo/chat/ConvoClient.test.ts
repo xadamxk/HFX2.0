@@ -266,15 +266,53 @@ describe("ConvoClient", () => {
     expect(client.conversations.get(PARTY)!.unread).toBe(0);
   });
 
-  it("loads history after the last loaded message", async () => {
+  it("loads the newest page first, even after a live message arrived", async () => {
     await ready();
-    socket.fire("convo_receivemessage_bulk", [
-      live({ mid: 40, noSound: true }),
-    ]);
+    // A new message in a chat whose history hasn't been loaded yet
+    socket.fire("convo_receivemessage", live({ mid: 40 }));
     await client.loadHistory(PARTY);
+    const loads = () =>
+      socket.acked.filter(([event]) => event === "convo_loadmessages");
+    expect(loads()).toEqual([
+      [
+        "convo_loadmessages",
+        { party: PARTY, mid: 0, position: "new", bulk: true, is_group: false },
+      ],
+    ]);
+
+    // Later loads (e.g. after a reconnect) only catch up from the last message
+    socket.fire("convo_receivemessage", live({ mid: 41 }));
+    await client.loadHistory(PARTY);
+    expect(loads()[1]).toEqual([
+      "convo_loadmessages",
+      { party: PARTY, mid: 41, position: "new", bulk: true, is_group: false },
+    ]);
+  });
+
+  it("keeps the earlier messages and the live one in order", async () => {
+    await ready();
+    socket.fire("convo_receivemessage", live({ mid: 40 }));
+    socket.ackReplies.convo_loadmessages = () => {
+      socket.fire(
+        "convo_receivemessage_bulk",
+        [38, 39, 40].map((mid) => live({ mid, noSound: true, history: true }))
+      );
+      return { ok: true, hasMore: false, lastMid: 40 };
+    };
+    await client.loadHistory(PARTY);
+    expect(client.getMessages(PARTY).map((m) => m.mid)).toEqual([38, 39, 40]);
+  });
+
+  it("does the same for a group's first load", async () => {
+    await ready();
+    socket.fire(
+      "convo_receivemessage",
+      live({ party_id: 48, is_group: true, mid: 70 })
+    );
+    await client.loadGroupHistory(48);
     expect(socket.acked).toContainEqual([
       "convo_loadmessages",
-      { party: PARTY, mid: 40, position: "new", bulk: true, is_group: false },
+      { party: 48, mid: 0, position: "new", bulk: true, is_group: true },
     ]);
   });
 

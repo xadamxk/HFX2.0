@@ -225,6 +225,8 @@ export class ConvoClient {
   readonly groups = new Map<number, GroupChat>();
   private readonly messages = new Map<number, ChatMessage[]>();
   private readonly groupMessages = new Map<number, ChatMessage[]>();
+  /** Chats (see chatKey) whose newest page of history has been loaded. */
+  private readonly historyLoaded = new Set<string>();
   private readonly seen = new Set<string>();
   private readonly listeners = new Map<string, Set<(...args: any[]) => void>>();
   private readonly socket: SocketIOClient;
@@ -395,11 +397,18 @@ export class ConvoClient {
   }
 
   private async loadNewer(group: boolean, id: number): Promise<void> {
+    const key = chatKey(group, id);
     const list = group ? this.getGroupMessages(id) : this.getMessages(id);
-    let cursor = list.length ? list[list.length - 1].mid : 0;
+    // The first load gets the newest page, even if live messages already
+    // arrived: catching up from those would skip everything before them
+    let cursor =
+      this.historyLoaded.has(key) && list.length
+        ? list[list.length - 1].mid
+        : 0;
     // Cap the catch-up loop; each page can be hundreds of KB
     for (let page = 0; page < 5; page++) {
       const result = await this.loadMessages(group, id, cursor, "new");
+      this.historyLoaded.add(key);
       if (!result?.hasMore || !toInt(result.lastMid)) return;
       cursor = toInt(result.lastMid);
     }

@@ -211,6 +211,139 @@ export const CHAT_DOCK_CSS = `
 .hfx-chat-row-unread .hfx-chat-row-time { color: var(--hfx-chat-text); }
 .hfx-chat-row-badge { position: static; flex: none; }
 
+/* Global chat: pinned entries */
+.hfx-chat-head-global {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hfx-chat-text);
+}
+.hfx-chat-head-global svg { width: 26px; height: 26px; }
+.hfx-chat-row-globe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--hfx-chat-header);
+  color: var(--hfx-chat-text);
+}
+.hfx-chat-row-globe svg { width: 22px; height: 22px; }
+
+/* Global chat window: Discord-style groups */
+.hfx-gc-window { width: 340px; }
+.hfx-gc-icon { display: flex; flex: none; color: var(--hfx-chat-text); }
+.hfx-gc-icon svg { width: 22px; height: 22px; }
+.hfx-gc-online-toggle {
+  flex: none;
+  padding: 1px 8px;
+  border: 1px solid #555;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--hfx-chat-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.hfx-gc-online-toggle:hover,
+.hfx-gc-online-toggle[aria-expanded="true"] { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.hfx-gc-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.hfx-gc-messages { gap: 0; padding: 6px 0; }
+.hfx-gc-group {
+  display: flex;
+  gap: 8px;
+  padding: 4px 10px;
+}
+.hfx-gc-group + .hfx-gc-group { margin-top: 6px; }
+.hfx-gc-avatar { flex: none; width: 32px; height: 32px; }
+.hfx-gc-avatar img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block; }
+.hfx-gc-content { flex: 1; min-width: 0; }
+.hfx-gc-meta { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.hfx-gc-name {
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #fff;
+  font: bold 12px Verdana, Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hfx-gc-name:hover span { text-decoration: underline; }
+/* HF's username styles (class="groupN") come from its own stylesheet; keep their size in check */
+#hfx-chat-dock .hfx-gc-name > span,
+#hfx-chat-dock .hfx-gc-user > span {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  letter-spacing: normal !important;
+}
+.hfx-gc-time { flex: none; color: var(--hfx-chat-muted); font-size: 11px; }
+.hfx-gc-line {
+  margin: 0 -10px 0 -50px;
+  padding: 1px 10px 1px 50px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.hfx-gc-line:hover { background: rgba(255, 255, 255, 0.04); }
+.hfx-gc-line a { color: #9ecbff; text-decoration: underline; }
+.hfx-gc-line img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 2px 0; }
+.hfx-gc-line.hfx-gc-mention {
+  background: rgba(77, 47, 93, 0.45);
+  box-shadow: inset 3px 0 0 #a982c4;
+}
+.hfx-gc-pending {
+  margin: 4px 10px 0 50px;
+  color: var(--hfx-chat-muted);
+  font-style: italic;
+  word-break: break-word;
+}
+/* Who's here: covers the messages */
+.hfx-gc-online {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 4px 0 8px;
+  background: var(--hfx-chat-bg);
+}
+.hfx-gc-online-back {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  border-bottom: 1px solid var(--hfx-chat-border);
+  background: none;
+  color: #fff;
+  font: bold 12px Verdana, Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.hfx-gc-rank {
+  padding: 8px 12px 2px;
+  color: var(--hfx-chat-muted);
+  font-size: 11px;
+}
+.hfx-gc-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 12px;
+  border: none;
+  background: none;
+  color: var(--hfx-chat-text);
+  text-align: left;
+  cursor: pointer;
+}
+.hfx-gc-user:hover { background: rgba(255, 255, 255, 0.06); }
+.hfx-gc-user img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .hfx-chat-dot { transition: none; }
   .hfx-chat-dot i { animation: none; opacity: 0.9; }

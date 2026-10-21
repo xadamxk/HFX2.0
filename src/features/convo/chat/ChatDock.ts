@@ -7,6 +7,8 @@ import type {
 } from "./ConvoClient";
 import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
+import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
+import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import {
   convoNiceTime,
   createTimestamp,
@@ -58,6 +60,12 @@ export interface ChatDockOptions {
   side?: "left" | "right";
   /** Avatar bubbles (default) or a Messenger-style conversation list. */
   layout?: "bubbles" | "list";
+  /** Builds the global chat window; leave out to hide the global chat entry. */
+  createGlobal?: (options: {
+    minimized: boolean;
+    onClose: () => void;
+    onChange: () => void;
+  }) => GlobalChatWindow;
   state: DockState;
   saveState: (state: DockState) => void;
   /** Called once if Convo ends the session or the API looks different. */
@@ -147,13 +155,16 @@ export class ChatDock {
     ReturnType<typeof setTimeout>
   >();
   private presenceTimer?: ReturnType<typeof setInterval>;
+  private global: GlobalChatWindow | null = null;
 
   constructor(private readonly options: ChatDockOptions) {
     this.client = options.client;
     this.origin = options.origin ?? location.origin;
     this.state = {
       open: (options.state?.open ?? []).filter(
-        (chat) => Number(chat?.partyId) > 0
+        (chat) =>
+          Number(chat?.partyId) > 0 ||
+          (chat?.partyId === GLOBAL_PARTY && Boolean(options.createGlobal))
       ),
       collapsed: Boolean(options.state?.collapsed),
     };
@@ -179,6 +190,8 @@ export class ChatDock {
   }
 
   destroy(): void {
+    this.global?.destroy();
+    this.global = null;
     clearInterval(this.presenceTimer);
     this.typingUsers.forEach((timer) => clearTimeout(timer));
     this.typingUsers.clear();
@@ -282,9 +295,12 @@ export class ChatDock {
     if (this.ended) return;
     const conversations =
       this.options.layout === "list" ? this.renderList() : this.renderBubbles();
+    // The global chat entry is always there when enabled
     this.root.hidden =
       !this.inboxLoaded ||
-      (conversations.length === 0 && this.windows.size === 0);
+      (conversations.length === 0 &&
+        this.windows.size === 0 &&
+        !this.options.createGlobal);
   }
 
   /** Conversations with unread messages, for the launcher and list header. */
@@ -366,8 +382,66 @@ export class ChatDock {
           return head;
         });
 
-    this.heads.replaceChildren(launcher, ...heads);
+    // Global chat is pinned just above the launcher
+    const global =
+      this.options.createGlobal && !this.state.collapsed
+        ? [this.globalHead()]
+        : [];
+    this.heads.replaceChildren(launcher, ...global, ...heads);
     return conversations;
+  }
+
+  /** The pinned bubble that opens the global room. */
+  private globalHead(): HTMLElement {
+    const head = el(
+      "button",
+      {
+        type: "button",
+        class: `hfx-chat-head hfx-chat-head-global${this.global ? " hfx-chat-head-open" : ""}`,
+        title: "Global chat",
+        "aria-label": "Open global chat",
+        "data-party": GLOBAL_PARTY,
+      },
+      GLOBE_ICON()
+    );
+    head.addEventListener("click", () =>
+      this.openChat(GLOBAL_PARTY, { focus: true })
+    );
+    return head;
+  }
+
+  /** The pinned first list row that opens the global room. */
+  private globalRow(): HTMLElement {
+    const row = el(
+      "button",
+      {
+        type: "button",
+        class: `hfx-chat-row hfx-chat-row-global${this.global ? " hfx-chat-row-open" : ""}`,
+        title: "Global chat",
+        "data-party": GLOBAL_PARTY,
+      },
+      [
+        el(
+          "span",
+          { class: "hfx-chat-row-avatar hfx-chat-row-globe" },
+          GLOBE_ICON()
+        ),
+        el("span", { class: "hfx-chat-row-body" }, [
+          el("span", { class: "hfx-chat-row-top" }, [
+            el("span", { class: "hfx-chat-row-name" }, "Global chat"),
+          ]),
+          el(
+            "span",
+            { class: "hfx-chat-row-preview" },
+            "Chat with everyone on HF"
+          ),
+        ]),
+      ]
+    );
+    row.addEventListener("click", () =>
+      this.openChat(GLOBAL_PARTY, { focus: true })
+    );
+    return el("li", null, row);
   }
 
   /**
@@ -467,7 +541,7 @@ export class ChatDock {
         el(
           "ul",
           { class: "hfx-chat-list-rows", "aria-label": "Convo conversations" },
-          rows
+          [this.options.createGlobal && this.globalRow(), ...rows]
         ),
     ]);
     return conversations;
@@ -488,16 +562,17 @@ export class ChatDock {
     partyId: number,
     { focus = false, minimized = false, restore = false } = {}
   ): void {
+    if (partyId === GLOBAL_PARTY) {
+      this.openGlobal({ focus, minimized, restore });
+      return;
+    }
     let win = this.windows.get(partyId);
     if (!win) {
       win = this.createWindow(partyId, minimized);
       this.windows.set(partyId, win);
       // The newest window sits next to the bubbles
       this.heads.after(win.root);
-      // Close the oldest windows that no longer fit
-      const open = Array.from(this.windows.values());
-      while (open.length > this.maxWindows())
-        this.closeChat(open.shift()!.partyId);
+      this.closeWindowsThatDontFit();
     } else if (!restore) {
       this.setMinimized(win, false);
     }
@@ -508,6 +583,56 @@ export class ChatDock {
     if (focus && !win.minimized) {
       win.input.focus();
       this.markReadIfActive(win);
+    }
+  }
+
+  /** Open the global room's window; its socket connects while it's expanded. */
+  private openGlobal({
+    focus = false,
+    minimized = false,
+    restore = false,
+  }): void {
+    const create = this.options.createGlobal;
+    if (!create) return;
+    if (!this.global) {
+      const global: GlobalChatWindow = create({
+        minimized,
+        onClose: () => this.closeGlobal(),
+        onChange: () => this.save(),
+      });
+      this.global = global;
+      this.heads.after(global.root);
+      this.closeWindowsThatDontFit();
+    } else if (!restore) {
+      this.global.setMinimized(false);
+    }
+    if (!restore) this.save();
+    this.renderHeads();
+    if (focus) this.global?.focus();
+  }
+
+  private closeGlobal(): void {
+    if (!this.global) return;
+    this.global.destroy();
+    this.global = null;
+    this.save();
+    this.renderHeads();
+  }
+
+  /** Windows in the dock, newest (closest to the bubbles) first. */
+  private openWindowRoots(): HTMLElement[] {
+    return Array.from(
+      this.root.querySelectorAll<HTMLElement>(":scope > .hfx-chat-window")
+    );
+  }
+
+  /** Close the oldest windows that no longer fit beside each other. */
+  private closeWindowsThatDontFit(): void {
+    const roots = this.openWindowRoots();
+    while (roots.length > this.maxWindows()) {
+      const partyId = Number(roots.pop()!.dataset.party);
+      if (partyId === GLOBAL_PARTY) this.closeGlobal();
+      else this.closeChat(partyId);
     }
   }
 
@@ -1018,9 +1143,10 @@ export class ChatDock {
 
   private save(): void {
     // Newest first, matching the dock order
-    const open = Array.from(this.windows.values())
-      .reverse()
-      .map(({ partyId, minimized }) => ({ partyId, minimized }));
+    const open = this.openWindowRoots().map((root) => ({
+      partyId: Number(root.dataset.party),
+      minimized: root.classList.contains("hfx-chat-minimized"),
+    }));
     this.state = { open, collapsed: this.state.collapsed };
     this.options.saveState(this.state);
   }

@@ -24,6 +24,8 @@ export interface ChatUser {
   avatar: string;
   /** Unix time the user was last active on HF, 0 if unknown. */
   lastActive: number;
+  /** The group HF styles their username with (`class="group<N>"`), 0 if unknown. */
+  group?: number;
 }
 
 export type Presence = "online" | "away" | "offline";
@@ -97,7 +99,7 @@ export interface ConvoClientOptions {
   randomUUID?: () => string;
 }
 
-const toInt = (value: unknown): number => {
+export const toInt = (value: unknown): number => {
   const n =
     typeof value === "number" ? value : parseInt(String(value ?? ""), 10);
   return Number.isFinite(n) ? n : 0;
@@ -119,7 +121,41 @@ export function parseUser(raw: any): ChatUser | null {
     username: raw.username,
     avatar: typeof raw.avatar === "string" ? raw.avatar : "",
     lastActive: toInt(raw.lastactive),
+    group: toInt(raw.group) || toInt(raw.displaygroup) || toInt(raw.usergroup),
   };
+}
+
+/** The Convo websocket URL for an HF origin. */
+export function convoSocketUrl(origin: string): string {
+  return `${origin.replace(/^http/, "ws")}/convo-ws/?EIO=4&transport=websocket`;
+}
+
+/**
+ * A one-time ticket to authenticate a Convo socket connection. Every
+ * connection attempt needs a fresh one.
+ */
+export async function fetchConvoTicket(
+  origin: string,
+  postKey: string,
+  fetchFn: typeof fetch
+): Promise<string> {
+  const response = await fetchFn(`${origin}/convo.php?action=socket_ticket`, {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ my_post_key: postKey }).toString(),
+  });
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("Convo authentication failed.");
+  }
+  if (!response.ok || typeof data?.ticket !== "string" || !data.ticket) {
+    throw new Error(data?.error || "Convo authentication failed.");
+  }
+  return data.ticket;
 }
 
 /** Normalize a message from `convo_receivemessage(_bulk)`. Null if it isn't a 1:1 message. */
@@ -171,13 +207,16 @@ export class ConvoClient {
     this.origin = options.origin ?? location.origin;
     this.fetchFn = options.fetch ?? ((...args) => fetch(...args));
     this.randomUUID = options.randomUUID ?? (() => crypto.randomUUID());
-    const auth = async () => ({ ticket: await this.fetchTicket() });
+    const auth = async () => ({
+      ticket: await fetchConvoTicket(
+        this.origin,
+        options.postKey,
+        this.fetchFn
+      ),
+    });
     this.socket = options.createSocket
       ? options.createSocket(auth)
-      : new SocketIOClient({
-          url: `${this.origin.replace(/^http/, "ws")}/convo-ws/?EIO=4&transport=websocket`,
-          auth,
-        });
+      : new SocketIOClient({ url: convoSocketUrl(this.origin), auth });
     this.bindSocket();
   }
 
@@ -311,31 +350,6 @@ export class ConvoClient {
       this.typingParty = 0;
       this.socket.emit("type_notice_stop", true);
     }
-  }
-
-  private async fetchTicket(): Promise<string> {
-    const response = await this.fetchFn(
-      `${this.origin}/convo.php?action=socket_ticket`,
-      {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          my_post_key: this.options.postKey,
-        }).toString(),
-      }
-    );
-    let data: any;
-    try {
-      data = await response.json();
-    } catch {
-      throw new Error("Convo authentication failed.");
-    }
-    if (!response.ok || typeof data?.ticket !== "string" || !data.ticket) {
-      throw new Error(data?.error || "Convo authentication failed.");
-    }
-    return data.ticket;
   }
 
   private async loadMessages(
@@ -485,6 +499,7 @@ export class ConvoClient {
     }
     existing.username = user.username;
     existing.avatar = user.avatar;
+    existing.group = user.group || existing.group;
     existing.lastActive = Math.max(existing.lastActive, user.lastActive);
   }
 

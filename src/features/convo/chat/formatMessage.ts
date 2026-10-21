@@ -1,6 +1,9 @@
 import { el } from "../../../core/Dom";
 import type { ChatImage, ChatMessage } from "./ConvoClient";
 
+/** The parts of a DM or global room message that rendering needs. */
+export type RenderableMessage = Pick<ChatMessage, "text" | "image" | "html">;
+
 /**
  * Safe rendering for Convo messages. Message text is raw user input: it is
  * only ever inserted as text nodes, with http(s) URLs turned into links and
@@ -70,7 +73,7 @@ export function renderImage(image: ChatImage): HTMLImageElement | null {
 }
 
 /** A message's content: image, Helpbot text, or user text. */
-export function renderMessage(message: ChatMessage): Node {
+export function renderMessage(message: RenderableMessage): Node {
   if (message.image) {
     return renderImage(message.image) ?? document.createTextNode("[Image]");
   }
@@ -78,7 +81,7 @@ export function renderMessage(message: ChatMessage): Node {
 }
 
 /** One-line preview for a bubble's tooltip. */
-export function previewText(message: ChatMessage | undefined): string {
+export function previewText(message: RenderableMessage | undefined): string {
   if (!message) return "";
   if (message.image) return "[Image]";
   const text = message.html ? htmlToText(message.text) : message.text;

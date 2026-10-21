@@ -1,4 +1,8 @@
-import { ChatDock, DEFAULT_DOCK_STATE, shortTime } from "./ChatDock";
+import { FakeConvoSocket } from "../../../test-utils/FakeConvoSocket";
+import { ChatDock, DEFAULT_DOCK_STATE, OpenChat, shortTime } from "./ChatDock";
+import { GlobalChatWindow } from "./GlobalChatWindow";
+import { GlobalRoomClient } from "./GlobalRoomClient";
+import type { SocketIOClient } from "./SocketIOClient";
 import type { ChatMessage, Conversation, ConvoClient } from "./ConvoClient";
 import { convoNiceTime } from "../common/timestamps";
 
@@ -61,14 +65,20 @@ const flush = () =>
 let client: FakeClient;
 let dock: ChatDock | undefined;
 
+let saveState: jest.Mock;
+let globalSockets: FakeConvoSocket[];
+
 const mount = async (
   timestamps: boolean,
   options: {
     side?: "left" | "right";
     layout?: "bubbles" | "list";
     open?: boolean;
+    global?: boolean;
+    openChats?: OpenChat[];
   } = {}
 ) => {
+  saveState = jest.fn();
   dock = new ChatDock({
     client: client as unknown as ConvoClient,
     maxBubbles: 5,
@@ -76,12 +86,32 @@ const mount = async (
     timestamps,
     side: options.side,
     layout: options.layout,
+    createGlobal: options.global
+      ? ({ minimized, onClose, onChange }) => {
+          const socket = new FakeConvoSocket();
+          globalSockets.push(socket);
+          return new GlobalChatWindow({
+            postKey: "abc",
+            minimized,
+            typingIndicators: true,
+            onClose,
+            onChange,
+            origin: "https://hackforums.net",
+            createClient: () =>
+              new GlobalRoomClient({
+                postKey: "abc",
+                createSocket: () => socket as unknown as SocketIOClient,
+              }),
+          });
+        }
+      : undefined,
     state: {
       ...DEFAULT_DOCK_STATE,
       open:
-        options.open === false ? [] : [{ partyId: PARTY, minimized: false }],
+        options.openChats ??
+        (options.open === false ? [] : [{ partyId: PARTY, minimized: false }]),
     },
-    saveState: jest.fn(),
+    saveState,
     origin: "https://hackforums.net",
   });
   dock.mount();
@@ -94,6 +124,7 @@ const mount = async (
 beforeEach(() => {
   document.body.innerHTML = "";
   client = new FakeClient();
+  globalSockets = [];
 });
 
 afterEach(() => {
@@ -193,6 +224,81 @@ describe("ChatDock bubbles", () => {
     expect(document.getElementById("hfx-chat-dock")!.classList).not.toContain(
       "hfx-chat-left"
     );
+  });
+});
+
+describe("ChatDock global chat", () => {
+  const globalHead = () =>
+    document.querySelector<HTMLElement>(".hfx-chat-head-global");
+  const globalWindow = () =>
+    document.querySelector<HTMLElement>('.hfx-chat-window[data-party="-1"]');
+
+  it("pins a global chat bubble above the launcher, only when enabled", async () => {
+    await mount(true, { open: false });
+    client.fire("conversations");
+    expect(globalHead()).toBeNull();
+    dock!.destroy();
+
+    await mount(true, { open: false, global: true });
+    client.fire("conversations");
+    const heads = document.querySelector(".hfx-chat-heads")!.children;
+    expect(heads[0].classList).toContain("hfx-chat-launcher");
+    expect(heads[1]).toBe(globalHead());
+  });
+
+  it("opens the global window and joins the room on click", async () => {
+    await mount(true, { open: false, global: true });
+    client.fire("conversations");
+    globalHead()!.click();
+
+    expect(globalWindow()).not.toBeNull();
+    expect(globalSockets).toHaveLength(1);
+    expect(globalSockets[0].connects).toBe(1);
+    expect(globalHead()!.classList).toContain("hfx-chat-head-open");
+    expect(saveState).toHaveBeenLastCalledWith({
+      open: [{ partyId: -1, minimized: false }],
+      collapsed: false,
+    });
+  });
+
+  it("restores the global window from saved state", async () => {
+    await mount(true, {
+      global: true,
+      openChats: [
+        { partyId: -1, minimized: true },
+        { partyId: PARTY, minimized: false },
+      ],
+    });
+    expect(globalWindow()!.classList).toContain("hfx-chat-minimized");
+    // Minimized, so it hasn't joined the room
+    expect(globalSockets[0].connects).toBe(0);
+  });
+
+  it("ignores a saved global window when global chat is off", async () => {
+    await mount(true, { openChats: [{ partyId: -1, minimized: false }] });
+    expect(globalWindow()).toBeNull();
+  });
+
+  it("leaves the room when the window closes", async () => {
+    await mount(true, { open: false, global: true });
+    client.fire("conversations");
+    globalHead()!.click();
+    globalWindow()!
+      .querySelector<HTMLElement>('.hfx-chat-action[title="Close"]')!
+      .click();
+    expect(globalWindow()).toBeNull();
+    expect(globalSockets[0].disconnects).toBe(1);
+    expect(saveState).toHaveBeenLastCalledWith({ open: [], collapsed: false });
+  });
+
+  it("pins a global chat row first in the list", async () => {
+    await mount(true, { open: false, global: true, layout: "list" });
+    client.fire("conversations");
+    const rows = document.querySelectorAll(".hfx-chat-row");
+    expect(rows[0].classList).toContain("hfx-chat-row-global");
+    expect(rows[0].textContent).toContain("Global chat");
+    (rows[0] as HTMLElement).click();
+    expect(globalWindow()).not.toBeNull();
   });
 });
 

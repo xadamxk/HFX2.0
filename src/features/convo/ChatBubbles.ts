@@ -9,6 +9,7 @@ import Convo from "../../sections/Convo";
 import Global from "../../sections/Global";
 import { ChatDock, DEFAULT_DOCK_STATE, DockState } from "./chat/ChatDock";
 import { ConvoClient } from "./chat/ConvoClient";
+import { GlobalChatWindow } from "./chat/GlobalChatWindow";
 import { CHAT_DOCK_CSS } from "./chat/styles";
 import MessageTimestamps from "./MessageTimestamps";
 
@@ -16,6 +17,7 @@ interface ChatBubblesSettings {
   enabled: boolean;
   maxBubbles: number;
   typingIndicators: boolean;
+  globalChat: boolean;
   side: "left" | "right";
   layout: "bubbles" | "list";
   storage_dockState?: DockState;
@@ -72,6 +74,13 @@ class ChatBubbles extends Feature {
             "Show when the other person is typing, and let them see when you are.",
           default: true,
         }),
+        new Checkbox({
+          id: "globalChat",
+          label: "Global chat",
+          description:
+            "Add a Global chat entry for HF's public Convo room. You only join the room, and show in its online list, while its window is open.",
+          default: true,
+        }),
       ],
       storageItems: [
         {
@@ -102,6 +111,17 @@ class ChatBubbles extends Feature {
       client,
       maxBubbles: Number(settings.maxBubbles) || 5,
       typingIndicators: settings.typingIndicators !== false,
+      createGlobal:
+        settings.globalChat !== false
+          ? ({ minimized, onClose, onChange }) =>
+              new GlobalChatWindow({
+                postKey,
+                minimized,
+                typingIndicators: settings.typingIndicators !== false,
+                onClose,
+                onChange,
+              })
+          : undefined,
       side: settings.side === "left" ? "left" : "right",
       layout: settings.layout === "list" ? "list" : "bubbles",
       timestamps: Boolean(timestamps),

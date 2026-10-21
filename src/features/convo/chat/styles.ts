@@ -340,7 +340,10 @@ export const CHAT_DOCK_CSS = `
   padding: 4px 10px;
 }
 .hfx-gc-group + .hfx-gc-group { margin-top: 6px; }
-.hfx-gc-avatar { flex: none; width: 32px; height: 32px; }
+/* Above the line highlights, which reach under the avatar column; isolated so
+   it stays below the people panel */
+.hfx-gc-messages { isolation: isolate; }
+.hfx-gc-avatar { flex: none; width: 32px; height: 32px; position: relative; z-index: 1; }
 .hfx-gc-avatar img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block; }
 .hfx-gc-content { flex: 1; min-width: 0; }
 .hfx-gc-meta { display: flex; align-items: baseline; gap: 6px; min-width: 0; }

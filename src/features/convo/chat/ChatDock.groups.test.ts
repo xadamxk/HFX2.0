@@ -42,6 +42,8 @@ const groupMessage = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+let LIST_OVERRIDE: GroupInfo[] | null = null;
+
 const LIST: GroupInfo[] = [
   { gid: 48, name: "Quantum" },
   { gid: 52, name: "Pink LSZ", unread: true },
@@ -82,7 +84,7 @@ describe("ChatDock group chats", () => {
     } = {}
   ) => {
     groups = {
-      list: jest.fn(async () => LIST),
+      list: jest.fn(async () => LIST_OVERRIDE ?? LIST),
       mapNames: jest.fn(async () => ({ 99: "New Crew" })),
       addToList: jest.fn(),
       sound: options.groupSound ?? "mentions",
@@ -118,6 +120,7 @@ describe("ChatDock group chats", () => {
     );
 
   beforeEach(() => {
+    LIST_OVERRIDE = null;
     document.body.innerHTML = "";
     document.cookie = "convoSoundData=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     saved = [];
@@ -141,29 +144,81 @@ describe("ChatDock group chats", () => {
     expect(client.groups.get(52)!.unread).toBe(1);
   });
 
-  it("pins groups under the global chat, ahead of DMs, in bubbles", async () => {
-    await mount();
-    const heads = Array.from(
+  const bubbleOrder = () =>
+    Array.from(
       document.querySelectorAll<HTMLElement>(".hfx-chat-heads > .hfx-chat-head")
+    ).map((h) =>
+      h.classList.contains("hfx-chat-groups-toggle")
+        ? "groups"
+        : (h.dataset.group ?? `dm${h.dataset.party}`)
     );
-    expect(heads.map((h) => h.dataset.group ?? `dm${h.dataset.party}`)).toEqual(
-      ["52", "48", `dm${PARTY}`]
-    );
-    const quantum = heads[1];
-    expect(quantum.classList).toContain("hfx-chat-head-group");
-    expect(quantum.querySelector(".hfx-chat-dot")).toBeNull();
-    expect(quantum.textContent).toBe("Q");
+  const toggle = () =>
+    document.querySelector<HTMLElement>(".hfx-chat-groups-toggle")!;
+
+  it("collapses groups into one Groups bubble by default", async () => {
+    await mount();
+    expect(bubbleOrder()).toEqual(["groups", `dm${PARTY}`]);
+    expect(toggle().getAttribute("aria-expanded")).toBe("false");
+    // Pink LSZ was unread on convo.php
+    expect(toggle().querySelector(".hfx-chat-badge")!.textContent).toBe("1");
   });
 
-  it("orders groups by the activity HFX has seen", async () => {
+  it("expands to a bubble per group above it, and remembers that", async () => {
     await mount();
-    socket.fire("convo_receivemessage", groupMessage());
-    const first = document.querySelector<HTMLElement>(
-      ".hfx-chat-heads > .hfx-chat-head"
+    toggle().click();
+    expect(bubbleOrder()).toEqual(["groups", "52", "48", `dm${PARTY}`]);
+    expect(toggle().getAttribute("aria-expanded")).toBe("true");
+    // The badge moves to the group itself
+    expect(toggle().querySelector(".hfx-chat-badge")).toBeNull();
+    const quantum = document.querySelector<HTMLElement>(
+      '.hfx-chat-head-group[data-group="48"]'
     )!;
-    expect(first.dataset.group).toBe("48");
-    expect(first.title).toBe("Quantum: Nova: group hello");
-    expect(first.querySelector(".hfx-chat-badge")!.textContent).toBe("1");
+    expect(quantum.querySelector(".hfx-chat-dot")).toBeNull();
+    expect(quantum.textContent).toBe("Q");
+    expect(saved[saved.length - 1].groupsExpanded).toBe(true);
+
+    dock.destroy();
+    newClient();
+    await mount({ state: { groupsExpanded: true } });
+    expect(bubbleOrder()).toEqual(["groups", "52", "48", `dm${PARTY}`]);
+  });
+
+  it("orders expanded groups by the activity HFX has seen", async () => {
+    await mount({ state: { groupsExpanded: true } });
+    socket.fire("convo_receivemessage", groupMessage());
+    expect(bubbleOrder()).toEqual(["groups", "48", "52", `dm${PARTY}`]);
+    const quantum = document.querySelector<HTMLElement>(
+      '.hfx-chat-head-group[data-group="48"]'
+    )!;
+    expect(quantum.title).toBe("Quantum: Nova: group hello");
+    expect(quantum.querySelector(".hfx-chat-badge")!.textContent).toBe("1");
+  });
+
+  it("marks the collapsed Groups bubble when a group window is open", async () => {
+    await mount({
+      state: { open: [{ partyId: 48, minimized: true, kind: "group" }] },
+    });
+    expect(toggle().classList).toContain("hfx-chat-head-open");
+    toggle().click();
+    expect(toggle().classList).not.toContain("hfx-chat-head-open");
+  });
+
+  it("has no Groups bubble when there are no groups", async () => {
+    LIST_OVERRIDE = [];
+    await mount();
+    expect(document.querySelector(".hfx-chat-groups-toggle")).toBeNull();
+  });
+
+  it("remembers the list filter across page loads", async () => {
+    await mount({ layout: "list", state: { filter: "group" } });
+    const pressed = document.querySelector<HTMLElement>(
+      '.hfx-chat-filter[aria-pressed="true"]'
+    )!;
+    expect(pressed.dataset.filter).toBe("group");
+    expect(
+      document.querySelector(`.hfx-chat-row[data-party="${PARTY}"]`)
+    ).toBeNull();
+    expect(document.querySelectorAll(".hfx-chat-row-group")).toHaveLength(2);
   });
 
   it("names a group found through a message from the cached map, and adds it to the list", async () => {
@@ -211,7 +266,7 @@ describe("ChatDock group chats", () => {
   });
 
   it("opens, saves and restores a group window", async () => {
-    await mount();
+    await mount({ state: { groupsExpanded: true } });
     document
       .querySelector<HTMLElement>('.hfx-chat-head-group[data-group="48"]')!
       .click();

@@ -10,7 +10,7 @@ import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
-import { GroupChatWindow } from "./GroupChatWindow";
+import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
 import type { GroupInfo } from "./groupList";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { MessageSoundPlayer, mutedParties } from "./sound";
@@ -40,6 +40,8 @@ export interface DockState {
   collapsed: boolean;
   /** The list layout's All / Direct / Groups filter. */
   filter?: DockFilter;
+  /** Whether the Groups bubble is expanded to a bubble per group. */
+  groupsExpanded?: boolean;
   /**
    * Group activity HFX tracks itself from live messages and opened groups
    * (HF sends no group read state): last message time and unread count by id.
@@ -225,6 +227,7 @@ export class ChatDock {
       ),
       collapsed: Boolean(options.state?.collapsed),
       filter: options.state?.filter,
+      groupsExpanded: options.state?.groupsExpanded,
       groups: options.state?.groups,
     };
     this.heads = el("div", {
@@ -511,11 +514,14 @@ export class ChatDock {
     );
     launcher.addEventListener("click", () => this.toggleCollapsed());
 
-    // Global chat is pinned just above the launcher, then groups, then recent DMs
+    // From the launcher up: Global chat, the Groups bubble (and the groups when
+    // it's expanded), then recent DMs
+    const expanded = Boolean(this.state.groupsExpanded);
     const heads = this.state.collapsed
       ? []
       : [
-          ...groups.map((group) => this.groupHead(group)),
+          ...(groups.length ? [this.groupsToggle(groups)] : []),
+          ...(expanded ? groups.map((group) => this.groupHead(group)) : []),
           ...conversations.map((conversation) => this.dmHead(conversation)),
         ];
     const global =
@@ -524,6 +530,41 @@ export class ChatDock {
         : [];
     this.heads.replaceChildren(launcher, ...global, ...heads);
     return conversations.length + groups.length;
+  }
+
+  /**
+   * One bubble for all group chats, so they don't crowd the column: it shows
+   * how many groups have unread messages, and expands to a bubble per group.
+   */
+  private groupsToggle(groups: GroupChat[]): HTMLElement {
+    const expanded = Boolean(this.state.groupsExpanded);
+    const unread = groups.filter((group) => group.unread > 0).length;
+    const anyOpen = groups.some((group) => this.groupWindows.has(group.gid));
+    const toggle = el(
+      "button",
+      {
+        type: "button",
+        class: [
+          "hfx-chat-head hfx-chat-head-group hfx-chat-groups-toggle",
+          expanded && "hfx-chat-groups-expanded",
+          // An open group window is otherwise hidden while collapsed
+          !expanded && anyOpen && "hfx-chat-head-open",
+        ]
+          .filter(Boolean)
+          .join(" "),
+        title: expanded ? "Hide group chats" : "Show group chats",
+        "aria-label": `${expanded ? "Hide" : "Show"} group chats${unread ? `, ${unread} unread` : ""}`,
+        "aria-expanded": String(expanded),
+      },
+      // Each group shows its own badge once expanded
+      [GROUP_ICON(), !expanded && unreadBadge(unread)]
+    );
+    toggle.addEventListener("click", () => {
+      this.state.groupsExpanded = !expanded;
+      this.save();
+      this.renderHeads();
+    });
+    return toggle;
   }
 
   private dmHead(conversation: Conversation): HTMLElement {

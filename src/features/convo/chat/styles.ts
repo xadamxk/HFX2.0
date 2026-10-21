@@ -245,6 +245,13 @@ export const CHAT_DOCK_CSS = `
   color: #fff;
 }
 .hfx-chat-group-initials { font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
+/* The Groups bubble: one entry for all group chats, expanded on click */
+.hfx-chat-groups-toggle svg { width: 24px; height: 24px; }
+.hfx-chat-head.hfx-chat-groups-toggle.hfx-chat-groups-expanded {
+  background: var(--hfx-chat-header);
+  border-color: var(--hfx-chat-accent);
+  color: var(--hfx-chat-text);
+}
 .hfx-chat-row-group-icon {
   display: flex;
   align-items: center;

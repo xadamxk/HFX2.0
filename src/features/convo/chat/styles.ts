@@ -380,9 +380,12 @@ export const CHAT_DOCK_CSS = `
 /* Font Awesome link icons in Helpbot notices, like HF draws them */
 .hfx-chat-icon { margin-left: 3px; font-size: 10px; color: #7fd67f; vertical-align: super; }
 .hfx-gc-line img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 2px 0; }
+/* Only the text column (from just left of the text), not under the avatar */
 .hfx-gc-line.hfx-gc-mention {
-  background: rgba(77, 47, 93, 0.45);
-  box-shadow: inset 3px 0 0 #a982c4;
+  background:
+    linear-gradient(#a982c4, #a982c4) 44px 0 / 3px 100% no-repeat,
+    linear-gradient(rgba(77, 47, 93, 0.45), rgba(77, 47, 93, 0.45)) 44px 0 /
+      calc(100% - 44px) 100% no-repeat;
 }
 .hfx-gc-pending {
   margin: 4px 10px 0 50px;

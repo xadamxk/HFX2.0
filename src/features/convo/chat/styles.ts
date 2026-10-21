@@ -630,4 +630,25 @@ export const CHAT_DOCK_CSS = `
   outline: none;
 }
 .hfx-chat-compose textarea:focus { border-color: #555; }
+/* Members offered while typing an @mention, just above the compose box */
+.hfx-chat-compose { position: relative; }
+.hfx-gc-mentions {
+  position: absolute;
+  bottom: 100%;
+  left: 6px;
+  right: 6px;
+  z-index: 2;
+  max-height: 200px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #555 transparent;
+  padding: 4px 0;
+  border: 1px solid var(--hfx-chat-border);
+  border-radius: 6px;
+  background: var(--hfx-chat-header);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.5);
+}
+.hfx-gc-mentions .hfx-gc-user { box-sizing: border-box; }
+.hfx-gc-mentions .hfx-gc-mention-active { background: rgba(255, 255, 255, 0.12); }
 `;

@@ -277,6 +277,12 @@ export class GroupChatWindow extends RoomChatWindow {
     this.membersButton.setAttribute("aria-expanded", String(open));
   }
 
+  /** Members seen in loaded messages, other than you. */
+  protected mentionCandidates(): ChatUser[] {
+    const me = this.client.me?.uid;
+    return this.room.members().filter((user) => user.uid !== me);
+  }
+
   private renderMembers(): void {
     const members = this.room.members();
     this.renderPeople(`${members.length} members seen`, [{ users: members }]);

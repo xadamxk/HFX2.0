@@ -147,6 +147,44 @@ describe("GroupChatWindow", () => {
     ).toBe("Images can't be sent to group chats from HFX yet.");
   });
 
+  it("offers members to mention on @, and Enter picks one instead of sending", async () => {
+    await open();
+    socket.fire("convo_receivemessage_bulk", [groupMessage()]);
+    socket.ackReplies.convo_newmessage_group = () => ({ ok: true });
+    const input = win.root.querySelector("textarea")!;
+    input.focus();
+    input.value = "hey @";
+    input.setSelectionRange(5, 5);
+    input.dispatchEvent(new Event("input"));
+    const picker = win.root.querySelector<HTMLElement>(".hfx-gc-mentions")!;
+    // Everyone seen but you
+    expect(
+      Array.from(picker.querySelectorAll('[role="option"]')).map(
+        (o) => o.textContent
+      )
+    ).toEqual(["Nova", "Orbit"]);
+
+    input.value = "hey @or";
+    input.setSelectionRange(7, 7);
+    input.dispatchEvent(new Event("input"));
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", cancelable: true })
+    );
+    await flush();
+    expect(input.value).toBe("hey @Orbit@ ");
+    expect(picker.hidden).toBe(true);
+    expect(
+      socket.acked.some(([event]) => event === "convo_newmessage_group")
+    ).toBe(false);
+
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    expect(socket.acked).toContainEqual([
+      "convo_newmessage_group",
+      { partyID: GID, message: "hey @Orbit@", requestId: "req-1" },
+    ]);
+  });
+
   it("lists members seen in the loaded messages", async () => {
     await open();
     socket.fire("convo_receivemessage_bulk", [groupMessage()]);

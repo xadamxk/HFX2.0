@@ -4,6 +4,7 @@ import type { ChatUser, ConvoStatus } from "./ConvoClient";
 import { avatarUrl, renderMessage } from "./formatMessage";
 import { isCommand, RoomMessage } from "./GlobalRoomClient";
 import { acceptImages, imageUploadError, readBytes } from "./images";
+import { MentionPicker } from "./mentions";
 
 /**
  * A chat window for a room with many people (the global room, private group
@@ -101,6 +102,7 @@ export abstract class RoomChatWindow {
   private readonly pendingBox: HTMLElement;
   private readonly notice: HTMLElement;
   private readonly typing: HTMLElement;
+  private readonly mentions: MentionPicker;
   private readonly lines = new Map<string, HTMLElement>();
   private lastGroup: Group | null = null;
   private pending: { requestId: string; node: HTMLElement }[] = [];
@@ -168,17 +170,20 @@ export abstract class RoomChatWindow {
       "aria-label": view.placeholder,
       maxlength: 5000,
     });
+    this.mentions = new MentionPicker(
+      this.input,
+      () => this.mentionCandidates(),
+      this.origin,
+      () => this.onInputChange()
+    );
     this.input.addEventListener("keydown", (event) => {
+      if (this.mentions.handleKey(event)) return;
       if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
         event.preventDefault();
         this.send();
       }
     });
-    this.input.addEventListener("input", () => {
-      this.input.style.height = "";
-      this.input.style.height = `${Math.min(this.input.scrollHeight, 110)}px`;
-      this.onOwnTyping();
-    });
+    this.input.addEventListener("input", () => this.onInputChange());
 
     this.root = el(
       "section",
@@ -191,7 +196,10 @@ export abstract class RoomChatWindow {
         el("div", { class: "hfx-gc-body" }, [this.list, this.panel]),
         this.notice,
         this.typing,
-        el("div", { class: "hfx-chat-compose" }, this.input),
+        el("div", { class: "hfx-chat-compose" }, [
+          this.mentions.root,
+          this.input,
+        ]),
       ]
     );
 
@@ -207,7 +215,10 @@ export abstract class RoomChatWindow {
     if (this.minimized === minimized) return;
     this.minimized = minimized;
     this.root.classList.toggle("hfx-chat-minimized", minimized);
-    if (minimized) this.stopOwnTyping();
+    if (minimized) {
+      this.stopOwnTyping();
+      this.mentions.close();
+    }
     this.onMinimizedChange(minimized);
     if (!minimized) this.scrollToBottom();
     this.options.onChange();
@@ -232,6 +243,11 @@ export abstract class RoomChatWindow {
   // ---- Subclass hooks -------------------------------------------------------
 
   protected onMinimizedChange(_minimized: boolean): void {}
+
+  /** Who typing @ offers to mention, sorted. None: typing @ shows no list. */
+  protected mentionCandidates(): ChatUser[] {
+    return [];
+  }
 
   /** A message arrived that wasn't loaded before (not a re-render). */
   protected onNewMessage(_message: RoomMessage, _mentionsMe: boolean): void {}
@@ -581,6 +597,12 @@ export abstract class RoomChatWindow {
       if (/not sent|pending send|empty/i.test(message)) undo?.();
       this.showNotice(message);
     }
+  }
+
+  private onInputChange(): void {
+    this.input.style.height = "";
+    this.input.style.height = `${Math.min(this.input.scrollHeight, 110)}px`;
+    this.onOwnTyping();
   }
 
   private onOwnTyping(): void {

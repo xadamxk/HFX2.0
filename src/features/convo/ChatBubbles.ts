@@ -5,18 +5,16 @@ import { Feature } from "../../core/Feature";
 import { Section } from "../../core/Section";
 import { SectionArray } from "../../core/SectionArray";
 import { Util } from "../../core/Util";
-import { GROUP_MAP_TTL, groupIdOf, resolveGroupMap } from "../../core/GroupMap";
 import Convo from "../../sections/Convo";
 import Global from "../../sections/Global";
 import { ChatDock, DEFAULT_DOCK_STATE, DockState } from "./chat/ChatDock";
 import { ConvoClient } from "./chat/ConvoClient";
+import { fetchGroupList, GroupInfo } from "./chat/groupList";
 import { GlobalChatWindow } from "./chat/GlobalChatWindow";
 import { MessageSound } from "./chat/sound";
 import { CHAT_DOCK_CSS } from "./chat/styles";
 import MessageTimestamps from "./MessageTimestamps";
-import WhosOnlineSorting, {
-  STORAGE_KEYS as GROUP_MAP_KEYS,
-} from "../global/WhosOnlineSorting";
+import WhosOnlineSorting from "../global/WhosOnlineSorting";
 
 interface ChatBubblesSettings {
   enabled: boolean;
@@ -29,16 +27,15 @@ interface ChatBubblesSettings {
   groupChats: boolean;
   groupSound: "mentions" | "all";
   storage_dockState?: DockState;
-  storage_groupMembers?: GroupMembers | null;
+  storage_groupList?: GroupListCache | null;
 }
 
-interface GroupMembers {
-  gids: number[];
-  checkedAt: number;
+interface GroupListCache {
+  groups: GroupInfo[];
 }
 
 const DOCK_STATE = "dockState";
-const GROUP_MEMBERS = "groupMembers";
+const GROUP_LIST = "groupList";
 
 class ChatBubbles extends Feature {
   constructor() {
@@ -130,9 +127,9 @@ class ChatBubbles extends Feature {
           defaultValue: DEFAULT_DOCK_STATE,
         },
         {
-          id: GROUP_MEMBERS,
+          id: GROUP_LIST,
           description:
-            "Which group chats you're in, rechecked daily (this browser only).",
+            "Your group chats, read once from convo.php (this browser only). Clear it to read them again.",
           defaultValue: null,
         },
       ],
@@ -162,15 +159,10 @@ class ChatBubbles extends Feature {
       groups:
         settings.groupChats !== false
           ? {
-              names: () => this.groupNames(),
-              members: freshMembers(settings.storage_groupMembers),
-              saveMembers: (gids) => {
-                this.settingsService
-                  .setStorageItem(this, GROUP_MEMBERS, {
-                    gids,
-                    checkedAt: Date.now(),
-                  })
-                  .catch(() => undefined);
+              list: () => this.groupList(settings.storage_groupList),
+              mapNames: () => this.mapNames(),
+              addToList: (group) => {
+                this.addToGroupList(group);
               },
               sound: settings.groupSound === "all" ? "all" : "mentions",
             }
@@ -214,55 +206,53 @@ class ChatBubbles extends Feature {
   }
 
   /**
-   * Group names by id. Uses the group map WhosOnlineSorting keeps (from
-   * showgroups.php), fetching and storing it there when it's missing or stale.
+   * The user's groups: the cached list, or (only when there's none) the
+   * Comrades list read once from convo.php and cached until cleared.
    */
-  private async groupNames(): Promise<Record<number, string>> {
-    const storage = this.settingsService;
-    const map = await resolveGroupMap({
-      stored: await storage.getStorageItem(
-        WhosOnlineSorting,
-        GROUP_MAP_KEYS.GROUP_MAP
-      ),
-      nextFetch:
-        Number(
-          await storage.getStorageItem(
-            WhosOnlineSorting,
-            GROUP_MAP_KEYS.NEXT_FETCH
-          )
-        ) || 0,
-      save: async (fetched, nextFetch) => {
-        if (fetched) {
-          await storage.setStorageItem(
-            WhosOnlineSorting,
-            GROUP_MAP_KEYS.GROUP_MAP,
-            fetched
-          );
-        }
-        await storage.setStorageItem(
-          WhosOnlineSorting,
-          GROUP_MAP_KEYS.NEXT_FETCH,
-          nextFetch
-        );
-      },
-    });
+  private async groupList(
+    cached: GroupListCache | null | undefined
+  ): Promise<GroupInfo[]> {
+    if (cached && Array.isArray(cached.groups)) return cached.groups;
+    const groups = await fetchGroupList();
+    await this.saveGroupList(groups.map(({ gid, name }) => ({ gid, name })));
+    return groups;
+  }
+
+  /** Add a group found through a message to the cached list. */
+  private async addToGroupList(group: GroupInfo): Promise<void> {
+    const cached = (await this.settingsService.getStorageItem(
+      this,
+      GROUP_LIST
+    )) as GroupListCache | null;
+    const groups = cached?.groups ?? [];
+    if (groups.some((existing) => existing.gid === group.gid)) return;
+    await this.saveGroupList([...groups, { gid: group.gid, name: group.name }]);
+  }
+
+  private saveGroupList(groups: GroupInfo[]): Promise<void> {
+    return this.settingsService
+      .setStorageItem(this, GROUP_LIST, { groups })
+      .catch((error) =>
+        this.logger.error(`Couldn't save group list: ${error?.message}`, error)
+      );
+  }
+
+  /**
+   * Group names by id from the group map Who's Online Sorting keeps (from
+   * showgroups.php). Read only: Chat Bubbles never fetches it.
+   */
+  private async mapNames(): Promise<Record<number, string>> {
+    const map = ((await this.settingsService.getStorageItem(
+      WhosOnlineSorting,
+      "groupMap"
+    )) ?? {}) as Record<string, string>;
     const names: Record<number, string> = {};
-    for (const [className, name] of Object.entries(map ?? {})) {
-      const gid = groupIdOf(className);
-      if (gid) names[gid] = name;
+    for (const [className, name] of Object.entries(map)) {
+      const gid = parseInt(className.match(/^group(\d+)$/)?.[1] ?? "", 10);
+      if (gid && typeof name === "string") names[gid] = name;
     }
     return names;
   }
-}
-
-/** The cached group membership while it's under a day old, else null (check again). */
-function freshMembers(
-  cached: GroupMembers | null | undefined
-): number[] | null {
-  if (!cached || !Array.isArray(cached.gids)) return null;
-  return Date.now() - Number(cached.checkedAt) < GROUP_MAP_TTL
-    ? cached.gids
-    : null;
 }
 
 export default new ChatBubbles();

@@ -6,6 +6,7 @@ import {
   DockState,
 } from "./ChatDock";
 import { ConvoClient } from "./ConvoClient";
+import type { GroupInfo } from "./groupList";
 import type { SocketIOClient } from "./SocketIOClient";
 
 const ME = { uid: 10, username: "Me", avatar: "" };
@@ -40,30 +41,49 @@ const groupMessage = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const LIST: GroupInfo[] = [
+  { gid: 48, name: "Quantum" },
+  { gid: 52, name: "Pink LSZ", unread: true },
+];
+
 describe("ChatDock group chats", () => {
   let socket: FakeConvoSocket;
   let client: ConvoClient;
   let dock: ChatDock;
   let saved: DockState[];
   let sound: { play: jest.Mock };
-  let groups: DockGroups & { saveMembers: jest.Mock };
+  let groups: DockGroups & {
+    list: jest.Mock;
+    mapNames: jest.Mock;
+    addToList: jest.Mock;
+  };
+
+  const newClient = () => {
+    socket = new FakeConvoSocket();
+    socket.ackReplies.convo_loadmessages = () => ({
+      ok: true,
+      hasMore: false,
+      lastMid: 0,
+    });
+    client = new ConvoClient({
+      postKey: "abc",
+      origin: "https://hackforums.net",
+      randomUUID: () => "req-1",
+      createSocket: () => socket as unknown as SocketIOClient,
+    });
+  };
 
   const mount = async (
     options: {
       layout?: "bubbles" | "list";
       state?: Partial<DockState>;
-      members?: number[] | null;
       groupSound?: "mentions" | "all";
     } = {}
   ) => {
     groups = {
-      names: async () => ({
-        48: "Brotherhood",
-        52: "Guardians",
-        46: "Not mine",
-      }),
-      members: options.members === undefined ? null : options.members,
-      saveMembers: jest.fn(),
+      list: jest.fn(async () => LIST),
+      mapNames: jest.fn(async () => ({ 99: "New Crew" })),
+      addToList: jest.fn(),
       sound: options.groupSound ?? "mentions",
     };
     dock = new ChatDock({
@@ -74,6 +94,7 @@ describe("ChatDock group chats", () => {
       layout: options.layout,
       sound,
       groups,
+      createGlobal: undefined,
       state: { ...DEFAULT_DOCK_STATE, ...options.state },
       saveState: (state) => saved.push(JSON.parse(JSON.stringify(state))),
       origin: "https://hackforums.net",
@@ -89,76 +110,88 @@ describe("ChatDock group chats", () => {
     });
   };
 
+  const groupLoads = () =>
+    socket.acked.filter(
+      ([event, data]) =>
+        event === "convo_loadmessages" && (data as any).is_group
+    );
+
   beforeEach(() => {
     document.body.innerHTML = "";
     document.cookie = "convoSoundData=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     saved = [];
     sound = { play: jest.fn() };
-    socket = new FakeConvoSocket();
-    socket.ackReplies.convo_loadmessages = (data) =>
-      data.is_group && ![48, 52].includes(data.party)
-        ? { ok: false, error: "No permission for this group chat." }
-        : { ok: true, hasMore: false, lastMid: 0 };
-    client = new ConvoClient({
-      postKey: "abc",
-      origin: "https://hackforums.net",
-      randomUUID: () => "req-1",
-      createSocket: () => socket as unknown as SocketIOClient,
-    });
+    newClient();
   });
 
   afterEach(() => dock?.destroy());
 
-  it("checks membership once a day and names groups from the shared map", async () => {
+  it("shows the listed groups without asking the server anything about them", async () => {
     await mount();
-    expect(groups.saveMembers).toHaveBeenCalledWith([48, 52]);
+    expect(groups.list).toHaveBeenCalledTimes(1);
     expect(
       client
         .getGroups()
         .map((g) => g.name)
         .sort()
-    ).toEqual(["Brotherhood", "Guardians"]);
+    ).toEqual(["Pink LSZ", "Quantum"]);
+    expect(groupLoads()).toEqual([]);
+    // A group marked unread on convo.php starts unread
+    expect(client.groups.get(52)!.unread).toBe(1);
   });
 
-  it("uses cached membership without asking the server", async () => {
-    await mount({ members: [48] });
-    expect(groups.saveMembers).not.toHaveBeenCalled();
-    expect(
-      socket.acked.some(
-        ([event, data]) =>
-          event === "convo_loadmessages" && (data as any).mid === 99999999
-      )
-    ).toBe(false);
-    expect(client.getGroups().map((g) => g.gid)).toEqual([48]);
-  });
-
-  it("mixes groups into the bubbles by recency, as rounded squares", async () => {
-    await mount({ members: [48, 52] });
-    socket.fire("convo_receivemessage", groupMessage());
-
+  it("pins groups under the global chat, ahead of DMs, in bubbles", async () => {
+    await mount();
     const heads = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        ".hfx-chat-head:not(.hfx-chat-launcher)"
-      )
+      document.querySelectorAll<HTMLElement>(".hfx-chat-heads > .hfx-chat-head")
     );
-    // The group's message is newer than the DM's
-    expect(heads[0].classList).toContain("hfx-chat-head-group");
-    expect(heads[0].dataset.group).toBe("48");
-    expect(heads[0].title).toBe("Brotherhood: Nova: group hello");
-    expect(heads[0].querySelector(".hfx-chat-badge")!.textContent).toBe("1");
-    expect(heads[0].querySelector(".hfx-chat-dot")).toBeNull();
-    expect(heads[1].dataset.party).toBe(String(PARTY));
+    expect(heads.map((h) => h.dataset.group ?? `dm${h.dataset.party}`)).toEqual(
+      ["52", "48", `dm${PARTY}`]
+    );
+    const quantum = heads[1];
+    expect(quantum.classList).toContain("hfx-chat-head-group");
+    expect(quantum.querySelector(".hfx-chat-dot")).toBeNull();
   });
 
-  it("lists groups with their HF-styled name and filters by kind", async () => {
-    await mount({ members: [48], layout: "list" });
+  it("orders groups by the activity HFX has seen", async () => {
+    await mount();
+    socket.fire("convo_receivemessage", groupMessage());
+    const first = document.querySelector<HTMLElement>(
+      ".hfx-chat-heads > .hfx-chat-head"
+    )!;
+    expect(first.dataset.group).toBe("48");
+    expect(first.title).toBe("Quantum: Nova: group hello");
+    expect(first.querySelector(".hfx-chat-badge")!.textContent).toBe("1");
+  });
+
+  it("names a group found through a message from the cached map, and adds it to the list", async () => {
+    await mount();
+    socket.fire("convo_receivemessage", groupMessage({ party_id: 99 }));
+    await flush();
+    expect(client.groups.get(99)!.name).toBe("New Crew");
+    expect(groups.addToList).toHaveBeenCalledWith({
+      gid: 99,
+      name: "New Crew",
+    });
+    expect(groupLoads()).toEqual([]);
+  });
+
+  it("lists groups first with their HF-styled name and filters by kind", async () => {
+    await mount({ layout: "list" });
     socket.fire("convo_receivemessage", groupMessage());
 
-    const row = document.querySelector<HTMLElement>(".hfx-chat-row-group")!;
-    expect(row.querySelector(".hfx-chat-row-name span")!.className).toBe(
+    const rows = Array.from(
+      document.querySelectorAll<HTMLElement>(".hfx-chat-row")
+    );
+    expect(rows.map((r) => r.dataset.group ?? `dm${r.dataset.party}`)).toEqual([
+      "48",
+      "52",
+      `dm${PARTY}`,
+    ]);
+    expect(rows[0].querySelector(".hfx-chat-row-name span")!.className).toBe(
       "group48"
     );
-    expect(row.querySelector(".hfx-chat-row-preview")!.textContent).toBe(
+    expect(rows[0].querySelector(".hfx-chat-row-preview")!.textContent).toBe(
       "Nova: group hello"
     );
 
@@ -168,9 +201,6 @@ describe("ChatDock group chats", () => {
       )!;
     chip("dm").click();
     expect(document.querySelector(".hfx-chat-row-group")).toBeNull();
-    expect(
-      document.querySelector(`.hfx-chat-row[data-party="${PARTY}"]`)
-    ).not.toBeNull();
     chip("group").click();
     expect(
       document.querySelector(`.hfx-chat-row[data-party="${PARTY}"]`)
@@ -179,7 +209,7 @@ describe("ChatDock group chats", () => {
   });
 
   it("opens, saves and restores a group window", async () => {
-    await mount({ members: [48] });
+    await mount();
     document
       .querySelector<HTMLElement>('.hfx-chat-head-group[data-group="48"]')!
       .click();
@@ -187,112 +217,46 @@ describe("ChatDock group chats", () => {
     const win = document.querySelector<HTMLElement>(
       '.hfx-chat-window[data-party="g48"]'
     )!;
-    expect(win.querySelector(".hfx-chat-title a")!.textContent).toBe(
-      "Brotherhood"
-    );
+    expect(win.querySelector(".hfx-chat-title a")!.textContent).toBe("Quantum");
+    // Opening it is what loads its history
+    expect(groupLoads()).toHaveLength(1);
     expect(saved[saved.length - 1].open).toEqual([
       { partyId: 48, minimized: false, kind: "group" },
     ]);
     dock.destroy();
 
     document.body.innerHTML = "";
-    socket = new FakeConvoSocket();
-    socket.ackReplies.convo_loadmessages = () => ({
-      ok: true,
-      hasMore: false,
-      lastMid: 0,
-    });
-    client = new ConvoClient({
-      postKey: "abc",
-      createSocket: () => socket as unknown as SocketIOClient,
-    });
+    newClient();
     await mount({
-      members: [48],
       state: { open: [{ partyId: 48, minimized: true, kind: "group" }] },
     });
-    expect(
-      document.querySelector('.hfx-chat-window[data-party="g48"]')!.classList
-    ).toContain("hfx-chat-minimized");
+    const restored = document.querySelector(
+      '.hfx-chat-window[data-party="g48"]'
+    )!;
+    expect(restored.classList).toContain("hfx-chat-minimized");
+    expect(restored.querySelector(".hfx-chat-title a")!.textContent).toBe(
+      "Quantum"
+    );
+    expect(groupLoads()).toEqual([]);
   });
 
   it("keeps group activity across page loads", async () => {
-    await mount({ members: [48] });
+    await mount();
     socket.fire("convo_receivemessage", groupMessage());
     const last = saved[saved.length - 1];
-    expect(last.groups?.["48"]).toEqual({
-      dateline: NOW - 60,
-      unread: 1,
-      lastMid: 1,
-    });
+    expect(last.groups?.["48"]).toEqual({ dateline: NOW - 60, unread: 1 });
     dock.destroy();
 
-    socket = new FakeConvoSocket();
-    socket.ackReplies.convo_loadmessages = () => ({
-      ok: true,
-      hasMore: false,
-      lastMid: 0,
-    });
-    client = new ConvoClient({
-      postKey: "abc",
-      createSocket: () => socket as unknown as SocketIOClient,
-    });
-    await mount({ members: [48], state: { groups: last.groups } });
+    newClient();
+    await mount({ state: { groups: last.groups } });
     expect(client.groups.get(48)).toMatchObject({
       dateline: NOW - 60,
       unread: 1,
     });
   });
 
-  it("learns each group's latest message once, then only asks for newer ones", async () => {
-    await mount({ members: [48] });
-    expect(socket.acked).toContainEqual([
-      "convo_loadmessages",
-      { party: 48, mid: 0, position: "new", bulk: true, is_group: true },
-    ]);
-  });
-
-  it("counts messages missed while away as unread", async () => {
-    socket.ackReplies.convo_loadmessages = (data) => {
-      if (data.is_group && data.mid === 40) {
-        socket.fire("convo_receivemessage_bulk", [
-          groupMessage({ mid: 41, noSound: true, history: true }),
-          groupMessage({ mid: 42, uid: ME.uid, noSound: true, history: true }),
-          groupMessage({ mid: 43, noSound: true, history: true }),
-        ]);
-      }
-      return { ok: true, hasMore: false, lastMid: 0 };
-    };
-    await mount({
-      members: [48],
-      state: {
-        groups: { 48: { dateline: NOW - 9999, unread: 0, lastMid: 40 } },
-      },
-    });
-    expect(socket.acked).toContainEqual([
-      "convo_loadmessages",
-      { party: 48, mid: 40, position: "new", bulk: true, is_group: true },
-    ]);
-    expect(client.groups.get(48)!.unread).toBe(2);
-  });
-
-  it("skips the catch-up when it ran a moment ago", async () => {
-    await mount({
-      members: [48],
-      state: {
-        groups: { 48: { dateline: NOW - 9999, unread: 0, lastMid: 40 } },
-        groupsCheckedAt: Date.now(),
-      },
-    });
-    expect(
-      socket.acked.some(
-        ([event, data]) =>
-          event === "convo_loadmessages" && (data as any).is_group
-      )
-    ).toBe(false);
-  });
-
   it("plays the group sound for mentions only by default", async () => {
-    await mount({ members: [48] });
+    await mount();
     socket.fire("convo_receivemessage", groupMessage({ mid: 2 }));
     expect(sound.play).not.toHaveBeenCalled();
     socket.fire(
@@ -303,10 +267,42 @@ describe("ChatDock group chats", () => {
   });
 
   it("plays it for every group message when set to", async () => {
-    await mount({ members: [48], groupSound: "all" });
+    await mount({ groupSound: "all" });
     socket.fire("convo_receivemessage", groupMessage({ mid: 2 }));
     socket.fire("convo_receivemessage", groupMessage({ mid: 4, uid: ME.uid }));
     expect(sound.play.mock.calls).toEqual([["group:48:2"]]);
+  });
+
+  it("still restores windows when the group list can't be read", async () => {
+    newClient();
+    groups = undefined as any;
+    dock = new ChatDock({
+      client,
+      maxBubbles: 5,
+      typingIndicators: true,
+      timestamps: false,
+      groups: {
+        list: async () => {
+          throw new Error("convo.php has no Comrades list");
+        },
+        mapNames: async () => ({}),
+        addToList: jest.fn(),
+        sound: "mentions",
+      },
+      state: {
+        ...DEFAULT_DOCK_STATE,
+        open: [{ partyId: PARTY, minimized: true }],
+      },
+      saveState: jest.fn(),
+    });
+    dock.mount();
+    client.connect();
+    socket.fire("convo_ready", { user: ME, bootId: "b" });
+    await flush();
+    await flush();
+    expect(
+      document.querySelector(`.hfx-chat-window[data-party="${PARTY}"]`)
+    ).not.toBeNull();
   });
 
   it("hides groups when group chats are off", async () => {

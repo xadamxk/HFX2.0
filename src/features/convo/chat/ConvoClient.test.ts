@@ -431,27 +431,6 @@ describe("ConvoClient", () => {
     const groupMessage = (overrides: Record<string, unknown> = {}) =>
       live({ party_id: GID, is_group: true, mid: 7001, ...overrides });
 
-    it("checks membership with a history request that returns nothing", async () => {
-      await ready();
-      socket.ackReplies.convo_loadmessages = (data) =>
-        data.party === GID
-          ? { ok: true, hasMore: false, lastMid: 0 }
-          : { ok: false, error: "No permission for this group chat." };
-      await expect(client.checkGroupMembership([GID, 46])).resolves.toEqual([
-        GID,
-      ]);
-      expect(socket.acked).toContainEqual([
-        "convo_loadmessages",
-        {
-          party: 46,
-          mid: 99999999,
-          position: "new",
-          bulk: true,
-          is_group: true,
-        },
-      ]);
-    });
-
     it("keeps group and DM messages apart even with the same id", async () => {
       await ready();
       const onGroup = jest.fn();
@@ -534,14 +513,6 @@ describe("ConvoClient", () => {
       expect(socket.emitted).not.toContainEqual(["type_notice_start", true]);
       client.setGroupTyping(PARTY, true);
       expect(socket.emitted).toContainEqual(["type_notice_start", true]);
-    });
-
-    it("doesn't send typing after a membership check until a real load", async () => {
-      await ready();
-      await client.loadHistory(PARTY);
-      await client.checkGroupMembership([GID]);
-      client.setTyping(PARTY, true);
-      expect(socket.emitted).not.toContainEqual(["type_notice_start", true]);
     });
   });
 

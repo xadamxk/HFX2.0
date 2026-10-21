@@ -1,14 +1,18 @@
 import { Checkbox } from "../../configuration/configurables/Checkbox";
 import { Feature } from "../../core/Feature";
 import { appendChildren, el, ElChild } from "../../core/Dom";
-import { resolveGroupMap } from "../../core/GroupMap";
+import { fetchSharedDocument, SHOWGROUPS_URL } from "../../core/Remote";
 import Global from "../../sections/Global";
 
-// Chat Bubbles reads the same group map cache
-export enum STORAGE_KEYS {
+enum STORAGE_KEYS {
   GROUP_MAP = "groupMap",
   NEXT_FETCH = "groupMapNextFetch",
 }
+
+// Refresh the group map daily so new groups don't stay "Unknown"
+const GROUP_MAP_TTL = 24 * 60 * 60 * 1000;
+// After a failed or empty fetch, wait before trying showgroups.php again
+const FAILED_FETCH_RETRY_DELAY = 60 * 60 * 1000;
 
 type GroupItem = { el: Element; hasStar: boolean };
 
@@ -92,20 +96,45 @@ class WhosOnlineSorting extends Feature {
   }
 
   /**
-   * The shared group map (see core/GroupMap), cached in this feature's storage
-   * items. Chat Bubbles reads and refreshes the same cache.
+   * Use the stored group map while it's fresh, otherwise refetch it. Falls back to
+   * the stored map if the refetch fails; null when there's no map at all.
    */
   private async resolveGroupMap(
     settings: any
   ): Promise<Record<string, string> | null> {
-    return resolveGroupMap({
-      stored: settings[`storage_${STORAGE_KEYS.GROUP_MAP}`],
-      nextFetch: Number(settings[`storage_${STORAGE_KEYS.NEXT_FETCH}`]) || 0,
-      save: async (map, nextFetch) => {
-        if (map) await this.saveStorageItem(STORAGE_KEYS.GROUP_MAP, map);
-        await this.saveStorageItem(STORAGE_KEYS.NEXT_FETCH, nextFetch);
-      },
-    });
+    const storedMap = settings[`storage_${STORAGE_KEYS.GROUP_MAP}`] as
+      | Record<string, string>
+      | undefined;
+    const hasStoredMap = !!storedMap && Object.keys(storedMap).length > 0;
+    const nextFetch =
+      Number(settings[`storage_${STORAGE_KEYS.NEXT_FETCH}`]) || 0;
+
+    // Not due yet: either the map is fresh, or a recent fetch failed and we're waiting to retry
+    if (Date.now() < nextFetch) {
+      this.logger.debug(
+        hasStoredMap
+          ? "Group map found, appending sorted members..."
+          : "Group map fetch failed recently, skipping sort."
+      );
+      return hasStoredMap ? storedMap : null;
+    }
+
+    this.logger.debug("Group map missing or stale, fetching...");
+    const fetchedMap = await this.fetchGroupMap();
+    if (fetchedMap) {
+      await this.saveStorageItem(STORAGE_KEYS.GROUP_MAP, fetchedMap);
+      await this.saveStorageItem(
+        STORAGE_KEYS.NEXT_FETCH,
+        Date.now() + GROUP_MAP_TTL
+      );
+      return fetchedMap;
+    }
+
+    await this.saveStorageItem(
+      STORAGE_KEYS.NEXT_FETCH,
+      Date.now() + FAILED_FETCH_RETRY_DELAY
+    );
+    return hasStoredMap ? storedMap : null;
   }
 
   private async saveStorageItem(id: STORAGE_KEYS, value: unknown) {
@@ -114,6 +143,36 @@ class WhosOnlineSorting extends Feature {
     } catch (error) {
       this.logger.debug(`Failed to save ${id}: ${error}`);
     }
+  }
+
+  /**
+   * Fetch class -> group name pairs from showgroups.php.
+   * Returns null on a network/HTTP error or when no groups were found (e.g. logged out).
+   */
+  private async fetchGroupMap(): Promise<Record<string, string> | null> {
+    let doc: Document;
+    try {
+      // Shared with GroupManagement, so a page running both fetches it once
+      doc = await fetchSharedDocument(SHOWGROUPS_URL);
+    } catch (error) {
+      this.logger.debug(`Group map fetch failed: ${error}`);
+      return null;
+    }
+
+    const map: Record<string, string> = {};
+    const containers = doc.querySelectorAll(".groupName");
+    containers.forEach((container) => {
+      const span = container.querySelector(
+        "span > strong > span"
+      ) as HTMLElement | null;
+      if (!span) return;
+      const className = span.className?.trim();
+      const groupName = span.textContent?.trim();
+      if (!className || !groupName) return;
+      map[className] = groupName;
+    });
+
+    return Object.keys(map).length > 0 ? map : null;
   }
 
   /**

@@ -75,7 +75,7 @@ export interface ChatMessage {
 /** A private group convo ("Comrades" on convo.php). Group ids are HF usergroup ids. */
 export interface GroupChat {
   gid: number;
-  /** From the shared group map; "Group <gid>" when unknown. */
+  /** From convo.php's Comrades list; "Group <gid>" when unknown. */
   name: string;
   lastMessage?: ChatMessage;
   dateline: number;
@@ -212,10 +212,6 @@ export function parseMessage(raw: any): ChatMessage | null {
   return message;
 }
 
-// Group membership check: asks for messages after an id no group has reached,
-// which a member gets an empty "ok" for and anyone else "No permission".
-const MEMBERSHIP_CHECK_MID = 99999999;
-
 /** The key the typing guard and history requests use; DM and group ids overlap. */
 const chatKey = (group: boolean, id: number) =>
   `${group ? "group" : "dm"}:${id}`;
@@ -326,7 +322,7 @@ export class ConvoClient {
   }
 
   /**
-   * Set the user's groups (names from the shared group map). Keeps what's
+   * Set the user's groups (from convo.php's Comrades list). Keeps what's
    * already known about each, e.g. unread counts and the latest message.
    */
   setGroups(
@@ -351,36 +347,9 @@ export class ConvoClient {
     this.fire("groups");
   }
 
-  /**
-   * Which of these group ids the user can chat in. HF sends no group list, so
-   * each is checked with a history request that can't return any messages.
-   */
-  async checkGroupMembership(gids: number[]): Promise<number[]> {
-    const results = await Promise.all(
-      gids.map((gid) =>
-        this.socket
-          .emitWithAck("convo_loadmessages", {
-            party: gid,
-            mid: MEMBERSHIP_CHECK_MID,
-            position: "new",
-            bulk: true,
-            is_group: true,
-          })
-          .then((result) => (result?.ok ? gid : 0))
-          .catch(() => 0)
-      )
-    );
-    // These requests moved the server's idea of the open chat; don't send typing until a real load
-    this.loadedParty = "";
-    return results.filter((gid) => gid > 0);
-  }
-
-  /**
-   * Load a group's newest messages, or the ones after what's loaded. With
-   * `after` and nothing loaded yet, only messages newer than that id.
-   */
-  async loadGroupHistory(gid: number, after = 0): Promise<void> {
-    await this.loadNewer(true, gid, after);
+  /** Load a group's newest messages, or the ones after what's loaded. */
+  async loadGroupHistory(gid: number): Promise<void> {
+    await this.loadNewer(true, gid);
   }
 
   /** Load the page of group messages before the oldest loaded. False when there's nothing older. */
@@ -425,13 +394,9 @@ export class ConvoClient {
     return this.loadedParty === chatKey(group, id);
   }
 
-  private async loadNewer(
-    group: boolean,
-    id: number,
-    after = 0
-  ): Promise<void> {
+  private async loadNewer(group: boolean, id: number): Promise<void> {
     const list = group ? this.getGroupMessages(id) : this.getMessages(id);
-    let cursor = list.length ? list[list.length - 1].mid : after;
+    let cursor = list.length ? list[list.length - 1].mid : 0;
     // Cap the catch-up loop; each page can be hundreds of KB
     for (let page = 0; page < 5; page++) {
       const result = await this.loadMessages(group, id, cursor, "new");

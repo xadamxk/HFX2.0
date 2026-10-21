@@ -11,6 +11,7 @@ import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
+import type { GroupInfo } from "./groupList";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { MessageSoundPlayer, mutedParties } from "./sound";
 import {
@@ -40,37 +41,23 @@ export interface DockState {
   /** The list layout's All / Direct / Groups filter. */
   filter?: DockFilter;
   /**
-   * Group activity HFX tracks itself (HF sends no group list or read state):
-   * last message time and unread count by group id.
+   * Group activity HFX tracks itself from live messages and opened groups
+   * (HF sends no group read state): last message time and unread count by id.
    */
-  groups?: Record<
-    string,
-    { dateline: number; unread: number; lastMid?: number }
-  >;
-  /** When groups were last caught up (ms since epoch). */
-  groupsCheckedAt?: number;
+  groups?: Record<string, { dateline: number; unread: number }>;
 }
 
 /** What the dock needs to show the user's private group convos. */
 export interface DockGroups {
-  /** Group names by id, from the shared group map (WhosOnlineSorting's cache). */
-  names: () => Promise<Record<number, string>>;
-  /** The group ids from the last membership check, or null when it's due again. */
-  members: number[] | null;
-  saveMembers: (gids: number[]) => void;
+  /** The user's groups: the cached list, or convo.php's Comrades list fetched once when there's none. */
+  list: () => Promise<GroupInfo[]>;
+  /** Group names by id from Who's Online Sorting's cached group map (read only, never fetched). */
+  mapNames: () => Promise<Record<number, string>>;
+  /** Add a group found through a message to the cached list. */
+  addToList: (group: GroupInfo) => void;
   /** Which new group messages make the message sound. */
   sound: "mentions" | "all";
 }
-
-type DockItem =
-  | { kind: "dm"; conversation: Conversation }
-  | { kind: "group"; group: GroupChat };
-
-const itemDateline = (item: DockItem) =>
-  item.kind === "dm" ? item.conversation.dateline : item.group.dateline;
-
-const itemUnread = (item: DockItem) =>
-  item.kind === "dm" ? item.conversation.unread : item.group.unread;
 
 const unreadBadge = (unread: number) =>
   unread > 0 &&
@@ -155,8 +142,6 @@ interface ChatWindow {
 }
 
 const TYPING_TIMEOUT = 35000;
-// How often group activity is caught up on page load
-const GROUP_CATCH_UP_MS = 5 * 60 * 1000;
 // The longest saved windows wait for group setup on page load
 const GROUP_SETUP_WAIT_MS = 5000;
 const OWN_TYPING_TIMEOUT = 30000;
@@ -214,7 +199,8 @@ export class ChatDock {
   private presenceTimer?: ReturnType<typeof setInterval>;
   private global: GlobalChatWindow | null = null;
   private readonly groupWindows = new Map<number, GroupChatWindow>();
-  private groupNames: Record<number, string> = {};
+  /** Groups on the cached list (or added to it); others found in messages get added. */
+  private readonly listedGroups = new Set<number>();
 
   constructor(private readonly options: ChatDockOptions) {
     this.client = options.client;
@@ -229,7 +215,6 @@ export class ChatDock {
       collapsed: Boolean(options.state?.collapsed),
       filter: options.state?.filter,
       groups: options.state?.groups,
-      groupsCheckedAt: options.state?.groupsCheckedAt,
     };
     this.heads = el("div", {
       class: options.layout === "list" ? "hfx-chat-list" : "hfx-chat-heads",
@@ -287,7 +272,7 @@ export class ChatDock {
       if (live && this.isActive(win)) client.markRead(partyId);
     });
     client.on("groups", () => {
-      this.applyGroupNames();
+      this.addUnlistedGroups();
       this.saveGroupActivity();
       this.renderHeads();
     });
@@ -339,9 +324,8 @@ export class ChatDock {
   }
 
   /**
-   * On the first connection: set up groups, then reopen the saved windows.
-   * Groups go first because the membership check moves the server's idea of
-   * the open chat, and loading the windows' history afterwards sets it back.
+   * On the first connection: set up groups, then reopen the saved windows, so
+   * restored group windows have their names.
    */
   private async firstReady(): Promise<void> {
     // Saving before the windows are back would drop them from the saved state
@@ -362,77 +346,47 @@ export class ChatDock {
   }
 
   /**
-   * The user's groups: names from the shared group map, membership from a
-   * cached check (redone when due), and HFX's own saved activity per group.
+   * The user's groups, from the cached list (or convo.php's Comrades list,
+   * fetched once when there's none), with HFX's own saved activity per group.
+   * Nothing else is requested for groups: activity comes from live messages
+   * and from opening a group.
    */
   private async setupGroups(): Promise<void> {
     const groups = this.options.groups;
     if (!groups) return;
-    this.groupNames = await groups.names().catch(() => ({}));
-    let members = groups.members;
-    if (!members) {
-      const candidates = Object.keys(this.groupNames).map(Number);
-      members = candidates.length
-        ? await this.client.checkGroupMembership(candidates)
-        : [];
-      groups.saveMembers(members);
-    }
+    const list = await groups.list();
     const saved = this.state.groups ?? {};
+    list.forEach((group) => this.listedGroups.add(group.gid));
     this.client.setGroups(
-      members.map((gid) => ({
-        gid,
-        name: this.groupNames[gid] ?? `Group ${gid}`,
-        dateline: saved[gid]?.dateline ?? 0,
-        unread: saved[gid]?.unread ?? 0,
+      list.map((group) => ({
+        gid: group.gid,
+        name: group.name,
+        dateline: saved[group.gid]?.dateline ?? 0,
+        unread: saved[group.gid]?.unread ?? (group.unread ? 1 : 0),
       }))
     );
-    await this.catchUpGroups(members, saved);
   }
 
   /**
-   * HF gives no group activity, so HFX keeps its own: once per group, load its
-   * latest page to learn its last message; afterwards (at most every few
-   * minutes) fetch only messages newer than the last one seen, counting the
-   * ones from others as unread.
+   * A message from a group the list didn't have (e.g. one joined since): name
+   * it from Who's Online Sorting's cached group map, and add it to the list.
    */
-  private async catchUpGroups(
-    gids: number[],
-    saved: NonNullable<DockState["groups"]>
-  ): Promise<void> {
-    const due =
-      Date.now() - (this.state.groupsCheckedAt ?? 0) >= GROUP_CATCH_UP_MS ||
-      gids.some((gid) => !saved[gid]?.lastMid);
-    if (!due) return;
-    const me = this.client.me?.uid;
-    await Promise.all(
-      gids.map(async (gid) => {
-        const lastMid = saved[gid]?.lastMid ?? 0;
-        if (this.client.getGroupMessages(gid).length) return;
-        try {
-          await this.client.loadGroupHistory(gid, lastMid);
-        } catch {
-          return;
-        }
-        if (!lastMid) return;
-        const missed = this.client
-          .getGroupMessages(gid)
-          .filter(
-            (message) => message.mid > lastMid && message.uid !== me
-          ).length;
-        const group = this.client.groups.get(gid);
-        if (group && missed) group.unread += missed;
-      })
+  private async addUnlistedGroups(): Promise<void> {
+    const groups = this.options.groups;
+    if (!groups) return;
+    const unlisted = Array.from(this.client.groups.values()).filter(
+      (group) => !this.listedGroups.has(group.gid)
     );
-    this.state.groupsCheckedAt = Date.now();
-    this.renderHeads();
-  }
-
-  /** Name groups that were only known by id (e.g. found through a message). */
-  private applyGroupNames(): void {
-    for (const group of this.client.groups.values()) {
-      const name = this.groupNames[group.gid];
-      if (name && group.name !== name) group.name = name;
+    if (!unlisted.length) return;
+    unlisted.forEach((group) => this.listedGroups.add(group.gid));
+    const names = await groups
+      .mapNames()
+      .catch(() => ({}) as Record<number, string>);
+    for (const group of unlisted) {
+      if (names[group.gid]) group.name = names[group.gid];
+      groups.addToList({ gid: group.gid, name: group.name });
     }
+    this.renderHeads();
   }
 
   /** Keep each group's last activity and unread count across page loads. */
@@ -440,14 +394,7 @@ export class ChatDock {
     if (!this.options.groups || !this.windowsRestored) return;
     const groups: NonNullable<DockState["groups"]> = {};
     for (const group of this.client.groups.values()) {
-      const lastMid =
-        this.client.getGroupMessages(group.gid).slice(-1)[0]?.mid ??
-        this.state.groups?.[group.gid]?.lastMid;
-      groups[group.gid] = {
-        dateline: group.dateline,
-        unread: group.unread,
-        ...(lastMid ? { lastMid } : {}),
-      };
+      groups[group.gid] = { dateline: group.dateline, unread: group.unread };
     }
     const before = JSON.stringify(this.state.groups ?? {});
     if (JSON.stringify(groups) === before) return;
@@ -478,55 +425,41 @@ export class ChatDock {
 
   // ---- Bubbles -------------------------------------------------------------
 
-  /** DMs and (when enabled) groups, newest first. */
-  private items(): DockItem[] {
-    const dms: DockItem[] = this.client
-      .getConversations()
-      .map((conversation) => ({ kind: "dm", conversation }));
-    const groups: DockItem[] = this.options.groups
-      ? this.client.getGroups().map((group) => ({ kind: "group", group }))
-      : [];
-    return [...dms, ...groups].sort(
-      (a, b) => itemDateline(b) - itemDateline(a)
-    );
+  /** The user's groups, always shown (pinned under Global chat), most active first. */
+  private pinnedGroups(): GroupChat[] {
+    return this.options.groups ? this.client.getGroups() : [];
   }
 
-  private isOpen(item: DockItem): boolean {
-    return item.kind === "dm"
-      ? this.windows.has(item.conversation.partyId)
-      : this.groupWindows.has(item.group.gid);
-  }
-
-  /** Recent chats, always including unread and open ones, newest first. */
-  private visibleItems(limit: number, filter: DockFilter = "all"): DockItem[] {
-    const all = this.items().filter(
-      (item) => filter === "all" || item.kind === filter
-    );
+  /** Recent DMs, always including unread and open ones, newest first. */
+  private visibleConversations(limit: number): Conversation[] {
+    const all = this.client.getConversations();
     const max = Math.max(
       1,
       Math.min(limit, Math.round(this.options.maxBubbles) || 5)
     );
-    const picked = new Set<DockItem>();
-    for (const item of all) {
+    const picked = new Set<Conversation>();
+    for (const conversation of all) {
       if (picked.size >= max) break;
-      if (itemUnread(item) > 0 || this.isOpen(item)) picked.add(item);
+      if (conversation.unread > 0 || this.windows.has(conversation.partyId)) {
+        picked.add(conversation);
+      }
     }
-    for (const item of all) {
+    for (const conversation of all) {
       if (picked.size >= max) break;
-      picked.add(item);
+      picked.add(conversation);
     }
-    return all.filter((item) => picked.has(item));
+    return all.filter((conversation) => picked.has(conversation));
   }
 
   /** Render the bubbles or the list, whichever layout is configured. */
   private renderHeads(): void {
     if (this.ended) return;
-    const items =
+    const shown =
       this.options.layout === "list" ? this.renderList() : this.renderBubbles();
     // The global chat entry is always there when enabled
     this.root.hidden =
       !this.inboxLoaded ||
-      (items.length === 0 &&
+      (shown === 0 &&
         this.windows.size === 0 &&
         this.groupWindows.size === 0 &&
         !this.options.createGlobal);
@@ -534,7 +467,10 @@ export class ChatDock {
 
   /** Chats with unread messages, for the launcher and list header. */
   private unreadCount(): number {
-    return this.items().filter((item) => itemUnread(item) > 0).length;
+    return (
+      this.client.getConversations().filter((c) => c.unread > 0).length +
+      this.pinnedGroups().filter((group) => group.unread > 0).length
+    );
   }
 
   private toggleCollapsed(): void {
@@ -543,8 +479,10 @@ export class ChatDock {
     this.renderHeads();
   }
 
-  private renderBubbles(): DockItem[] {
-    const items = this.visibleItems(10);
+  /** Returns how many chat bubbles it shows. */
+  private renderBubbles(): number {
+    const conversations = this.visibleConversations(10);
+    const groups = this.pinnedGroups();
     const totalUnread = this.unreadCount();
 
     const launcher = el(
@@ -562,21 +500,19 @@ export class ChatDock {
     );
     launcher.addEventListener("click", () => this.toggleCollapsed());
 
+    // Global chat is pinned just above the launcher, then groups, then recent DMs
     const heads = this.state.collapsed
       ? []
-      : items.map((item) =>
-          item.kind === "dm"
-            ? this.dmHead(item.conversation)
-            : this.groupHead(item.group)
-        );
-
-    // Global chat is pinned just above the launcher
+      : [
+          ...groups.map((group) => this.groupHead(group)),
+          ...conversations.map((conversation) => this.dmHead(conversation)),
+        ];
     const global =
       this.options.createGlobal && !this.state.collapsed
         ? [this.globalHead()]
         : [];
     this.heads.replaceChildren(launcher, ...global, ...heads);
-    return items;
+    return conversations.length + groups.length;
   }
 
   private dmHead(conversation: Conversation): HTMLElement {
@@ -741,9 +677,13 @@ export class ChatDock {
    * Messenger-style list: a "Chats" panel docked at the bottom edge, with a
    * row per chat (avatar, name, time, last message or typing).
    */
-  private renderList(): DockItem[] {
+  /** Returns how many chat rows it shows. */
+  private renderList(): number {
     const filter = this.options.groups ? (this.state.filter ?? "all") : "all";
-    const items = this.visibleItems(20, filter);
+    // Groups are pinned under Global chat; DMs follow by recency
+    const groups = filter === "dm" ? [] : this.pinnedGroups();
+    const conversations =
+      filter === "group" ? [] : this.visibleConversations(20);
     const totalUnread = this.unreadCount();
     const now = Math.floor(Date.now() / 1000);
 
@@ -768,11 +708,10 @@ export class ChatDock {
     );
     header.addEventListener("click", () => this.toggleCollapsed());
 
-    const rows = items.map((item) =>
-      item.kind === "dm"
-        ? this.dmRow(item.conversation, now)
-        : this.groupRow(item.group, now)
-    );
+    const rows = [
+      ...groups.map((group) => this.groupRow(group, now)),
+      ...conversations.map((conversation) => this.dmRow(conversation, now)),
+    ];
 
     this.heads.replaceChildren();
     appendChildren(this.heads, [
@@ -788,7 +727,7 @@ export class ChatDock {
           ]
         ),
     ]);
-    return items;
+    return rows.length;
   }
 
   private dmRow(conversation: Conversation, now: number): HTMLElement {
@@ -1011,7 +950,7 @@ export class ChatDock {
       win = new GroupChatWindow({
         client: this.client,
         gid,
-        name: group?.name ?? this.groupNames[gid] ?? `Group ${gid}`,
+        name: group?.name ?? `Group ${gid}`,
         minimized,
         typingIndicators: this.options.typingIndicators,
         origin: this.origin,

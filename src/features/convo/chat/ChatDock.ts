@@ -10,7 +10,7 @@ import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
-import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
+import { GroupChatWindow } from "./GroupChatWindow";
 import type { GroupInfo } from "./groupList";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { MessageSoundPlayer, mutedParties } from "./sound";
@@ -57,6 +57,17 @@ export interface DockGroups {
   addToList: (group: GroupInfo) => void;
   /** Which new group messages make the message sound. */
   sound: "mentions" | "all";
+}
+
+/** A group's initials for its bubble: "Quantum" → "Q", "The Brotherhood" → "B", "Lions League" → "LL". */
+export function groupInitials(name: string): string {
+  const words = name
+    .split(/\s+/)
+    .filter((word) => word && !/^the$/i.test(word));
+  const letters = (words.length ? words : [name])
+    .slice(0, 2)
+    .map((word) => Array.from(word)[0] ?? "");
+  return letters.join("").toUpperCase() || "?";
 }
 
 const unreadBadge = (unread: number) =>
@@ -566,7 +577,14 @@ export class ChatDock {
         "aria-label": `Open ${group.name} group chat`,
         "data-group": group.gid,
       },
-      [GROUP_ICON(), unreadBadge(group.unread)]
+      [
+        el(
+          "span",
+          { class: "hfx-chat-group-initials", "aria-hidden": "true" },
+          groupInitials(group.name)
+        ),
+        unreadBadge(group.unread),
+      ]
     );
     head.addEventListener("click", () =>
       this.openGroup(group.gid, { focus: true })
@@ -801,7 +819,11 @@ export class ChatDock {
         el(
           "span",
           { class: "hfx-chat-row-avatar hfx-chat-row-group-icon" },
-          GROUP_ICON()
+          el(
+            "span",
+            { class: "hfx-chat-group-initials", "aria-hidden": "true" },
+            groupInitials(group.name)
+          )
         ),
         this.rowBody(
           // The group's name in its HF style

@@ -41,8 +41,14 @@ export const CHAT_DOCK_CSS = `
   flex-direction: column-reverse;
   align-items: center;
   gap: 10px;
-  padding-bottom: 16px;
+  padding: 6px 6px 16px;
+  /* Many groups and DMs: scroll rather than run off the top of the page */
+  max-height: calc(100vh - 8px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+.hfx-chat-heads::-webkit-scrollbar { display: none; }
 .hfx-chat-head,
 .hfx-chat-launcher {
   position: relative;
@@ -238,7 +244,7 @@ export const CHAT_DOCK_CSS = `
   background: var(--hfx-chat-accent);
   color: #fff;
 }
-.hfx-chat-head-group svg { width: 24px; height: 24px; }
+.hfx-chat-group-initials { font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
 .hfx-chat-row-group-icon {
   display: flex;
   align-items: center;
@@ -247,7 +253,7 @@ export const CHAT_DOCK_CSS = `
   background: var(--hfx-chat-accent);
   color: #fff;
 }
-.hfx-chat-row-group-icon svg { width: 20px; height: 20px; }
+.hfx-chat-row-group-icon .hfx-chat-group-initials { font-size: 13px; }
 /* HF's group name styles come from its own stylesheet; keep them row-sized */
 #hfx-chat-dock .hfx-chat-row-name > span[class^="group"] {
   font-size: inherit !important;

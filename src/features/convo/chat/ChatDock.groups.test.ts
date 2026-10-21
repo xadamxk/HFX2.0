@@ -4,6 +4,7 @@ import {
   DEFAULT_DOCK_STATE,
   DockGroups,
   DockState,
+  groupInitials,
 } from "./ChatDock";
 import { ConvoClient } from "./ConvoClient";
 import type { GroupInfo } from "./groupList";
@@ -151,6 +152,7 @@ describe("ChatDock group chats", () => {
     const quantum = heads[1];
     expect(quantum.classList).toContain("hfx-chat-head-group");
     expect(quantum.querySelector(".hfx-chat-dot")).toBeNull();
+    expect(quantum.textContent).toBe("Q");
   });
 
   it("orders groups by the activity HFX has seen", async () => {
@@ -330,5 +332,15 @@ describe("ChatDock group chats", () => {
     expect(
       document.querySelector('.hfx-chat-window[data-party="g48"]')
     ).toBeNull();
+  });
+});
+
+describe("groupInitials", () => {
+  it("uses up to two words' first letters, skipping a leading The", () => {
+    expect(groupInitials("Quantum")).toBe("Q");
+    expect(groupInitials("Lions League")).toBe("LL");
+    expect(groupInitials("The Brotherhood")).toBe("B");
+    expect(groupInitials("pink  lsz crew")).toBe("PL");
+    expect(groupInitials("The")).toBe("T");
   });
 });

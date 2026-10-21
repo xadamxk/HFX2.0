@@ -182,6 +182,9 @@ export const CHAT_DOCK_CSS = `
 .hfx-chat-msg img { max-width: 100%; height: auto; border-radius: 8px; display: block; }
 .hfx-chat-mine { align-self: flex-end; background: var(--hfx-chat-mine); color: #fff; }
 .hfx-chat-theirs { align-self: flex-start; background: var(--hfx-chat-theirs); border: 1px solid var(--hfx-chat-border); }
+/* Message Timestamps sets an inline margin for convo.php; align them with each side's bubbles */
+.hfx-chat-stamp-mine { align-self: flex-end; margin: 2px 6px 4px 0 !important; }
+.hfx-chat-stamp-theirs { align-self: flex-start; margin: 2px 0 4px 6px !important; }
 .hfx-chat-pending { opacity: 0.6; }
 .hfx-chat-failed { border: 1px solid var(--hfx-chat-badge); }
 .hfx-chat-msg-error {

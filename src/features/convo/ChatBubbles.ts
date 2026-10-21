@@ -9,6 +9,7 @@ import Global from "../../sections/Global";
 import { ChatDock, DEFAULT_DOCK_STATE, DockState } from "./chat/ChatDock";
 import { ConvoClient } from "./chat/ConvoClient";
 import { CHAT_DOCK_CSS } from "./chat/styles";
+import MessageTimestamps from "./MessageTimestamps";
 
 interface ChatBubblesSettings {
   enabled: boolean;
@@ -58,11 +59,17 @@ class ChatBubbles extends Feature {
     });
   }
 
-  run(settings: ChatBubblesSettings, section: Section) {
+  async run(settings: ChatBubblesSettings, section: Section) {
     if (section === Convo || window.top !== window) return;
     if (document.getElementById("hfx-chat-dock")) return;
     const postKey = Util.getUserPostKey();
     if (!postKey || !Util.getCurrentUser()) return;
+
+    // Chat windows follow the Message Timestamps toggle
+    const timestampSettings =
+      await this.settingsService.getFeatureSettings(MessageTimestamps);
+    const timestamps = timestampSettings?.enabled ?? MessageTimestamps.enabled;
+    if (document.getElementById("hfx-chat-dock")) return;
 
     Util.addCssToPage(CHAT_DOCK_CSS);
     const client = new ConvoClient({ postKey });
@@ -70,6 +77,7 @@ class ChatBubbles extends Feature {
       client,
       maxBubbles: Number(settings.maxBubbles) || 5,
       typingIndicators: settings.typingIndicators !== false,
+      timestamps: Boolean(timestamps),
       state: settings.storage_dockState ?? DEFAULT_DOCK_STATE,
       saveState: (state) => {
         this.settingsService

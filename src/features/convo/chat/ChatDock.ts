@@ -7,6 +7,11 @@ import type {
 } from "./ConvoClient";
 import { HISTORY_PAGE_SIZE } from "./ConvoClient";
 import { avatarUrl, previewText, renderMessage } from "./formatMessage";
+import {
+  convoNiceTime,
+  createTimestamp,
+  showsTimestamp,
+} from "../common/timestamps";
 
 /**
  * Facebook-style chat UI: a column of avatar bubbles (bottom right) for recent
@@ -30,6 +35,8 @@ export interface ChatDockOptions {
   client: ConvoClient;
   maxBubbles: number;
   typingIndicators: boolean;
+  /** Show timestamps under messages, as Message Timestamps does on convo.php. */
+  timestamps: boolean;
   state: DockState;
   saveState: (state: DockState) => void;
   /** Called once if Convo ends the session or the API looks different. */
@@ -58,6 +65,7 @@ interface ChatWindow {
   typing: HTMLElement;
   input: HTMLTextAreaElement;
   rendered: Map<number, HTMLElement>;
+  timestamps: Map<number, HTMLElement>;
   pending: PendingSend[];
   loaded: boolean;
   loading: boolean;
@@ -178,14 +186,12 @@ export class ChatDock {
     if (!this.restored) {
       this.restored = true;
       // Oldest first, so the newest ends up next to the bubbles
-      [...this.state.open]
-        .reverse()
-        .forEach((chat) =>
-          this.openChat(chat.partyId, {
-            minimized: chat.minimized,
-            restore: true,
-          })
-        );
+      [...this.state.open].reverse().forEach((chat) =>
+        this.openChat(chat.partyId, {
+          minimized: chat.minimized,
+          restore: true,
+        })
+      );
     } else {
       // Catch up on what was missed while disconnected
       this.windows.forEach((win) => {
@@ -438,6 +444,7 @@ export class ChatDock {
       typing,
       input,
       rendered: new Map(),
+      timestamps: new Map(),
       pending: [],
       loaded: false,
       loading: false,
@@ -587,6 +594,13 @@ export class ChatDock {
         !prior || prior.uid !== message.uid
       );
       previous = node;
+
+      // Timestamps follow their message, and move when a newer message joins its minute
+      const timestamp = this.timestampFor(win, message, messages[index + 1]);
+      if (timestamp) {
+        if (node.nextSibling !== timestamp) node.after(timestamp);
+        previous = timestamp;
+      }
     });
     if (messages.length) this.setListNotice(win, "");
 
@@ -609,13 +623,42 @@ export class ChatDock {
     }
   }
 
+  /**
+   * The message's timestamp element if it should show one (same rule as
+   * Message Timestamps), removing a stale one otherwise.
+   */
+  private timestampFor(
+    win: ChatWindow,
+    message: ChatMessage,
+    next: ChatMessage | undefined
+  ): HTMLElement | null {
+    const existing = win.timestamps.get(message.mid);
+    const minute = convoNiceTime(message.dateline);
+    const nextMinute =
+      next && next.uid === message.uid ? convoNiceTime(next.dateline) : null;
+    if (!this.options.timestamps || !showsTimestamp(minute, nextMinute)) {
+      existing?.remove();
+      win.timestamps.delete(message.mid);
+      return null;
+    }
+    if (existing) return existing;
+    const timestamp = createTimestamp(minute);
+    timestamp.classList.add(
+      message.uid === this.client.me?.uid
+        ? "hfx-chat-stamp-mine"
+        : "hfx-chat-stamp-theirs"
+    );
+    win.timestamps.set(message.mid, timestamp);
+    return timestamp;
+  }
+
   private renderBubble(message: ChatMessage): HTMLElement {
     const mine = message.uid === this.client.me?.uid;
     return el(
       "div",
       {
         class: `hfx-chat-msg ${mine ? "hfx-chat-mine" : "hfx-chat-theirs"}`,
-        title: new Date(message.dateline * 1000).toLocaleString(),
+        title: convoNiceTime(message.dateline),
         "data-mid": message.mid,
       },
       renderMessage(message)

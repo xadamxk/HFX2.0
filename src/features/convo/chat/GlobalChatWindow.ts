@@ -23,6 +23,8 @@ export interface GlobalChatWindowOptions extends RoomWindowOptions {
   createClient?: () => GlobalRoomClient;
   /** Plays HF's sound for new messages that mention the user. */
   sound?: MessageSoundPlayer;
+  /** Hide Stanley's (Helpbot's) automated notices. */
+  hideHelpbot?: boolean;
 }
 
 export const GLOBE_ICON = () => {
@@ -55,7 +57,11 @@ export class GlobalChatWindow extends RoomChatWindow {
     const origin = options.origin ?? location.origin;
     const client =
       options.createClient?.() ??
-      new GlobalRoomClient({ postKey: options.postKey, origin });
+      new GlobalRoomClient({
+        postKey: options.postKey,
+        origin,
+        hideHelpbot: options.hideHelpbot,
+      });
     const onlineButton = el(
       "button",
       {

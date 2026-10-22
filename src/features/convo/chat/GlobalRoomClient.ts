@@ -137,6 +137,8 @@ export interface GlobalRoomClientOptions {
   ) => SocketIOClient;
   fetch?: typeof fetch;
   randomUUID?: () => string;
+  /** Drop Helpbot's (Stanley's) automated notices. */
+  hideHelpbot?: boolean;
 }
 
 export class GlobalRoomClient {
@@ -159,6 +161,7 @@ export class GlobalRoomClient {
   private readonly listeners = new Map<string, Set<(...args: any[]) => void>>();
   private readonly socket: SocketIOClient;
   private readonly randomUUID: () => string;
+  private readonly hideHelpbot: boolean;
   private bootId: string | null = null;
   private sending = false;
   private ownTyping = false;
@@ -167,6 +170,7 @@ export class GlobalRoomClient {
     const origin = options.origin ?? location.origin;
     const fetchFn = options.fetch ?? ((...args) => fetch(...args));
     this.randomUUID = options.randomUUID ?? (() => crypto.randomUUID());
+    this.hideHelpbot = options.hideHelpbot ?? false;
     const auth = async () => ({
       ticket: await fetchConvoTicket(origin, options.postKey, fetchFn),
     });
@@ -371,6 +375,7 @@ export class GlobalRoomClient {
       if (this.seen.size > SEEN_LIMIT) {
         this.seen.delete(this.seen.values().next().value!);
       }
+      if (this.hideHelpbot && message.uid === HELPBOT_UID) continue;
       for (const rawUser of Object.values<any>(raw.users ?? {})) {
         const user = parseUser(rawUser);
         if (user) this.users.set(user.uid, user);

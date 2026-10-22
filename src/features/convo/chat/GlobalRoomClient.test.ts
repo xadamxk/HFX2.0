@@ -149,6 +149,34 @@ describe("GlobalRoomClient", () => {
     });
   });
 
+  it("drops Stanley's notices only when asked to", async () => {
+    const stanley = (mid: number) =>
+      roomMessage({
+        uid: 1337,
+        mid,
+        trustedHtml: true,
+        message: "🔔 <a href='showthread.php?tid=1'>New thread</a>",
+      });
+    await ready();
+    socket.fire("convo_receivemessage_bulk", [stanley(1), roomMessage()]);
+    expect(client.messages.map((m) => m.uid)).toEqual([1337, NOVA.uid]);
+
+    socket = new FakeSocket();
+    client = new GlobalRoomClient({
+      postKey: "abc",
+      origin: "https://hackforums.net",
+      createSocket: () => socket as unknown as SocketIOClient,
+      hideHelpbot: true,
+    });
+    const onMessages = jest.fn();
+    client.on("messages", onMessages);
+    await ready();
+    socket.fire("convo_receivemessage_bulk", [stanley(1), roomMessage()]);
+    socket.fire("convo_receivemessage", stanley(2));
+    expect(client.messages.map((m) => m.uid)).toEqual([NOVA.uid]);
+    expect(onMessages).toHaveBeenCalledTimes(1);
+  });
+
   it("starts over when the server restarts", async () => {
     await ready("boot-1");
     socket.fire("convo_receivemessage_bulk", [roomMessage()]);

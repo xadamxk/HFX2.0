@@ -28,6 +28,7 @@ interface ChatBubblesSettings {
   groupChats: boolean;
   groupSound: "mentions" | "all";
   convoLinks: boolean;
+  hideStanley: boolean;
   storage_dockState?: DockState;
   storage_groupList?: GroupListCache | null;
 }
@@ -94,6 +95,13 @@ class ChatBubbles extends Feature {
           description:
             "Add a Global chat entry for HF's public Convo room. You only join the room, and show in its online list, while its window is open.",
           default: true,
+        }),
+        new Checkbox({
+          id: "hideStanley",
+          label: "Hide Stanley in global chat",
+          description:
+            "Hide Stanley's automated notices (new threads and other alerts) from the global chat.",
+          default: false,
         }),
         new Checkbox({
           id: "groupChats",
@@ -184,6 +192,7 @@ class ChatBubbles extends Feature {
                 minimized,
                 typingIndicators: settings.typingIndicators !== false,
                 sound,
+                hideHelpbot: settings.hideStanley === true,
                 onClose,
                 onChange,
               })

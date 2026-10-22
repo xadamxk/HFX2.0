@@ -1,6 +1,7 @@
 import { appendChildren, el, ElChild } from "../../../core/Dom";
 import type {
   ChatMessage,
+  ChatUser,
   Conversation,
   GroupChat,
   ConvoClient,
@@ -17,6 +18,7 @@ import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
 import type { GroupInfo } from "./groupList";
+import { fetchConvoParty } from "./convoLinks";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { mirrorSiteScrollbar } from "./siteScrollbar";
 import { MessageSoundPlayer, mutedParties } from "./sound";
@@ -136,6 +138,8 @@ export interface ChatDockOptions {
   saveState: (state: DockState) => void;
   /** Called once if Convo ends the session or the API looks different. */
   onEnded?: (reason?: string) => void;
+  /** The chat id for a user's convo link, 0 if none (default: convo.php's redirect). */
+  findParty?: (uid: number) => Promise<number>;
   origin?: string;
 }
 
@@ -212,6 +216,8 @@ export class ChatDock {
   readonly root: HTMLElement;
   private readonly heads: HTMLElement;
   private readonly windows = new Map<number, ChatWindow>();
+  /** Chat ids found for users' convo links on this page: uid → party. */
+  private readonly partyByUid = new Map<number, number>();
   private readonly client: ConvoClient;
   private readonly origin: string;
   private state: DockState;
@@ -953,6 +959,33 @@ export class ChatDock {
       win.input.focus();
       this.markReadIfActive(win);
     }
+  }
+
+  /**
+   * Open the 1:1 chat with a user, as their Convo button on a profile or post
+   * would on convo.php. A chat already loaded opens straight away; otherwise
+   * convo.php's redirect for the user names it (one request, remembered for
+   * this page). Resolves false when there's no chat to open, so the caller
+   * can go to convo.php instead.
+   */
+  async openChatWithUser(uid: number, hint?: ChatUser): Promise<boolean> {
+    const me = this.client.me;
+    if (this.client.status !== "ready" || !me || uid === me.uid) return false;
+    let partyId =
+      this.client.getConversations().find((c) => c.other.uid === uid)
+        ?.partyId ?? this.partyByUid.get(uid);
+    if (!partyId) {
+      const findParty =
+        this.options.findParty ?? ((id) => fetchConvoParty(id, this.origin));
+      partyId = await findParty(uid);
+      if (!partyId) return false;
+      this.partyByUid.set(uid, partyId);
+    }
+    // The header shows who it is before the history (which names them) arrives
+    if (hint && !this.client.conversations.has(partyId))
+      this.client.addConversation(partyId, hint);
+    this.openChat(partyId, { focus: true });
+    return true;
   }
 
   /** Open the global room's window; its socket connects while it's expanded. */

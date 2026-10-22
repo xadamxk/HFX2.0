@@ -293,6 +293,22 @@ export class ConvoClient {
     );
   }
 
+  /**
+   * Add a 1:1 conversation that isn't in the loaded inbox, e.g. one opened
+   * from a profile. `other` is a stand-in until the chat's own data updates it.
+   */
+  addConversation(partyId: number, other: ChatUser): void {
+    if (this.conversations.has(partyId)) return;
+    if (!this.users.has(other.uid)) this.users.set(other.uid, { ...other });
+    this.conversations.set(partyId, {
+      partyId,
+      other: this.users.get(other.uid)!,
+      dateline: 0,
+      unread: 0,
+    });
+    this.fire("conversations");
+  }
+
   /** Loaded messages for a party, oldest first. */
   getMessages(partyId: number): ChatMessage[] {
     return this.messages.get(partyId) ?? [];

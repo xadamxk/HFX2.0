@@ -9,6 +9,7 @@ import Convo from "../../sections/Convo";
 import Global from "../../sections/Global";
 import { ChatDock, DEFAULT_DOCK_STATE, DockState } from "./chat/ChatDock";
 import { ConvoClient } from "./chat/ConvoClient";
+import { interceptConvoLinks, pageUserHint } from "./chat/convoLinks";
 import { fetchGroupList, GroupInfo } from "./chat/groupList";
 import { GlobalChatWindow } from "./chat/GlobalChatWindow";
 import { MessageSound } from "./chat/sound";
@@ -26,6 +27,7 @@ interface ChatBubblesSettings {
   layout: "bubbles" | "list";
   groupChats: boolean;
   groupSound: "mentions" | "all";
+  convoLinks: boolean;
   storage_dockState?: DockState;
   storage_groupList?: GroupListCache | null;
 }
@@ -98,6 +100,13 @@ class ChatBubbles extends Feature {
           label: "Group chats",
           description:
             "Include your private group convos (Comrades on convo.php) alongside your DMs.",
+          default: true,
+        }),
+        new Checkbox({
+          id: "convoLinks",
+          label: "Open Convo links here",
+          description:
+            "HF's Convo buttons on profiles and posts open the chat here instead of on convo.php. Ctrl-click or middle-click still opens convo.php.",
           default: true,
         }),
         new Checkbox({
@@ -202,6 +211,13 @@ class ChatBubbles extends Feature {
     });
     dock.mount();
     client.connect();
+    if (settings.convoLinks !== false) {
+      const origin = location.origin;
+      interceptConvoLinks(
+        (uid) => dock.openChatWithUser(uid, pageUserHint(uid, origin)),
+        origin
+      );
+    }
     window.addEventListener("pagehide", () => client.disconnect());
   }
 

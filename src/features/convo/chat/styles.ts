@@ -389,7 +389,7 @@ export const CHAT_DOCK_CSS = `
  * Fixed height, so a message list never grows when one loads (and stays at
  * the bottom); the width follows the image, up to the line.
  */
-.hfx-chat-embed { display: inline-block; max-width: 100%; text-decoration: none; }
+.hfx-chat-embed { display: block; width: fit-content; max-width: 100%; text-decoration: none; }
 .hfx-gc-line .hfx-chat-embed img { width: auto; height: 160px; object-fit: contain; }
 /* Only the text column (from just left of the text), not under the avatar */
 .hfx-gc-line.hfx-gc-mention {

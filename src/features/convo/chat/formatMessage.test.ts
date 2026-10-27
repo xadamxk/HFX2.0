@@ -3,6 +3,7 @@ import {
   embedsHidden,
   imageLink,
   parseEmbed,
+  withoutEmbedLink,
   htmlToText,
   mentionsUser,
   parsePreviews,
@@ -430,11 +431,38 @@ describe("image link embeds", () => {
     expect(img.alt).toBe("GIF");
     expect(img.getAttribute("referrerpolicy")).toBe("no-referrer");
     expect(img.getAttribute("loading")).toBe("lazy");
-    // The text, link included, still follows
-    expect(div.textContent).toContain(`: ${GIF}`);
+    // The text follows, without the link the image already shows
+    expect(div.textContent).toBe(
+      `Here's a GIF of "no ai", for https://hackforums.net/member.php?action=profile&uid=5`
+    );
+    expect(div.querySelectorAll("a")).toHaveLength(2);
   });
 
-  it("drops the image when it fails to load, keeping the text", () => {
+  it("drops the shown link from the text, and a ':' left at the end", () => {
+    expect(withoutEmbedLink(`for m0hx : ${GIF}`, GIF)).toBe("for m0hx");
+    expect(withoutEmbedLink(`for m0hx: ${GIF}  `, GIF)).toBe("for m0hx");
+    expect(withoutEmbedLink(GIF, GIF)).toBe("");
+    expect(withoutEmbedLink(`${GIF}\nnice`, GIF)).toBe("nice");
+    // In the middle, a colon stays and so does the line break
+    expect(withoutEmbedLink(`look: ${GIF}\nnice`, GIF)).toBe("look: nice");
+    expect(withoutEmbedLink(`look\n${GIF} nice`, GIF)).toBe("look\nnice");
+    // Only the whole link, once
+    expect(withoutEmbedLink(`${GIF}x and ${GIF}`, GIF)).toBe(`${GIF}x and`);
+    expect(withoutEmbedLink("no link", GIF)).toBe("no link");
+  });
+
+  it("previews the text without the link, or the kind of image", () => {
+    expect(previewText({ text: `look ${GIF}`, embed: GIF })).toBe("look");
+    expect(previewText({ text: GIF, embed: GIF })).toBe("[GIF]");
+    expect(
+      previewText({
+        text: "https://i.imgflip.com/b4edai.jpg",
+        embed: "https://i.imgflip.com/b4edai.jpg",
+      })
+    ).toBe("[Image]");
+  });
+
+  it("drops the image when it fails to load, putting the link back in the text", () => {
     const div = document.createElement("div");
     div.appendChild(renderMessage({ text: `see ${GIF}`, embed: GIF }));
     div.querySelector("img")!.dispatchEvent(new Event("error"));

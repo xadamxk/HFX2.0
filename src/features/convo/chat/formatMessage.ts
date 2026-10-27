@@ -158,11 +158,28 @@ export function embedsHidden(cookie: string = document.cookie): boolean {
   }
 }
 
+/**
+ * The text without the embedded link, which the image already shows. A link
+ * at the end takes a dangling ":" with it ("…, for m0hx : <link>" from /gif).
+ */
+export function withoutEmbedLink(text: string, url: string): string {
+  const parts = text.split(/(\s+)/);
+  const at = parts.indexOf(url);
+  if (at < 0) return text;
+  const before = parts.slice(0, at).join("");
+  const after = parts.slice(at + 1).join("");
+  if (!after.trim()) return before.replace(/\s*:?\s*$/, "");
+  if (!before.trim()) return after.replace(/^\s+/, "");
+  return before + after.replace(/^\s+/, "");
+}
+
+const isGif = (url: string) => /\.gif(?:\?|$)/i.test(url);
+
 /** An embedded image link, shown above the message text like convo.php does. */
-function renderEmbed(url: string): HTMLElement {
+function renderEmbed(url: string, onError: () => void): HTMLElement {
   const img = el("img", {
     src: url,
-    alt: /\.gif(?:\?|$)/i.test(url) ? "GIF" : "Image",
+    alt: isGif(url) ? "GIF" : "Image",
     loading: "lazy",
     referrerpolicy: "no-referrer",
   });
@@ -176,8 +193,10 @@ function renderEmbed(url: string): HTMLElement {
     },
     img
   );
-  // A dead link: leave just the text, which still has the link
-  img.addEventListener("error", () => link.remove());
+  img.addEventListener("error", () => {
+    link.remove();
+    onError();
+  });
   return link;
 }
 
@@ -440,10 +459,21 @@ export function renderMessage(
     return renderImage(message.image) ?? document.createTextNode("[Image]");
   }
   if (message.html) return renderTrustedHtml(message.text, origin);
-  const text = renderText(message.text, message.previews, origin);
-  if (!message.embed || embedsHidden()) return text;
+  const full = () => renderText(message.text, message.previews, origin);
+  if (!message.embed || embedsHidden()) return full();
+  const text = el(
+    "span",
+    null,
+    renderText(
+      withoutEmbedLink(message.text, message.embed),
+      message.previews,
+      origin
+    )
+  );
+  // A dead link: show the text as sent, link included
+  const embed = renderEmbed(message.embed, () => text.replaceChildren(full()));
   const content = document.createDocumentFragment();
-  content.append(renderEmbed(message.embed), text);
+  content.append(embed, text);
   return content;
 }
 
@@ -455,6 +485,11 @@ export function previewText(
   if (!message) return "";
   if (message.image) return "[Image]";
   let text = message.html ? htmlToText(message.text) : message.text;
+  if (!message.html && message.embed && !embedsHidden()) {
+    text =
+      withoutEmbedLink(text, message.embed) ||
+      (isGif(message.embed) ? "[GIF]" : "[Image]");
+  }
   if (!message.html && message.previews) {
     text = text.replace(URL_PATTERN, (match) => {
       const { url, trailing } = trimUrl(match);

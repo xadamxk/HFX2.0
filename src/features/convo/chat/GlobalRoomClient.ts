@@ -1,3 +1,4 @@
+import { Logger } from "../../../core/Logger";
 import {
   ChatImage,
   ChatUser,
@@ -422,7 +423,7 @@ export class GlobalRoomClient {
       try {
         listener(...args);
       } catch (error) {
-        console.error(`[GES] Global chat ${event} listener failed`, error);
+        Logger.error(`Global chat ${event} listener failed`, error);
       }
     }
   }

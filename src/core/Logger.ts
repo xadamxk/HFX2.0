@@ -3,23 +3,23 @@ import { Util } from "./Util";
 export class Logger {
   static debug(message: string, ...opts: any[]) {
     if (Util.isDevelopment()) {
-      console.log(`%c[GES] DEBUG: ${message}`, "color: #87CEEB", ...opts);
+      console.log(`%c[HFX] DEBUG: ${message}`, "color: #87CEEB", ...opts);
     }
   }
   static log(message: string, ...opts: any[]) {
-    console.log(...[`[GES] ${message}`, ...opts]);
+    console.log(...[`[HFX] ${message}`, ...opts]);
   }
   static error(message: string, ...opts: any[]) {
-    console.error(...[`[GES] ${message}`, ...opts]);
+    console.error(...[`[HFX] ${message}`, ...opts]);
   }
   static warn(message: string, ...opts: any[]) {
-    console.warn(...[`[GES] ${message}`, ...opts]);
+    console.warn(...[`[HFX] ${message}`, ...opts]);
   }
   static group(label?: string) {
-    console.group(`[GES] ${label}`);
+    console.group(`[HFX] ${label}`);
   }
   static groupCollapsed(label?: string) {
-    console.groupCollapsed(`[GES] ${label}`);
+    console.groupCollapsed(`[HFX] ${label}`);
   }
   static groupEnd() {
     console.groupEnd();

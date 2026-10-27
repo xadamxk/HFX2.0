@@ -7,7 +7,10 @@ import { STORAGE_KEYS } from "./constants";
 const runnableSection = { runnable: () => true } as unknown as Section;
 
 class AsyncFeature extends Feature {
-  constructor(name: string, private delayMs: number) {
+  constructor(
+    name: string,
+    private delayMs: number
+  ) {
     super({ id: name, section: runnableSection, name, description: "" });
   }
 
@@ -73,12 +76,12 @@ describe("Logger.scope", () => {
     expect(console.log).not.toHaveBeenCalled();
 
     logger.flush("Group");
-    expect(console.groupCollapsed).toHaveBeenCalledWith("[GES] Group");
-    expect(console.log).toHaveBeenCalledWith("[GES] [Example] buffered");
+    expect(console.groupCollapsed).toHaveBeenCalledWith("[HFX] Group");
+    expect(console.log).toHaveBeenCalledWith("[HFX] [Example] buffered");
     expect(console.groupEnd).toHaveBeenCalledTimes(1);
 
     logger.log("immediate");
-    expect(console.log).toHaveBeenLastCalledWith("[GES] [Example] immediate");
+    expect(console.log).toHaveBeenLastCalledWith("[HFX] [Example] immediate");
   });
 });
 
@@ -123,21 +126,24 @@ describe("FeatureManager.loadFeatures", () => {
     const consoleOutput = [console.groupCollapsed, console.log, console.error]
       .flatMap((method) => {
         const { calls, invocationCallOrder } = (method as jest.Mock).mock;
-        return calls.map(([text], i) => ({ text, order: invocationCallOrder[i] }));
+        return calls.map(([text], i) => ({
+          text,
+          order: invocationCallOrder[i],
+        }));
       })
       .sort((a, b) => a.order - b.order)
       .map(({ text }) => text as string);
     const groupedOutput = consoleOutput.filter(
-      (text) => text.startsWith("[GES] Feature: ") || text.includes("] [")
+      (text) => text.startsWith("[HFX] Feature: ") || text.includes("] [")
     );
 
     expect(groupedOutput.slice(0, 6)).toEqual([
-      "[GES] Feature: First",
-      "[GES] [First] before await",
-      "[GES] Feature: Second",
-      "[GES] [Second] before await",
-      "[GES] Feature: Throws",
-      "[GES] [Throws] Error loading feature: boom",
+      "[HFX] Feature: First",
+      "[HFX] [First] before await",
+      "[HFX] Feature: Second",
+      "[HFX] [Second] before await",
+      "[HFX] Feature: Throws",
+      "[HFX] [Throws] Error loading feature: boom",
     ]);
   });
 
@@ -145,10 +151,10 @@ describe("FeatureManager.loadFeatures", () => {
     const slow = new AsyncFeature("First", 5);
 
     await new FeatureManager().loadFeatures([slow]);
-    expect(console.log).not.toHaveBeenCalledWith("[GES] [First] after await");
+    expect(console.log).not.toHaveBeenCalledWith("[HFX] [First] after await");
 
     await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(console.log).toHaveBeenLastCalledWith("[GES] [First] after await");
+    expect(console.log).toHaveBeenLastCalledWith("[HFX] [First] after await");
   });
 
   it("logs a rejected async run() and records it in the loading summary", async () => {
@@ -159,7 +165,7 @@ describe("FeatureManager.loadFeatures", () => {
     manager.getFeatureReport();
 
     expect(console.error).toHaveBeenCalledWith(
-      "[GES] [Rejects] Error running feature: async boom",
+      "[HFX] [Rejects] Error running feature: async boom",
       expect.any(Error)
     );
     expect(console.table).toHaveBeenCalledWith(

@@ -1,3 +1,4 @@
+import { Logger } from "../../../core/Logger";
 import { LinkPreviews, parseEmbed, parsePreviews } from "./formatMessage";
 import { SocketIOClient } from "./SocketIOClient";
 
@@ -813,7 +814,7 @@ export class ConvoClient {
       try {
         listener(...args);
       } catch (error) {
-        console.error(`[GES] Convo chat ${event} listener failed`, error);
+        Logger.error(`Convo chat ${event} listener failed`, error);
       }
     }
   }

@@ -1,3 +1,4 @@
+import { Logger } from "../../../core/Logger";
 import { el } from "../../../core/Dom";
 import type {
   ChatMessage,
@@ -188,7 +189,7 @@ export class GroupRoom implements RoomSource {
       try {
         listener(...args);
       } catch (error) {
-        console.error(`[GES] Group chat ${event} listener failed`, error);
+        Logger.error(`Group chat ${event} listener failed`, error);
       }
     }
   }

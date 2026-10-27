@@ -1,3 +1,5 @@
+import { Logger } from "../../../core/Logger";
+
 /**
  * Minimal Socket.IO v4 client (Engine.IO v4, websocket transport only).
  *
@@ -365,7 +367,7 @@ export class SocketIOClient {
       try {
         handler(...args);
       } catch (error) {
-        console.error(`[GES] Convo socket handler for ${event} failed`, error);
+        Logger.error(`Convo socket handler for ${event} failed`, error);
       }
     }
   }

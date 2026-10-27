@@ -40,6 +40,9 @@ const DOCK_STATE = "dockState";
 const GROUP_LIST = "groupList";
 
 class ChatBubbles extends Feature {
+  /** The cached group list's pending additions, in order. */
+  private groupListWrites: Promise<void> = Promise.resolve();
+
   constructor() {
     super({
       id: "ChatBubbles",
@@ -220,7 +223,12 @@ class ChatBubbles extends Feature {
         origin
       );
     }
-    window.addEventListener("pagehide", () => client.disconnect());
+    // Close the sockets when leaving the page, and reconnect if the browser
+    // brings it back from its back/forward cache
+    window.addEventListener("pagehide", () => dock.suspend());
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) dock.resume();
+    });
   }
 
   /**
@@ -236,8 +244,21 @@ class ChatBubbles extends Feature {
     return groups;
   }
 
-  /** Add a group found through a message to the cached list. */
-  private async addToGroupList(group: GroupInfo): Promise<void> {
+  /**
+   * Add a group found through a message to the cached list. Additions run one
+   * at a time: each reads the list and writes it back, so overlapping ones
+   * would drop each other's group.
+   */
+  private addToGroupList(group: GroupInfo): Promise<void> {
+    this.groupListWrites = this.groupListWrites
+      .then(() => this.addToGroupListNow(group))
+      .catch((error) =>
+        this.logger.error(`Couldn't add a group: ${error?.message}`, error)
+      );
+    return this.groupListWrites;
+  }
+
+  private async addToGroupListNow(group: GroupInfo): Promise<void> {
     const cached = (await this.settingsService.getStorageItem(
       this,
       GROUP_LIST

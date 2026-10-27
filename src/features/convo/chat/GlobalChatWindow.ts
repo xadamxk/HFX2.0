@@ -107,6 +107,16 @@ export class GlobalChatWindow extends RoomChatWindow {
     this.client.disconnect();
   }
 
+  /** Leave the room while the page is away (e.g. in the back/forward cache). */
+  suspend(): void {
+    this.client.disconnect();
+  }
+
+  /** Rejoin when the page is back, if the window is expanded. */
+  resume(): void {
+    if (!this.minimized) this.client.connect();
+  }
+
   /** Minimizing leaves the room; expanding rejoins it. */
   protected onMinimizedChange(minimized: boolean): void {
     if (minimized) this.client.disconnect();

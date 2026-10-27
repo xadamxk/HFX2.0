@@ -126,6 +126,51 @@ export interface ConvoClientOptions {
   randomUUID?: () => string;
 }
 
+/**
+ * Why a send failed: it never left (`not-sent`), the server refused it
+ * (`refused`), or there was no reply, so it may have gone through
+ * (`unconfirmed`). Only an unconfirmed send risks a duplicate if resent.
+ */
+export type SendFailure = "not-sent" | "refused" | "unconfirmed";
+
+export class SendError extends Error {
+  constructor(
+    message: string,
+    readonly failure: SendFailure
+  ) {
+    super(message);
+  }
+}
+
+/** Whether a failed send certainly didn't reach the chat, so its text can go back in the input. */
+export const wasNotDelivered = (error: unknown): boolean =>
+  error instanceof SendError && error.failure !== "unconfirmed";
+
+/**
+ * Send something that adds to a chat and wait for the server's ack, failing
+ * with a SendError that says whether it may have gone through.
+ */
+export async function sendWithAck(
+  socket: SocketIOClient,
+  event: string,
+  data: Record<string, unknown>,
+  unconfirmed: string
+): Promise<void> {
+  let result: { ok?: boolean; error?: string } | undefined;
+  try {
+    result = await socket.emitWithAck(event, data, SEND_TIMEOUT);
+  } catch (error) {
+    throw (error as Error)?.message === "Not connected."
+      ? new SendError(
+          "Convo is disconnected. Your message was not sent.",
+          "not-sent"
+        )
+      : new SendError(unconfirmed, "unconfirmed");
+  }
+  if (!result?.ok)
+    throw new SendError(result?.error || "Convo request failed.", "refused");
+}
+
 export const toInt = (value: unknown): number => {
   const n =
     typeof value === "number" ? value : parseInt(String(value ?? ""), 10);
@@ -392,7 +437,7 @@ export class ConvoClient {
     requestId = this.createRequestId()
   ): Promise<{ requestId: string }> {
     const message = text.trim();
-    if (!message) throw new Error("Message is empty.");
+    if (!message) throw new SendError("Message is empty.", "not-sent");
     await this.mutate(chatKey(true, gid), "convo_newmessage_group", {
       partyID: gid,
       message,
@@ -459,7 +504,7 @@ export class ConvoClient {
     requestId = this.createRequestId()
   ): Promise<{ requestId: string }> {
     const message = text.trim();
-    if (!message) throw new Error("Message is empty.");
+    if (!message) throw new SendError("Message is empty.", "not-sent");
     await this.mutate(chatKey(false, partyId), "convo_newmessage", {
       partyID: partyId,
       message,
@@ -492,24 +537,24 @@ export class ConvoClient {
     data: Record<string, unknown>
   ): Promise<void> {
     if (this.sending)
-      throw new Error("Please wait for the pending send to finish.");
+      throw new SendError(
+        "Please wait for the pending send to finish.",
+        "not-sent"
+      );
     if (!this.socket.connected || this.status !== "ready") {
-      throw new Error("Convo is disconnected. Your message was not sent.");
+      throw new SendError(
+        "Convo is disconnected. Your message was not sent.",
+        "not-sent"
+      );
     }
     this.sending = true;
     try {
-      const result = await this.socket
-        .emitWithAck(event, data, SEND_TIMEOUT)
-        .catch((error: Error) => {
-          throw new Error(
-            error.message === "Timed out waiting for a reply." ||
-              error.message === "Disconnected."
-              ? "Delivery is unconfirmed. Check the conversation history before resending."
-              : error.message
-          );
-        });
-      if (!result?.ok)
-        throw new Error(result?.error || "Convo request failed.");
+      await sendWithAck(
+        this.socket,
+        event,
+        data,
+        "Delivery is unconfirmed. Check the conversation history before resending."
+      );
       this.typing(key, false);
     } finally {
       this.sending = false;

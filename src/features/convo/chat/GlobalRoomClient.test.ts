@@ -256,6 +256,24 @@ describe("GlobalRoomClient", () => {
     ]);
   });
 
+  it("says whether a failed send was never sent, refused or unconfirmed", async () => {
+    await expect(client.send("hi")).rejects.toMatchObject({
+      failure: "not-sent",
+    });
+    await ready();
+    await expect(client.send("/flip 5")).rejects.toMatchObject({
+      failure: "not-sent",
+    });
+    socket.ackReplies.convo_newmessage = () => ({
+      ok: false,
+      error: "Slow down.",
+    });
+    await expect(client.send("hi")).rejects.toMatchObject({
+      message: "Slow down.",
+      failure: "refused",
+    });
+  });
+
   it("reports an unconfirmed send", async () => {
     await ready();
     socket.ackReplies.convo_newmessage = () => {

@@ -278,6 +278,45 @@ describe("GlobalChatWindow", () => {
     expect(input().value).toBe("/flip 500");
   });
 
+  it("puts the text back when the server refuses it, but not when unconfirmed", async () => {
+    await open();
+    socket.ackReplies.convo_newmessage = () => ({
+      ok: false,
+      error: "You are sending messages too fast.",
+    });
+    input().value = "hello room";
+    input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    await flush();
+    expect(notice().textContent).toBe("You are sending messages too fast.");
+    expect(input().value).toBe("hello room");
+    expect(win.root.querySelector(".hfx-gc-pending")).toBeNull();
+
+    // No reply: it may be in the room, so it isn't put back to resend
+    socket.ackReplies.convo_newmessage = () => {
+      throw new Error("Timed out waiting for a reply.");
+    };
+    input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    await flush();
+    expect(notice().textContent).toContain("Delivery is unconfirmed");
+    expect(input().value).toBe("");
+  });
+
+  it("leaves the room while the page is away and rejoins when it's back", async () => {
+    await open();
+    expect(socket.connects).toBe(1);
+    win.suspend();
+    expect(socket.disconnects).toBe(1);
+    win.resume();
+    expect(socket.connects).toBe(2);
+    // A minimized window stays out of the room
+    win.setMinimized(true);
+    win.suspend();
+    win.resume();
+    expect(socket.connects).toBe(2);
+  });
+
   it("shows a pending line until the echo arrives", async () => {
     await open();
     let ack!: (value: unknown) => void;

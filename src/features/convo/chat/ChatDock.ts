@@ -7,7 +7,12 @@ import type {
   ConvoClient,
   ConvoStatus,
 } from "./ConvoClient";
-import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
+import {
+  HISTORY_PAGE_SIZE,
+  presence,
+  Presence,
+  wasNotDelivered,
+} from "./ConvoClient";
 import { avatarUrl, mentionsUser, previewText } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
@@ -282,6 +287,19 @@ export class ChatDock {
     }, 60000);
   }
 
+  /** The page is being left (maybe into the back/forward cache): close the sockets. */
+  suspend(): void {
+    this.client.disconnect();
+    this.global?.suspend();
+  }
+
+  /** The page came back from the back/forward cache: reconnect and catch up. */
+  resume(): void {
+    if (this.ended) return;
+    this.client.connect();
+    this.global?.resume();
+  }
+
   destroy(): void {
     this.global?.destroy();
     this.global = null;
@@ -361,10 +379,10 @@ export class ChatDock {
       this.windows.forEach((win) => {
         if (win.loaded)
           this.client.loadHistory(win.partyId).catch(() => undefined);
+        // A first load that failed while disconnected
+        else if (!win.minimized) this.ensureLoaded(win);
       });
-      this.groupWindows.forEach((win) =>
-        this.client.loadGroupHistory(win.gid).catch(() => undefined)
-      );
+      this.groupWindows.forEach((win) => win.catchUp());
     }
   }
 
@@ -1423,6 +1441,8 @@ export class ChatDock {
       const retry = el("button", { type: "button" }, "Retry");
       retry.addEventListener("click", () => {
         if (!window.confirm(UNCONFIRMED_RETRY)) return;
+        // Keep it listed until the retry can actually start
+        if (!this.canSend(win, pending.image ? "image" : "message")) return;
         win.pending = win.pending.filter((p) => p !== pending);
         if (pending.image) this.sendImage(win, pending.image);
         else this.send(win, pending.text);
@@ -1446,15 +1466,7 @@ export class ChatDock {
 
   private async send(win: ChatWindow, retryText?: string): Promise<void> {
     const text = (retryText ?? win.input.value).trim();
-    if (!text) return;
-    if (this.client.isSending) {
-      this.showNotice(win, "Please wait for the pending send to finish.");
-      return;
-    }
-    if (this.client.status !== "ready") {
-      this.showNotice(win, "Convo is disconnected. Your message was not sent.");
-      return;
-    }
+    if (!text || !this.canSend(win, "message")) return;
     if (retryText === undefined) {
       win.input.value = "";
       this.autoGrow(win.input);
@@ -1494,14 +1506,7 @@ export class ChatDock {
   }
 
   private async sendImage(win: ChatWindow, image: ArrayBuffer): Promise<void> {
-    if (this.client.isSending) {
-      this.showNotice(win, "Please wait for the pending send to finish.");
-      return;
-    }
-    if (this.client.status !== "ready") {
-      this.showNotice(win, "Convo is disconnected. Your image was not sent.");
-      return;
-    }
+    if (!this.canSend(win, "image")) return;
     const pending: PendingSend = {
       text: "Sending image…",
       image,
@@ -1510,6 +1515,19 @@ export class ChatDock {
     await this.deliver(win, pending, () =>
       this.client.sendImage(win.partyId, image, pending.requestId)
     );
+  }
+
+  /** Whether a send can start now (one at a time, while connected); if not, says why. */
+  private canSend(win: ChatWindow, what: "message" | "image"): boolean {
+    if (this.client.isSending) {
+      this.showNotice(win, "Please wait for the pending send to finish.");
+      return false;
+    }
+    if (this.client.status !== "ready") {
+      this.showNotice(win, `Convo is disconnected. Your ${what} was not sent.`);
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -1537,7 +1555,9 @@ export class ChatDock {
       if (!echoed) this.client.loadHistory(win.partyId).catch(() => undefined);
     } catch (error: any) {
       const message = String(error?.message || "Message failed.");
-      if (/not sent|pending send|empty/i.test(message)) {
+      // Never sent or refused by the server: undo. Only an unconfirmed send
+      // may have gone through, so only it offers a retry
+      if (wasNotDelivered(error)) {
         win.pending = win.pending.filter((p) => p !== pending);
         undo?.();
         this.showNotice(win, message);

@@ -4,6 +4,7 @@ import { ConvoClient } from "./ConvoClient";
 import {
   convoLinkUid,
   fetchConvoParty,
+  followLink,
   interceptConvoLinks,
   pageUserHint,
 } from "./convoLinks";
@@ -255,5 +256,42 @@ describe("ChatDock.openChatWithUser", () => {
     await expect(dock.openChatWithUser(ME.uid)).resolves.toBe(false);
     socket.fire("disconnect", "transport close");
     await expect(dock.openChatWithUser(CHARLIE.uid)).resolves.toBe(false);
+  });
+});
+
+describe("followLink", () => {
+  const URL = `${HF}/convo.php?action=user&uid=5`;
+  const fakeView = (userActivation?: { isActive: boolean }) => ({
+    navigator: { userActivation },
+    open: jest.fn(),
+    location: { assign: jest.fn() },
+  });
+  const link = (target?: string) => {
+    const a = document.createElement("a");
+    a.href = URL;
+    if (target) a.target = target;
+    return a;
+  };
+
+  it("opens a new-tab link in a new tab while the click still counts", () => {
+    for (const activation of [{ isActive: true }, undefined]) {
+      const view = fakeView(activation);
+      followLink(link("_blank"), view as unknown as Window);
+      expect(view.open).toHaveBeenCalledWith(URL, "_blank", "noopener");
+      expect(view.location.assign).not.toHaveBeenCalled();
+    }
+  });
+
+  it("goes there in this tab once the click no longer counts, instead of a blocked popup", () => {
+    const view = fakeView({ isActive: false });
+    followLink(link("_blank"), view as unknown as Window);
+    expect(view.open).not.toHaveBeenCalled();
+    expect(view.location.assign).toHaveBeenCalledWith(URL);
+  });
+
+  it("follows other links in this tab", () => {
+    const view = fakeView({ isActive: true });
+    followLink(link(), view as unknown as Window);
+    expect(view.location.assign).toHaveBeenCalledWith(URL);
   });
 });

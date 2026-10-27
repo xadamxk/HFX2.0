@@ -1,5 +1,6 @@
 import { el, ElChild } from "../../../core/Dom";
 import type { ChatUser, ConvoStatus } from "./ConvoClient";
+import { wasNotDelivered } from "./ConvoClient";
 import { avatarUrl, mentionsUser } from "./formatMessage";
 import { isCommand, RoomMessage } from "./GlobalRoomClient";
 import {
@@ -202,6 +203,9 @@ export abstract class RoomChatWindow {
 
     acceptImages(this.root, (file) => this.uploadImage(file));
     this.bindSource();
+    // What the source already holds, e.g. a group's messages loaded or
+    // received before this window opened
+    if (source.messages.length) this.addMessages(source.messages, true);
   }
 
   focus(): void {
@@ -305,8 +309,9 @@ export abstract class RoomChatWindow {
   /**
    * Show newly added messages. New ones go at the bottom, grouped; when older
    * ones arrive (Load older), everything is redrawn and the view kept in place.
+   * `existing` messages were there before the window opened: not new arrivals.
    */
-  private addMessages(added: RoomMessage[]): void {
+  private addMessages(added: RoomMessage[], existing = false): void {
     const fresh = added.filter((message) => !this.lines.has(message.key));
     if (!fresh.length) return;
     const firstMid = this.firstMid();
@@ -329,7 +334,8 @@ export abstract class RoomChatWindow {
       60;
     for (const message of fresh) {
       const line = this.appendLine(message);
-      this.onNewMessage(message, line.classList.contains("hfx-gc-mention"));
+      if (!existing)
+        this.onNewMessage(message, line.classList.contains("hfx-gc-mention"));
       // The echo of our own send replaces its pending line
       if (message.requestId) {
         this.pending = this.pending.filter((pending) => {
@@ -563,7 +569,8 @@ export abstract class RoomChatWindow {
     } catch (error: any) {
       const message = String(error?.message || "Message failed.");
       clear();
-      if (/not sent|pending send|empty/i.test(message)) undo?.();
+      // Never sent or refused: put the text back. Unconfirmed: it may be there
+      if (wasNotDelivered(error)) undo?.();
       this.showNotice(message);
     }
   }

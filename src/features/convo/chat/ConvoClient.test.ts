@@ -400,6 +400,30 @@ describe("ConvoClient", () => {
     await expect(client.send(PARTY, "hi")).rejects.toThrow("disconnected");
   });
 
+  it("says whether a failed send was never sent, refused or unconfirmed", async () => {
+    await expect(client.send(PARTY, "hi")).rejects.toMatchObject({
+      failure: "not-sent",
+    });
+    await ready();
+    await expect(client.send(PARTY, "  ")).rejects.toMatchObject({
+      failure: "not-sent",
+    });
+    socket.ackReplies.convo_newmessage = () => ({
+      ok: false,
+      error: "You are muted.",
+    });
+    await expect(client.send(PARTY, "hi")).rejects.toMatchObject({
+      message: "You are muted.",
+      failure: "refused",
+    });
+    socket.ackReplies.convo_newmessage = () => {
+      throw new Error("Disconnected.");
+    };
+    await expect(client.send(PARTY, "hi")).rejects.toMatchObject({
+      failure: "unconfirmed",
+    });
+  });
+
   it("marks read and clears unread", async () => {
     await ready();
     socket.fire("convo_receivemessage", live());

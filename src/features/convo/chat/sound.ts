@@ -5,8 +5,9 @@
  */
 
 export const SOUND_PATH = "/sounds/convo-blip.mp3";
-// How long a tab keeps a message's lock, so other tabs don't play it too
-const CLAIM_MS = 3000;
+// How long a tab keeps a message's lock, so other tabs don't play it too,
+// even ones whose socket delivers the message well after this tab's
+const CLAIM_MS = 30000;
 // How long a hidden tab waits before claiming, so a visible tab plays it
 const HIDDEN_DELAY_MS = 150;
 

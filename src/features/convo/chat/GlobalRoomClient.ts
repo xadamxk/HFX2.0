@@ -7,6 +7,8 @@ import {
   fetchConvoTicket,
   HELPBOT_UID,
   parseUser,
+  SendError,
+  sendWithAck,
   toInt,
 } from "./ConvoClient";
 import { LinkPreviews, parseEmbed, parsePreviews } from "./formatMessage";
@@ -29,7 +31,6 @@ import { SocketIOClient } from "./SocketIOClient";
  */
 
 export const GLOBAL_PARTY = -1;
-const SEND_TIMEOUT = 20000;
 const MESSAGE_LIMIT = 300;
 const TYPING_TIMEOUT = 35000;
 const SEEN_LIMIT = 5000;
@@ -216,10 +217,11 @@ export class GlobalRoomClient {
   /** Send a message to the room. One pending send at a time, as HF allows. */
   async send(text: string, requestId = this.createRequestId()): Promise<void> {
     const message = text.trim();
-    if (!message) throw new Error("Message is empty.");
+    if (!message) throw new SendError("Message is empty.", "not-sent");
     if (isCommand(message)) {
-      throw new Error(
-        "Commands like /flip only work on convo.php. Your message was not sent."
+      throw new SendError(
+        "Commands like /flip only work on convo.php. Your message was not sent.",
+        "not-sent"
       );
     }
     await this.mutate("convo_newmessage", {
@@ -247,26 +249,24 @@ export class GlobalRoomClient {
     data: Record<string, unknown>
   ): Promise<void> {
     if (this.sending)
-      throw new Error("Please wait for the pending send to finish.");
+      throw new SendError(
+        "Please wait for the pending send to finish.",
+        "not-sent"
+      );
     if (!this.socket.connected || this.status !== "ready") {
-      throw new Error(
-        "Global chat is disconnected. Your message was not sent."
+      throw new SendError(
+        "Global chat is disconnected. Your message was not sent.",
+        "not-sent"
       );
     }
     this.sending = true;
     try {
-      const result = await this.socket
-        .emitWithAck(event, data, SEND_TIMEOUT)
-        .catch((error: Error) => {
-          throw new Error(
-            error.message === "Timed out waiting for a reply." ||
-              error.message === "Disconnected."
-              ? "Delivery is unconfirmed. Check the room before resending."
-              : error.message
-          );
-        });
-      if (!result?.ok)
-        throw new Error(result?.error || "Convo request failed.");
+      await sendWithAck(
+        this.socket,
+        event,
+        data,
+        "Delivery is unconfirmed. Check the room before resending."
+      );
       this.setTyping(false);
     } finally {
       this.sending = false;

@@ -252,7 +252,10 @@ export class GroupChatWindow extends RoomChatWindow {
       event.stopPropagation();
       if (this.togglePanel()) this.renderMembers();
     });
-    olderButton.addEventListener("click", () => this.loadOlder());
+    // Until the first load succeeds, the button retries it
+    olderButton.addEventListener("click", () =>
+      this.loaded ? this.loadOlder() : this.ensureLoaded()
+    );
     this.list.addEventListener("scroll", () => {
       if (this.list.scrollTop < 40 && this.hasOlder) this.loadOlder();
     });
@@ -291,20 +294,29 @@ export class GroupChatWindow extends RoomChatWindow {
     this.renderPeople(`${members.length} members seen`, [{ users: members }]);
   }
 
+  /** After a reconnect: load what was missed, or retry a first load that failed. */
+  catchUp(): void {
+    if (this.loaded) this.room.load().catch(() => undefined);
+    else if (!this.minimized) this.ensureLoaded();
+  }
+
   private async ensureLoaded(): Promise<void> {
     if (this.loaded || this.loading) return;
     this.loading = true;
     this.status.textContent = "Loading…";
+    this.olderButton.hidden = true;
     try {
       await this.room.load();
       this.loaded = true;
       this.hasOlder = this.room.messages.length >= HISTORY_PAGE_SIZE;
+      this.olderButton.textContent = "Load older messages";
       this.olderButton.hidden = !this.hasOlder;
       this.status.textContent = "";
       this.scrollToBottom();
     } catch {
       this.status.textContent = "";
-      this.showNotice("Couldn't load messages.");
+      this.olderButton.textContent = "Couldn't load messages. Retry";
+      this.olderButton.hidden = false;
     } finally {
       this.loading = false;
     }

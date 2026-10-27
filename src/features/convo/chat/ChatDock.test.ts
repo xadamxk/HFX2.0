@@ -5,6 +5,7 @@ import { GlobalChatWindow } from "./GlobalChatWindow";
 import { GlobalRoomClient } from "./GlobalRoomClient";
 import type { SocketIOClient } from "./SocketIOClient";
 import type { ChatMessage, Conversation, ConvoClient } from "./ConvoClient";
+import { SendError } from "./ConvoClient";
 
 const ME = { uid: 10, username: "Me", avatar: "", lastActive: 0 };
 const OTHER = { uid: 123, username: "Charlie", avatar: "", lastActive: 0 };
@@ -45,6 +46,9 @@ class FakeClient {
   markRead = jest.fn();
   setTyping = jest.fn();
   sendImage = jest.fn(async () => ({ requestId: "req" }));
+  send = jest.fn(async () => ({ requestId: "req" }));
+  connect = jest.fn();
+  disconnect = jest.fn();
   createRequestId = () => "req";
 
   /** Add messages as the socket would and notify the dock. */
@@ -310,6 +314,77 @@ describe("ChatDock sound", () => {
   it("is off without a sound player", async () => {
     await mount({ open: false });
     expect(() => client.add({ uid: OTHER.uid })).not.toThrow();
+  });
+});
+
+describe("ChatDock sending", () => {
+  const win = () =>
+    document.querySelector<HTMLElement>(
+      `.hfx-chat-window[data-party="${PARTY}"]`
+    )!;
+  const input = () => win().querySelector("textarea")!;
+  const enter = async (text: string) => {
+    input().value = text;
+    input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    await flush();
+  };
+  const failed = () => win().querySelector(".hfx-chat-failed");
+
+  let confirmSpy: jest.SpyInstance;
+  beforeEach(() => {
+    confirmSpy = jest.spyOn(window, "confirm").mockReturnValue(true);
+  });
+  afterEach(() => confirmSpy.mockRestore());
+
+  it("puts a message the server refused back in the input, with no retry", async () => {
+    await mount();
+    client.send.mockRejectedValueOnce(
+      new SendError("You are muted.", "refused")
+    );
+    await enter("hello");
+    expect(input().value).toBe("hello");
+    expect(failed()).toBeNull();
+    expect(win().querySelector(":scope > .hfx-chat-notice")!.textContent).toBe(
+      "You are muted."
+    );
+  });
+
+  it("offers a retry only for an unconfirmed send, and keeps it until the retry starts", async () => {
+    await mount();
+    client.send.mockRejectedValueOnce(
+      new SendError("Delivery is unconfirmed.", "unconfirmed")
+    );
+    await enter("hello");
+    expect(input().value).toBe("");
+    expect(failed()!.textContent).toBe("hello");
+
+    // Another send is still pending: the retry can't start, so it stays
+    client.isSending = true;
+    const retry = () =>
+      Array.from(win().querySelectorAll("button")).find(
+        (button) => button.textContent === "Retry"
+      )!;
+    retry().click();
+    await flush();
+    expect(client.send).toHaveBeenCalledTimes(1);
+    client.isSending = false;
+    // Another render of the pending sends keeps it
+    client.send.mockImplementationOnce(() => new Promise(() => undefined));
+    await enter("second");
+    expect(failed()!.textContent).toBe("hello");
+
+    retry().click();
+    await flush();
+    expect(client.send).toHaveBeenLastCalledWith(PARTY, "hello", "req");
+  });
+
+  it("closes the socket when the page is left and reconnects when it's back", async () => {
+    await mount();
+    dock!.suspend();
+    expect(client.disconnect).toHaveBeenCalledTimes(1);
+    dock!.resume();
+    expect(client.connect).toHaveBeenCalledTimes(1);
   });
 });
 

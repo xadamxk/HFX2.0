@@ -74,6 +74,16 @@ describe("MessageSound", () => {
     expect(played).toHaveLength(2);
   });
 
+  it("keeps a message claimed for a tab that gets it seconds later", async () => {
+    const locks = new FakeLocks();
+    tab(locks).play("500:9");
+    await flush();
+    jest.advanceTimersByTime(10000);
+    tab(locks).play("500:9");
+    await flush();
+    expect(played).toHaveLength(1);
+  });
+
   it("leaves it to tabs that can play audio", async () => {
     const locks = new FakeLocks();
     tab(locks, false).play("500:9");

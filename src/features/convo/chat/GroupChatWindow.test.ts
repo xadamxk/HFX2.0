@@ -96,6 +96,72 @@ describe("GroupChatWindow", () => {
     expect(imgs.map((img) => img.getAttribute("src"))).toEqual([gif]);
   });
 
+  describe("messages the client already has", () => {
+    beforeEach(() => {
+      // The newest page, including a message that may already have arrived live
+      socket.ackReplies.convo_loadmessages = () => {
+        socket.fire("convo_receivemessage_bulk", [
+          groupMessage({ mid: 1, message: "older", history: true }),
+          groupMessage({ mid: 2, message: "live one", history: true }),
+        ]);
+        return { ok: true, hasMore: false, lastMid: 0 };
+      };
+    });
+
+    it("shows one that arrived while the window was closed", async () => {
+      socket.fire(
+        "convo_receivemessage",
+        groupMessage({ mid: 2, message: "live one" })
+      );
+      await open();
+      expect(lines()).toEqual(["older", "live one"]);
+    });
+
+    it("shows them again when the window is reopened", async () => {
+      await open();
+      expect(lines()).toEqual(["older", "live one"]);
+      win.destroy();
+      await open();
+      expect(lines()).toEqual(["older", "live one"]);
+    });
+  });
+
+  it("offers a retry when the first load fails, and catches up after a reconnect", async () => {
+    socket.ackReplies.convo_loadmessages = () => ({
+      ok: false,
+      error: "Try again later.",
+    });
+    await open();
+    const button =
+      win.root.querySelector<HTMLButtonElement>(".hfx-chat-older")!;
+    expect(button.hidden).toBe(false);
+    expect(button.textContent).toBe("Couldn't load messages. Retry");
+
+    socket.ackReplies.convo_loadmessages = () => {
+      socket.fire("convo_receivemessage_bulk", [
+        groupMessage({ mid: 1, message: "back", history: true }),
+      ]);
+      return { ok: true, hasMore: false, lastMid: 0 };
+    };
+    button.click();
+    await flush();
+    await flush();
+    expect(lines()).toEqual(["back"]);
+    expect(button.hidden).toBe(true);
+    expect(button.textContent).toBe("Load older messages");
+
+    // After a reconnect it asks only for what came after
+    win.catchUp();
+    await flush();
+    const loads = socket.acked.filter(
+      ([event]) => event === "convo_loadmessages"
+    );
+    expect(loads[loads.length - 1][1]).toMatchObject({
+      mid: 1,
+      position: "new",
+    });
+  });
+
   it("loads the group's history when opened, not when minimized", async () => {
     await open(true);
     expect(socket.acked.some(([event]) => event === "convo_loadmessages")).toBe(

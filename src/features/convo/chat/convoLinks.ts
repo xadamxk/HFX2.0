@@ -95,6 +95,23 @@ function sitePath(src: string, origin: string): string {
 }
 
 /**
+ * Go where a convo link points, as the click would have. A new tab needs the
+ * click's user activation, which a slow chat lookup can outlast; the link then
+ * opens in this tab instead of as a popup the browser blocks.
+ */
+export function followLink(link: HTMLAnchorElement, view: Window | null): void {
+  if (!view) return;
+  const active =
+    (view.navigator as { userActivation?: { isActive: boolean } })
+      .userActivation?.isActive ?? true;
+  if (link.target === "_blank" && active) {
+    view.open(link.href, "_blank", "noopener");
+  } else {
+    view.location.assign(link.href);
+  }
+}
+
+/**
  * Take plain left clicks on HF convo links: `open` opens the chat in the dock
  * and resolves false when it can't, and then the link is followed as usual.
  * Ctrl/Cmd/Shift/Alt and middle clicks are left to the browser. Returns a
@@ -104,11 +121,8 @@ export function interceptConvoLinks(
   open: (uid: number) => Promise<boolean>,
   origin: string,
   doc: Document = document,
-  follow: (link: HTMLAnchorElement) => void = (link) => {
-    const view = doc.defaultView;
-    if (link.target === "_blank") view?.open(link.href, "_blank", "noopener");
-    else view?.location.assign(link.href);
-  }
+  follow: (link: HTMLAnchorElement) => void = (link) =>
+    followLink(link, doc.defaultView)
 ): () => void {
   const pending = new Set<number>();
   const onClick = (event: MouseEvent) => {

@@ -47,7 +47,8 @@ class ChatBubbles extends Feature {
       // Runs on every page except convo.php, where HF's own client is open
       additionalSections: new SectionArray(Global),
       name: "Convo Anywhere",
-      enabled: true,
+      enabled: false,
+      experimental: true,
       description:
         "Chat in Convo from anywhere. A Messenger-style dock for your conversations, group chats and the global chat, with online status, typing indicators, and all the features you love from Convo. Hidden on convo.php itself.",
       configurables: [

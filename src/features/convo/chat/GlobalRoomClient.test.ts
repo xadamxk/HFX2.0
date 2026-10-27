@@ -74,6 +74,22 @@ describe("parseRoomMessage", () => {
     });
   });
 
+  it("keeps an image link convo.php would embed", () => {
+    const gif = "https://static.klipy.com/ii/a/b.gif";
+    const users = (usergroup: number) => ({
+      [NOVA.uid]: { ...NOVA, usergroup },
+    });
+    expect(
+      parseRoomMessage(
+        roomMessage({ message: `GIF: ${gif}`, users: users(28) })
+      )?.embed
+    ).toBe(gif);
+    expect(
+      parseRoomMessage(roomMessage({ message: `GIF: ${gif}`, users: users(2) }))
+        ?.embed
+    ).toBeUndefined();
+  });
+
   it("only accepts global room messages", () => {
     expect(parseRoomMessage(roomMessage({ party_id: 5 }))).toBeNull();
     expect(parseRoomMessage(roomMessage({ is_group: true }))).toBeNull();

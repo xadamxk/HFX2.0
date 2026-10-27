@@ -384,6 +384,13 @@ export const CHAT_DOCK_CSS = `
 /* Font Awesome link icons in Helpbot notices, like HF draws them */
 .hfx-chat-icon { margin-left: 3px; font-size: 10px; color: #7fd67f; vertical-align: super; }
 .hfx-gc-line img { max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 2px 0; }
+/* An image link shown as an image above its message, as convo.php does */
+/*
+ * Fixed height, so a message list never grows when one loads (and stays at
+ * the bottom); the width follows the image, up to the line.
+ */
+.hfx-chat-embed { display: inline-block; max-width: 100%; text-decoration: none; }
+.hfx-gc-line .hfx-chat-embed img { width: auto; height: 160px; object-fit: contain; }
 /* Only the text column (from just left of the text), not under the avatar */
 .hfx-gc-line.hfx-gc-mention {
   background:

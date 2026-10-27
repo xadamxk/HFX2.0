@@ -1,4 +1,4 @@
-import { LinkPreviews, parsePreviews } from "./formatMessage";
+import { LinkPreviews, parseEmbed, parsePreviews } from "./formatMessage";
 import { SocketIOClient } from "./SocketIOClient";
 
 /**
@@ -73,6 +73,8 @@ export interface ChatMessage {
   group?: boolean;
   /** HF's previews of HF links in the text (mentions are profile links). */
   previews?: LinkPreviews;
+  /** An image link convo.php would show as an image (see parseEmbed). */
+  embed?: string;
 }
 
 /** A private group convo ("Comrades" on convo.php). Group ids are HF usergroup ids. */
@@ -214,6 +216,8 @@ export function parseMessage(raw: any): ChatMessage | null {
   if (raw.is_group) message.group = true;
   const previews = parsePreviews(raw.extra);
   if (previews) message.previews = previews;
+  const embed = parseEmbed(raw);
+  if (embed) message.embed = embed;
   return message;
 }
 

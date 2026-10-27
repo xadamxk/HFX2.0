@@ -71,6 +71,31 @@ describe("GroupChatWindow", () => {
 
   afterEach(() => win?.destroy());
 
+  it("shows image links from embed-group posters as images, like convo.php", async () => {
+    await open();
+    const gif = "https://static.klipy.com/ii/a/b.gif";
+    socket.fire(
+      "convo_receivemessage",
+      groupMessage({
+        mid: 5,
+        message: `look ${gif}`,
+        users: { [NOVA.uid]: { ...NOVA, usergroup: 9 } },
+      })
+    );
+    socket.fire(
+      "convo_receivemessage",
+      groupMessage({ uid: ORBIT.uid, mid: 6, message: gif })
+    );
+    await flush();
+    const imgs = Array.from(
+      win.root.querySelectorAll<HTMLImageElement>(
+        ".hfx-gc-line .hfx-chat-embed img"
+      )
+    );
+    // Only Nova's: Orbit isn't in an embed group
+    expect(imgs.map((img) => img.getAttribute("src"))).toEqual([gif]);
+  });
+
   it("loads the group's history when opened, not when minimized", async () => {
     await open(true);
     expect(socket.acked.some(([event]) => event === "convo_loadmessages")).toBe(

@@ -54,6 +54,7 @@ const toRoomMessage = (gid: number, message: ChatMessage): RoomMessage => ({
   requestId: message.requestId,
   quiet: message.quiet,
   previews: message.previews,
+  embed: message.embed,
 });
 
 /** One group convo, read from and sent through the shared ConvoClient. */

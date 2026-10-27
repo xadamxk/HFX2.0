@@ -4,7 +4,7 @@ import type { ChatImage, ChatMessage } from "./ConvoClient";
 /** The parts of a DM or global room message that rendering needs. */
 export type RenderableMessage = Pick<
   ChatMessage,
-  "text" | "image" | "html" | "previews"
+  "text" | "image" | "html" | "previews" | "embed"
 >;
 
 /**
@@ -97,6 +97,88 @@ export function parsePreviews(extra: unknown): LinkPreviews | undefined {
     previews[key] = preview;
   }
   return previews;
+}
+
+/**
+ * Usergroups whose image links convo.php shows as images (convo_1d.js
+ * allowed_embed_groups), checked against the poster's usergroup and primary
+ * group. HF's /gif command posts its GIF as such a link.
+ */
+export const EMBED_GROUPS = [3, 4, 9, 28];
+
+const IMAGE_LINK = /^https:\/\/[^\s<>"']+\.(?:jpg|gif|png)(?:\?[^\s<>"']*)?$/i;
+
+/** The first https link to a .jpg, .gif or .png in the text, as convo.php finds it. */
+export function imageLink(text: string): string | null {
+  for (const word of text.split(/\s+/)) {
+    if (IMAGE_LINK.test(word) && safeHttpUrl(word)) return word;
+  }
+  return null;
+}
+
+/**
+ * The image link to show above a raw message, when its poster (from the
+ * message's users map) is in an EMBED_GROUPS group, as convo.php does.
+ */
+export function parseEmbed(raw: unknown): string | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const { message, uid, users, isImageDownload } = raw as {
+    message?: unknown;
+    uid?: unknown;
+    users?: unknown;
+    isImageDownload?: unknown;
+  };
+  if (typeof message !== "string" || isImageDownload) return undefined;
+  const user =
+    users && typeof users === "object"
+      ? (users as Record<string, unknown>)[String(uid)]
+      : undefined;
+  if (!user || typeof user !== "object") return undefined;
+  const { usergroup, primary_group } = user as {
+    usergroup?: unknown;
+    primary_group?: unknown;
+  };
+  const allowed = [usergroup, primary_group].some((group) =>
+    EMBED_GROUPS.includes(Number(group))
+  );
+  return (allowed && imageLink(message)) || undefined;
+}
+
+/** Whether embeds are turned off on convo.php (`/embed hide`, kept in the convoStorage cookie). */
+export function embedsHidden(cookie: string = document.cookie): boolean {
+  const raw = cookie
+    .split(/;\s*/)
+    .find((part) => part.startsWith("convoStorage="))
+    ?.slice("convoStorage=".length);
+  if (!raw) return false;
+  try {
+    return JSON.parse(decodeURIComponent(raw))?.hideEmbeds === true;
+  } catch {
+    return false;
+  }
+}
+
+/** An embedded image link, shown above the message text like convo.php does. */
+function renderEmbed(url: string): HTMLElement {
+  const img = el("img", {
+    src: url,
+    alt: /\.gif(?:\?|$)/i.test(url) ? "GIF" : "Image",
+    loading: "lazy",
+    referrerpolicy: "no-referrer",
+  });
+  const link = el(
+    "a",
+    {
+      class: "hfx-chat-embed",
+      href: url,
+      target: "_blank",
+      rel: "noopener noreferrer",
+    },
+    img
+  );
+  // A dead link: leave just the text, which still has the link
+  img.addEventListener("error", () => link.remove());
+  return link;
 }
 
 /**
@@ -357,9 +439,12 @@ export function renderMessage(
   if (message.image) {
     return renderImage(message.image) ?? document.createTextNode("[Image]");
   }
-  return message.html
-    ? renderTrustedHtml(message.text, origin)
-    : renderText(message.text, message.previews, origin);
+  if (message.html) return renderTrustedHtml(message.text, origin);
+  const text = renderText(message.text, message.previews, origin);
+  if (!message.embed || embedsHidden()) return text;
+  const content = document.createDocumentFragment();
+  content.append(renderEmbed(message.embed), text);
+  return content;
 }
 
 /** One-line preview for a bubble's tooltip; previewed links show their label. */

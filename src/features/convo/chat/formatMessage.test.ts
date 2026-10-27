@@ -1,5 +1,8 @@
 import {
   avatarUrl,
+  embedsHidden,
+  imageLink,
+  parseEmbed,
   htmlToText,
   mentionsUser,
   parsePreviews,
@@ -361,5 +364,96 @@ describe("link previews", () => {
       mentionsUser(`${HF}/member.php?action=profile&uid=16927470`, me, HF)
     ).toBe(false);
     expect(mentionsUser("hey g33k", me, HF)).toBe(false);
+  });
+});
+
+describe("image link embeds", () => {
+  const GIF =
+    "https://static.klipy.com/ii/4493325008d34b7bf8cd6813cd5c1619/3e/aa/xxoVkhJIKEqrZBz.gif";
+  // A /gif reply as the server sends it, from a poster in group 28
+  const gifReply = (user: Record<string, unknown> = {}) => ({
+    uid: 5,
+    message: `Here's a GIF of "no ai", for https://hackforums.net/member.php?action=profile&uid=5 : ${GIF}`,
+    users: {
+      5: { uid: 5, username: "m0hx", usergroup: 28, displaygroup: 70, ...user },
+    },
+  });
+
+  afterEach(() => {
+    document.cookie = "convoStorage=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  });
+
+  it("finds the first https link to a jpg, gif or png, like convo.php", () => {
+    expect(imageLink(`look ${GIF} and https://x.test/b.png`)).toBe(GIF);
+    expect(imageLink("https://i.imgflip.com/b4edai.JPG")).toBe(
+      "https://i.imgflip.com/b4edai.JPG"
+    );
+    expect(imageLink("https://x.test/a.gif?w=200 hi")).toBe(
+      "https://x.test/a.gif?w=200"
+    );
+    // Not https, another type, or not a whole word
+    expect(imageLink("http://x.test/a.gif")).toBeNull();
+    expect(imageLink("https://x.test/a.webp")).toBeNull();
+    expect(imageLink("https://x.test/a.gif.")).toBeNull();
+    expect(imageLink("https://x.test/a.gif.html")).toBeNull();
+    expect(imageLink("no links")).toBeNull();
+  });
+
+  it("embeds only for posters in HF's embed groups (usergroup or primary group)", () => {
+    expect(parseEmbed(gifReply())).toBe(GIF);
+    expect(parseEmbed(gifReply({ usergroup: 2, primary_group: 9 }))).toBe(GIF);
+    for (const group of [3, 4]) {
+      expect(parseEmbed(gifReply({ usergroup: group }))).toBe(GIF);
+    }
+    expect(parseEmbed(gifReply({ usergroup: 2 }))).toBeUndefined();
+    // The display group doesn't count
+    expect(
+      parseEmbed(gifReply({ usergroup: 2, displaygroup: 28 }))
+    ).toBeUndefined();
+    expect(parseEmbed({ ...gifReply(), users: {} })).toBeUndefined();
+    expect(parseEmbed({ ...gifReply(), message: "no image" })).toBeUndefined();
+    expect(
+      parseEmbed({ ...gifReply(), isImageDownload: true })
+    ).toBeUndefined();
+  });
+
+  it("shows the image above the message text, linked to it", () => {
+    const node = renderMessage({ text: gifReply().message, embed: GIF });
+    const div = document.createElement("div");
+    div.appendChild(node);
+    const link = div.firstElementChild as HTMLAnchorElement;
+    expect(link.className).toBe("hfx-chat-embed");
+    expect(link.href).toBe(GIF);
+    expect(link.target).toBe("_blank");
+    const img = link.querySelector("img")!;
+    expect(img.getAttribute("src")).toBe(GIF);
+    expect(img.alt).toBe("GIF");
+    expect(img.getAttribute("referrerpolicy")).toBe("no-referrer");
+    expect(img.getAttribute("loading")).toBe("lazy");
+    // The text, link included, still follows
+    expect(div.textContent).toContain(`: ${GIF}`);
+  });
+
+  it("drops the image when it fails to load, keeping the text", () => {
+    const div = document.createElement("div");
+    div.appendChild(renderMessage({ text: `see ${GIF}`, embed: GIF }));
+    div.querySelector("img")!.dispatchEvent(new Event("error"));
+    expect(div.querySelector(".hfx-chat-embed")).toBeNull();
+    expect(div.textContent).toBe(`see ${GIF}`);
+  });
+
+  it("follows /embed hide from convo.php", () => {
+    expect(
+      embedsHidden("a=1; convoStorage=%7B%22hideEmbeds%22%3Atrue%7D")
+    ).toBe(true);
+    expect(embedsHidden('convoStorage={"hideEmbeds":false}')).toBe(false);
+    expect(embedsHidden("convoStorage=not json")).toBe(false);
+    expect(embedsHidden("")).toBe(false);
+
+    document.cookie = `convoStorage=${encodeURIComponent('{"hideEmbeds":true}')}`;
+    const div = document.createElement("div");
+    div.appendChild(renderMessage({ text: GIF, embed: GIF }));
+    expect(div.querySelector("img")).toBeNull();
+    expect(div.querySelector("a")!.textContent).toBe(GIF);
   });
 });

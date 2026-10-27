@@ -8,7 +8,7 @@ import {
   parseUser,
   toInt,
 } from "./ConvoClient";
-import { LinkPreviews, parsePreviews } from "./formatMessage";
+import { LinkPreviews, parseEmbed, parsePreviews } from "./formatMessage";
 import { SocketIOClient } from "./SocketIOClient";
 
 /**
@@ -48,6 +48,8 @@ export interface RoomMessage {
   quiet?: boolean;
   /** HF's previews of HF links in the text (mentions are profile links). */
   previews?: LinkPreviews;
+  /** An image link convo.php would show as an image (see parseEmbed). */
+  embed?: string;
 }
 
 export interface RoomUser extends ChatUser {
@@ -112,6 +114,8 @@ export function parseRoomMessage(raw: any): RoomMessage | null {
   if ("noSound" in raw) message.quiet = true;
   const previews = parsePreviews(raw.extra);
   if (previews) message.previews = previews;
+  const embed = parseEmbed(raw);
+  if (embed) message.embed = embed;
   return message;
 }
 

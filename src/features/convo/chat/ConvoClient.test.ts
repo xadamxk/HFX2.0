@@ -83,6 +83,13 @@ describe("parseMessage", () => {
     expect(parseMessage({ party_id: 1 })).toBeNull();
   });
 
+  it("keeps an image link convo.php would embed", () => {
+    const gif = "https://static.klipy.com/ii/a/b.gif";
+    const users = { [OTHER.uid]: { ...OTHER, primary_group: 9 } };
+    expect(parseMessage(live({ message: gif, users }))?.embed).toBe(gif);
+    expect(parseMessage(live({ message: gif }))?.embed).toBeUndefined();
+  });
+
   it("flags group messages", () => {
     expect(parseMessage({ ...live(), is_group: true })?.group).toBe(true);
     expect(parseMessage(live())?.group).toBeUndefined();

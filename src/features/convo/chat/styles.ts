@@ -630,18 +630,25 @@ export const CHAT_DOCK_CSS = `
 .hfx-chat-attach svg { display: block; width: 18px; height: 18px; }
 .hfx-chat-attach:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
 .hfx-chat-attach:focus-visible { outline: 1px solid #555; }
+/*
+ * One 16px line between 7px paddings and the border fills the 32px box, so the
+ * text sits in the middle. HF styles every textarea (custom_v4.css sets
+ * line-height 1.4; the profile page's a_p_4.css forces padding, font size and
+ * background with !important), so these are !important to keep it centred.
+ */
 .hfx-chat-compose textarea {
   flex: 1;
   height: 32px;
   max-height: 110px;
   min-height: 32px;
   box-sizing: border-box;
-  padding: 7px 10px;
+  margin: 0;
+  padding: 7px 10px !important;
   border: 1px solid #222;
-  border-radius: 16px;
-  background: #2a2a2a;
-  color: #eee;
-  font: 13px Arial, sans-serif;
+  border-radius: 16px !important;
+  background: #2a2a2a !important;
+  color: #eee !important;
+  font: 13px/16px Arial, sans-serif !important;
   resize: none;
   outline: none;
 }

@@ -219,6 +219,41 @@ describe("ChatDock bubbles", () => {
     }
   });
 
+  it("shows their status and typing on the window's header, minimized too", async () => {
+    jest.useFakeTimers({ now: Date.now() });
+    try {
+      await mount();
+      const win = document.querySelector<HTMLElement>(
+        `.hfx-chat-window[data-party="${PARTY}"]`
+      )!;
+      const avatar = () =>
+        win.querySelector<HTMLElement>(".hfx-chat-header-avatar")!;
+      const dot = () => avatar().querySelector(".hfx-chat-dot")!;
+      win.querySelector<HTMLButtonElement>("button[title=Minimize]")!.click();
+      expect(win.classList).toContain("hfx-chat-minimized");
+
+      client.conversations.get(PARTY)!.other.lastActive = now();
+      client.fire("conversations");
+      expect(avatar().dataset.presence).toBe("online");
+      expect(dot().classList).toContain("hfx-chat-presence-online");
+      expect(avatar().title).toBe("Charlie is online");
+      expect(avatar().querySelector("img")).not.toBeNull();
+
+      client.fire("typing", OTHER.uid, true);
+      expect(dot().classList).toContain("hfx-chat-dot-typing");
+      expect(avatar().title).toBe("Charlie is typing");
+      client.fire("typing", OTHER.uid, false);
+      expect(dot().classList).not.toContain("hfx-chat-dot-typing");
+
+      // Statuses age on the header like on the bubble
+      jest.advanceTimersByTime(16 * 60 * 1000);
+      expect(avatar().dataset.presence).toBe("away");
+      expect(avatar().querySelectorAll(".hfx-chat-dot")).toHaveLength(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("docks on the left when configured", async () => {
     await mount({ side: "left", open: false });
     expect(document.getElementById("hfx-chat-dock")!.classList).toContain(

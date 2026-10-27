@@ -157,6 +157,8 @@ interface ChatWindow {
   root: HTMLElement;
   header: HTMLElement;
   avatar: HTMLImageElement;
+  /** The avatar and the other person's status dot. */
+  avatarBox: HTMLElement;
   name: HTMLAnchorElement;
   status: HTMLElement;
   list: HTMLElement;
@@ -274,7 +276,10 @@ export class ChatDock {
     parent.appendChild(this.root);
     mirrorSiteScrollbar(this.root);
     // Statuses come from last-active times, so they age (online → away → offline)
-    this.presenceTimer = setInterval(() => this.renderHeads(), 60000);
+    this.presenceTimer = setInterval(() => {
+      this.renderHeads();
+      this.windows.forEach((win) => this.renderHeader(win));
+    }, 60000);
   }
 
   destroy(): void {
@@ -1127,6 +1132,8 @@ export class ChatDock {
     };
 
     const avatar = el("img", { src: avatarUrl("", this.origin), alt: "" });
+    // Their status dot sits on the avatar, as on their bubble or row
+    const avatarBox = el("span", { class: "hfx-chat-header-avatar" }, avatar);
     const name = el(
       "a",
       { href: `${this.origin}/convo.php?id=${partyId}` },
@@ -1144,7 +1151,7 @@ export class ChatDock {
       "↗"
     );
     const header = el("div", { class: "hfx-chat-header" }, [
-      avatar,
+      avatarBox,
       el("div", { class: "hfx-chat-title" }, [name, status]),
       fullLink,
     ]);
@@ -1198,6 +1205,7 @@ export class ChatDock {
       root,
       header,
       avatar,
+      avatarBox,
       name,
       status,
       list,
@@ -1261,6 +1269,12 @@ export class ChatDock {
       win.name.textContent = other.username;
       win.name.href = `${this.origin}/member.php?action=profile&uid=${other.uid}`;
       win.name.title = `${other.username}'s profile`;
+      // Their status, and the typing pill, as on their bubble or row
+      const status = presence(other.lastActive);
+      const typing = this.typingUsers.has(other.uid);
+      win.avatarBox.replaceChildren(win.avatar, statusDot(status, typing));
+      win.avatarBox.dataset.presence = status;
+      win.avatarBox.title = `${other.username} is ${typing ? "typing" : status}`;
     }
     win.header.classList.toggle(
       "hfx-chat-unread",
@@ -1555,7 +1569,10 @@ export class ChatDock {
         setTimeout(() => this.setUserTyping(uid, false), TYPING_TIMEOUT)
       );
     }
-    this.windows.forEach((win) => this.renderTyping(win));
+    this.windows.forEach((win) => {
+      this.renderTyping(win);
+      this.renderHeader(win);
+    });
     this.renderHeads();
   }
 

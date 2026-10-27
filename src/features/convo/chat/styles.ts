@@ -519,6 +519,21 @@ export const CHAT_DOCK_CSS = `
   object-fit: cover;
   flex: none;
 }
+/* A DM window's avatar with the other person's status dot, ringed in the header's color */
+.hfx-chat-header-avatar {
+  position: relative;
+  flex: none;
+  display: flex;
+}
+.hfx-chat-header-avatar .hfx-chat-dot {
+  --hfx-chat-dot-size: 10px;
+  --hfx-chat-dot-ring: var(--hfx-chat-header);
+  top: -2px;
+  right: -2px;
+  box-shadow: 0 0 0 2px var(--hfx-chat-dot-ring);
+}
+.hfx-chat-header.hfx-chat-unread .hfx-chat-dot { --hfx-chat-dot-ring: var(--hfx-chat-accent); }
+.hfx-chat-header-avatar .hfx-chat-dot i { width: 2px; height: 2px; }
 .hfx-chat-title {
   flex: 1;
   min-width: 0;

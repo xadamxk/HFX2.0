@@ -5,7 +5,6 @@ import { GlobalChatWindow } from "./GlobalChatWindow";
 import { GlobalRoomClient } from "./GlobalRoomClient";
 import type { SocketIOClient } from "./SocketIOClient";
 import type { ChatMessage, Conversation, ConvoClient } from "./ConvoClient";
-import { convoNiceTime } from "../common/timestamps";
 
 const ME = { uid: 10, username: "Me", avatar: "", lastActive: 0 };
 const OTHER = { uid: 123, username: "Charlie", avatar: "", lastActive: 0 };
@@ -18,6 +17,10 @@ class FakeClient {
   me = ME;
   status = "connecting";
   isSending = false;
+  users = new Map([
+    [ME.uid, { ...ME }],
+    [OTHER.uid, { ...OTHER, group: 46 }],
+  ]);
   conversations = new Map<number, Conversation>([
     [PARTY, { partyId: PARTY, other: { ...OTHER }, dateline: T, unread: 0 }],
   ]);
@@ -71,7 +74,6 @@ let saveState: jest.Mock;
 let globalSockets: FakeConvoSocket[];
 
 const mount = async (
-  timestamps: boolean,
   options: {
     side?: "left" | "right";
     layout?: "bubbles" | "list";
@@ -87,7 +89,6 @@ const mount = async (
     sound: options.sound,
     maxBubbles: 5,
     typingIndicators: true,
-    timestamps,
     side: options.side,
     layout: options.layout,
     createGlobal: options.global
@@ -144,7 +145,7 @@ describe("ChatDock bubbles", () => {
   const now = () => Math.floor(Date.now() / 1000);
 
   it("colors the bubble by the user's last-active time", async () => {
-    await mount(true, { open: false });
+    await mount({ open: false });
     const other = client.conversations.get(PARTY)!.other;
 
     for (const [ago, status] of [
@@ -165,7 +166,7 @@ describe("ChatDock bubbles", () => {
   it("ages statuses without new data", async () => {
     jest.useFakeTimers({ now: Date.now() });
     try {
-      await mount(true, { open: false });
+      await mount({ open: false });
       client.conversations.get(PARTY)!.other.lastActive = now();
       client.fire("conversations");
       expect(head().dataset.presence).toBe("online");
@@ -177,7 +178,7 @@ describe("ChatDock bubbles", () => {
   });
 
   it("shows typing on the bubble and in the window until they send", async () => {
-    await mount(true);
+    await mount();
     client.fire("conversations");
     client.fire("typing", OTHER.uid, true);
     expect(head().querySelector(".hfx-chat-dot-typing")).not.toBeNull();
@@ -207,7 +208,7 @@ describe("ChatDock bubbles", () => {
   it("expires a typing notice that never stops", async () => {
     jest.useFakeTimers();
     try {
-      await mount(true, { open: false });
+      await mount({ open: false });
       client.fire("conversations");
       client.fire("typing", OTHER.uid, true);
       expect(head().querySelector(".hfx-chat-dot-typing")).not.toBeNull();
@@ -219,12 +220,12 @@ describe("ChatDock bubbles", () => {
   });
 
   it("docks on the left when configured", async () => {
-    await mount(true, { side: "left", open: false });
+    await mount({ side: "left", open: false });
     expect(document.getElementById("hfx-chat-dock")!.classList).toContain(
       "hfx-chat-left"
     );
     dock!.destroy();
-    await mount(true, { open: false });
+    await mount({ open: false });
     expect(document.getElementById("hfx-chat-dock")!.classList).not.toContain(
       "hfx-chat-left"
     );
@@ -239,13 +240,13 @@ describe("ChatDock sound", () => {
   });
 
   it("plays for a new message from the other person", async () => {
-    await mount(true, { open: false, sound });
+    await mount({ open: false, sound });
     client.add({ uid: OTHER.uid });
     expect(sound.play).toHaveBeenCalledWith(`${PARTY}:1`);
   });
 
   it("stays quiet for your own messages and ones HF marks quiet", async () => {
-    await mount(true, { open: false, sound });
+    await mount({ open: false, sound });
     client.add({ uid: ME.uid });
     client.add({ uid: OTHER.uid, quiet: true });
     expect(sound.play).not.toHaveBeenCalled();
@@ -253,13 +254,13 @@ describe("ChatDock sound", () => {
 
   it("stays quiet for conversations muted on convo.php", async () => {
     document.cookie = `convoSoundData=${encodeURIComponent(JSON.stringify({ [PARTY]: true }))}`;
-    await mount(true, { open: false, sound });
+    await mount({ open: false, sound });
     client.add({ uid: OTHER.uid });
     expect(sound.play).not.toHaveBeenCalled();
   });
 
   it("stays quiet while you're looking at that chat", async () => {
-    await mount(true, { sound });
+    await mount({ sound });
     const hasFocus = jest.spyOn(document, "hasFocus").mockReturnValue(true);
     document
       .querySelector<HTMLTextAreaElement>(
@@ -272,7 +273,7 @@ describe("ChatDock sound", () => {
   });
 
   it("is off without a sound player", async () => {
-    await mount(true, { open: false });
+    await mount({ open: false });
     expect(() => client.add({ uid: OTHER.uid })).not.toThrow();
   });
 });
@@ -294,7 +295,7 @@ describe("ChatDock images", () => {
   afterEach(() => confirmSpy.mockRestore());
 
   it("uploads a pasted image after HF's confirmation", async () => {
-    await mount(true);
+    await mount();
     chatWindow().dispatchEvent(transferEvent("paste", [file()]));
     await flush();
     await flush();
@@ -310,7 +311,7 @@ describe("ChatDock images", () => {
   });
 
   it("refuses other file types with HF's message", async () => {
-    await mount(true);
+    await mount();
     chatWindow().dispatchEvent(transferEvent("drop", [file("image/webp")]));
     await flush();
     expect(client.sendImage).not.toHaveBeenCalled();
@@ -320,7 +321,7 @@ describe("ChatDock images", () => {
   });
 
   it("shows the upload as pending until it's acked", async () => {
-    await mount(true);
+    await mount();
     let ack!: () => void;
     client.sendImage.mockImplementation(
       () =>
@@ -345,12 +346,12 @@ describe("ChatDock global chat", () => {
     document.querySelector<HTMLElement>('.hfx-chat-window[data-party="-1"]');
 
   it("pins a global chat bubble above the launcher, only when enabled", async () => {
-    await mount(true, { open: false });
+    await mount({ open: false });
     client.fire("conversations");
     expect(globalHead()).toBeNull();
     dock!.destroy();
 
-    await mount(true, { open: false, global: true });
+    await mount({ open: false, global: true });
     client.fire("conversations");
     const heads = document.querySelector(".hfx-chat-heads")!.children;
     expect(heads[0].classList).toContain("hfx-chat-launcher");
@@ -358,7 +359,7 @@ describe("ChatDock global chat", () => {
   });
 
   it("opens the global window and joins the room on click", async () => {
-    await mount(true, { open: false, global: true });
+    await mount({ open: false, global: true });
     client.fire("conversations");
     globalHead()!.click();
 
@@ -373,7 +374,7 @@ describe("ChatDock global chat", () => {
   });
 
   it("restores the global window from saved state", async () => {
-    await mount(true, {
+    await mount({
       global: true,
       openChats: [
         { partyId: -1, minimized: true },
@@ -386,12 +387,12 @@ describe("ChatDock global chat", () => {
   });
 
   it("ignores a saved global window when global chat is off", async () => {
-    await mount(true, { openChats: [{ partyId: -1, minimized: false }] });
+    await mount({ openChats: [{ partyId: -1, minimized: false }] });
     expect(globalWindow()).toBeNull();
   });
 
   it("leaves the room when the window closes", async () => {
-    await mount(true, { open: false, global: true });
+    await mount({ open: false, global: true });
     client.fire("conversations");
     globalHead()!.click();
     globalWindow()!
@@ -403,7 +404,7 @@ describe("ChatDock global chat", () => {
   });
 
   it("pins a global chat row first in the list", async () => {
-    await mount(true, { open: false, global: true, layout: "list" });
+    await mount({ open: false, global: true, layout: "list" });
     client.fire("conversations");
     const rows = document.querySelectorAll(".hfx-chat-row");
     expect(rows[0].classList).toContain("hfx-chat-row-global");
@@ -459,7 +460,7 @@ describe("ChatDock list layout", () => {
   });
 
   it("lists conversations with name, time, preview and status", async () => {
-    await mount(true, { layout: "list", open: false });
+    await mount({ layout: "list", open: false });
     client.fire("conversations");
 
     expect(document.querySelector(".hfx-chat-list")).not.toBeNull();
@@ -496,7 +497,7 @@ describe("ChatDock list layout", () => {
   });
 
   it("shows typing in place of the preview", async () => {
-    await mount(true, { layout: "list", open: false });
+    await mount({ layout: "list", open: false });
     client.fire("conversations");
     client.fire("typing", OTHER.uid, true);
     expect(row().querySelector(".hfx-chat-row-preview")!.textContent).toBe(
@@ -508,7 +509,7 @@ describe("ChatDock list layout", () => {
   });
 
   it("opens a chat window from a row", async () => {
-    await mount(true, { layout: "list", open: false });
+    await mount({ layout: "list", open: false });
     client.fire("conversations");
     row().click();
     await flush();
@@ -519,7 +520,7 @@ describe("ChatDock list layout", () => {
   });
 
   it("collapses to the header", async () => {
-    await mount(true, { layout: "list", open: false });
+    await mount({ layout: "list", open: false });
     client.fire("conversations");
     const header = () =>
       document.querySelector<HTMLElement>(".hfx-chat-list-header")!;
@@ -531,56 +532,51 @@ describe("ChatDock list layout", () => {
   });
 });
 
-describe("ChatDock timestamps", () => {
-  /** The window's messages and timestamps in order, e.g. ["1", "@", "2"]. */
-  const layout = () =>
+describe("ChatDock message layout", () => {
+  /** Each sender group as "name: line, line". */
+  const groups = () =>
     Array.from(
-      document.querySelectorAll(
-        ".hfx-chat-messages > .hfx-chat-msg[data-mid], .hfx-chat-messages > .message-bubble-timestamp"
-      )
-    ).map((node) =>
-      node.classList.contains("message-bubble-timestamp")
-        ? `@${node.textContent}`
-        : (node as HTMLElement).dataset.mid
+      document.querySelectorAll(".hfx-chat-messages .hfx-gc-group")
+    ).map(
+      (group) =>
+        `${group.querySelector(".hfx-gc-name")!.textContent}: ${Array.from(
+          group.querySelectorAll(".hfx-gc-line")
+        )
+          .map((line) => line.textContent)
+          .join(", ")}`
     );
 
-  it("puts one timestamp under each same-sender, same-minute run", async () => {
+  it("groups each sender's messages within five minutes, like the room windows", async () => {
     client.messages = [];
-    await mount(true);
+    await mount();
     client.add(
-      { uid: OTHER.uid, dateline: T },
-      { uid: OTHER.uid, dateline: T + 30 },
-      { uid: ME.uid, dateline: T + 40 },
-      { uid: ME.uid, dateline: T + 70 }
+      { uid: OTHER.uid, dateline: T, text: "one" },
+      { uid: OTHER.uid, dateline: T + 30, text: "two" },
+      { uid: ME.uid, dateline: T + 40, text: "mine" },
+      { uid: ME.uid, dateline: T + 40 + 6 * 60, text: "later" }
     );
-
-    const minute = `@${convoNiceTime(T)}`;
-    expect(layout()).toEqual([
-      "1",
-      "2",
-      minute,
-      "3",
-      minute,
-      "4",
-      `@${convoNiceTime(T + 70)}`,
-    ]);
-    const stamps = document.querySelectorAll(".message-bubble-timestamp");
-    expect(stamps[0].classList).toContain("hfx-chat-stamp-theirs");
-    expect(stamps[1].classList).toContain("hfx-chat-stamp-mine");
+    expect(groups()).toEqual(["Charlie: one, two", "Me: mine", "Me: later"]);
+    const first = document.querySelector(".hfx-chat-messages .hfx-gc-group")!;
+    expect(first.querySelector(".hfx-gc-name span")!.className).toBe("group46");
+    expect(first.querySelector<HTMLAnchorElement>(".hfx-gc-avatar")!.href).toBe(
+      `https://hackforums.net/member.php?action=profile&uid=${OTHER.uid}`
+    );
+    expect(first.querySelector(".hfx-gc-time")).not.toBeNull();
+    expect(document.querySelector(".hfx-chat-msg")).toBeNull();
   });
 
-  it("moves the timestamp when a newer message joins the minute", async () => {
-    await mount(true);
-    client.add({ uid: OTHER.uid, dateline: T });
-    expect(layout()).toEqual(["1", `@${convoNiceTime(T)}`]);
-
-    client.add({ uid: OTHER.uid, dateline: T + 5 });
-    expect(layout()).toEqual(["1", "2", `@${convoNiceTime(T)}`]);
+  it("adds a new message to the last group without redrawing it", async () => {
+    await mount();
+    client.add({ uid: OTHER.uid, dateline: T, text: "one" });
+    const line = document.querySelector(".hfx-gc-line");
+    client.add({ uid: OTHER.uid, dateline: T + 5, text: "two" });
+    expect(groups()).toEqual(["Charlie: one, two"]);
+    expect(document.querySelector(".hfx-gc-line")).toBe(line);
   });
 
-  it("keeps timestamps in place when older messages load", async () => {
-    await mount(true);
-    client.add({ uid: OTHER.uid, dateline: T + 120 });
+  it("keeps messages in order when older ones load", async () => {
+    await mount();
+    client.add({ uid: OTHER.uid, dateline: T + 120, text: "newer" });
     // An older page arrives before it
     client.messages.unshift({
       mid: 0,
@@ -590,18 +586,6 @@ describe("ChatDock timestamps", () => {
       dateline: T,
     });
     client.fire("messages", PARTY, false);
-
-    expect(layout()).toEqual([
-      "0",
-      `@${convoNiceTime(T)}`,
-      "1",
-      `@${convoNiceTime(T + 120)}`,
-    ]);
-  });
-
-  it("shows no timestamps when Message Timestamps is off", async () => {
-    await mount(false);
-    client.add({ uid: OTHER.uid }, { uid: ME.uid });
-    expect(layout()).toEqual(["1", "2"]);
+    expect(groups()).toEqual(["Charlie: older, newer"]);
   });
 });

@@ -14,7 +14,6 @@ import { fetchGroupList, GroupInfo } from "./chat/groupList";
 import { GlobalChatWindow } from "./chat/GlobalChatWindow";
 import { MessageSound } from "./chat/sound";
 import { CHAT_DOCK_CSS } from "./chat/styles";
-import MessageTimestamps from "./MessageTimestamps";
 import WhosOnlineSorting from "../global/WhosOnlineSorting";
 
 interface ChatBubblesSettings {
@@ -159,12 +158,6 @@ class ChatBubbles extends Feature {
     const postKey = Util.getUserPostKey();
     if (!postKey || !Util.getCurrentUser()) return;
 
-    // Chat windows follow the Message Timestamps toggle
-    const timestampSettings =
-      await this.settingsService.getFeatureSettings(MessageTimestamps);
-    const timestamps = timestampSettings?.enabled ?? MessageTimestamps.enabled;
-    if (document.getElementById("hfx-chat-dock")) return;
-
     Util.addCssToPage(CHAT_DOCK_CSS);
     const client = new ConvoClient({ postKey });
     const sound = settings.sound ? new MessageSound() : undefined;
@@ -199,7 +192,6 @@ class ChatBubbles extends Feature {
           : undefined,
       side: settings.side === "left" ? "left" : "right",
       layout: settings.layout === "list" ? "list" : "bubbles",
-      timestamps: Boolean(timestamps),
       state: settings.storage_dockState ?? DEFAULT_DOCK_STATE,
       saveState: (state) => {
         this.settingsService

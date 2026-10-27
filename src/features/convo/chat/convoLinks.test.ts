@@ -193,7 +193,6 @@ describe("ChatDock.openChatWithUser", () => {
       client,
       maxBubbles: 5,
       typingIndicators: true,
-      timestamps: false,
       state: { ...DEFAULT_DOCK_STATE },
       saveState: () => undefined,
       findParty,

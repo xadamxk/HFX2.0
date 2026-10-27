@@ -13,8 +13,7 @@ class MessageTimestamps extends Feature {
       section: Convo,
       name: "Message Timestamps",
       enabled: true,
-      description:
-        "Add timestamps to convo messages, including Convo Anywhere windows.",
+      description: "Add timestamps to convo messages.",
     });
   }
 

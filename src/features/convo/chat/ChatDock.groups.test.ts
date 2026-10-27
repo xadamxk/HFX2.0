@@ -93,7 +93,6 @@ describe("ChatDock group chats", () => {
       client,
       maxBubbles: 5,
       typingIndicators: true,
-      timestamps: false,
       layout: options.layout,
       sound,
       groups,
@@ -344,7 +343,6 @@ describe("ChatDock group chats", () => {
       client,
       maxBubbles: 5,
       typingIndicators: true,
-      timestamps: false,
       groups: {
         list: async () => {
           throw new Error("convo.php has no Comrades list");
@@ -374,7 +372,6 @@ describe("ChatDock group chats", () => {
       client,
       maxBubbles: 5,
       typingIndicators: true,
-      timestamps: false,
       state: {
         ...DEFAULT_DOCK_STATE,
         open: [{ partyId: 48, minimized: false, kind: "group" }],

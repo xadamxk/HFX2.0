@@ -1,10 +1,18 @@
 import { el, ElChild } from "../../../core/Dom";
-import { convoNiceTime } from "../common/timestamps";
 import type { ChatUser, ConvoStatus } from "./ConvoClient";
-import { avatarUrl, mentionsUser, renderMessage } from "./formatMessage";
+import { avatarUrl, mentionsUser } from "./formatMessage";
 import { isCommand, RoomMessage } from "./GlobalRoomClient";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { MentionPicker } from "./mentions";
+import {
+  createMessageGroup,
+  createMessageLine,
+  joinsGroup,
+  MessageGroup,
+  userLabel,
+} from "./roomLayout";
+
+export { groupTime } from "./roomLayout";
 
 /**
  * A chat window for a room with many people (the global room, private group
@@ -13,8 +21,6 @@ import { MentionPicker } from "./mentions";
  * joined and its people panel (online list or members).
  */
 
-// Messages from one sender within this many seconds share a group
-const GROUP_SECONDS = 5 * 60;
 const OWN_TYPING_TIMEOUT = 30000;
 
 /** What a room window reads from and sends through. */
@@ -64,24 +70,6 @@ export interface RoomWindowView {
   listTop?: ElChild[];
 }
 
-interface Group {
-  uid: number;
-  dateline: number;
-  lines: HTMLElement;
-}
-
-/** A group's time: just the time today, otherwise the date too. */
-export function groupTime(dateline: number, now = new Date()): string {
-  const date = new Date(dateline * 1000);
-  const time = date.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return date.toDateString() === now.toDateString()
-    ? time
-    : `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
-}
-
 /** "Nova is typing…", "Nova and Kestrel are typing…", "Several people are typing…". */
 export function typingText(names: string[]): string {
   if (names.length === 0) return "";
@@ -104,7 +92,7 @@ export abstract class RoomChatWindow {
   private readonly typing: HTMLElement;
   private readonly mentions: MentionPicker;
   private readonly lines = new Map<string, HTMLElement>();
-  private lastGroup: Group | null = null;
+  private lastGroup: MessageGroup | null = null;
   private pending: { requestId: string; node: HTMLElement }[] = [];
   private noticeTimer?: ReturnType<typeof setTimeout>;
   private ownTypingTimer?: ReturnType<typeof setTimeout>;
@@ -362,11 +350,7 @@ export abstract class RoomChatWindow {
     const line = this.renderLine(message);
     this.lines.set(message.key, line);
     const group = this.lastGroup;
-    if (
-      group &&
-      group.uid === message.uid &&
-      message.dateline - group.dateline <= GROUP_SECONDS
-    ) {
+    if (group && joinsGroup(group, message)) {
       group.lines.appendChild(line);
       group.dateline = message.dateline;
     } else {
@@ -375,49 +359,27 @@ export abstract class RoomChatWindow {
     return line;
   }
 
-  private renderGroup(message: RoomMessage, firstLine: HTMLElement): Group {
+  private renderGroup(
+    message: RoomMessage,
+    firstLine: HTMLElement
+  ): MessageGroup {
     const user = this.source.users.get(message.uid);
     const username = user?.username ?? `User ${message.uid}`;
     const nameButton = el(
       "button",
       { type: "button", class: "hfx-gc-name", title: `Mention ${username}` },
-      el("span", { class: user?.group ? `group${user.group}` : null }, username)
+      userLabel(user, message.uid)
     );
     nameButton.addEventListener("click", () => this.insertMention(username));
-    const lines = el("div", { class: "hfx-gc-lines" }, firstLine);
-    const group = el(
-      "div",
-      { class: "hfx-gc-group", "data-uid": message.uid },
-      [
-        el(
-          "a",
-          {
-            class: "hfx-gc-avatar",
-            href: `${this.origin}/member.php?action=profile&uid=${message.uid}`,
-            target: "_blank",
-            rel: "noopener",
-            title: `${username}'s profile`,
-          },
-          el("img", {
-            src: avatarUrl(user?.avatar ?? "", this.origin),
-            alt: "",
-          })
-        ),
-        el("div", { class: "hfx-gc-content" }, [
-          el("div", { class: "hfx-gc-meta" }, [
-            nameButton,
-            el(
-              "span",
-              { class: "hfx-gc-time", title: convoNiceTime(message.dateline) },
-              groupTime(message.dateline)
-            ),
-          ]),
-          lines,
-        ]),
-      ]
+    const group = createMessageGroup(
+      message,
+      user,
+      firstLine,
+      this.origin,
+      nameButton
     );
-    this.list.insertBefore(group, this.pendingBox);
-    return { uid: message.uid, dateline: message.dateline, lines };
+    this.list.insertBefore(group.root, this.pendingBox);
+    return group;
   }
 
   private renderLine(message: RoomMessage): HTMLElement {
@@ -427,14 +389,11 @@ export abstract class RoomChatWindow {
       message.uid !== me.uid &&
       !message.html &&
       mentionsUser(message.text, me, this.origin);
-    return el(
-      "div",
-      {
-        class: `hfx-gc-line${mention ? " hfx-gc-mention" : ""}`,
-        title: convoNiceTime(message.dateline),
-        "data-key": message.key,
-      },
-      renderMessage(message, this.origin)
+    return createMessageLine(
+      message,
+      this.origin,
+      { "data-key": message.key },
+      !!mention
     );
   }
 

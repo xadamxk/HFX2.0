@@ -8,12 +8,7 @@ import type {
   ConvoStatus,
 } from "./ConvoClient";
 import { HISTORY_PAGE_SIZE, presence, Presence } from "./ConvoClient";
-import {
-  avatarUrl,
-  mentionsUser,
-  previewText,
-  renderMessage,
-} from "./formatMessage";
+import { avatarUrl, mentionsUser, previewText } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
@@ -22,11 +17,13 @@ import { fetchConvoParty } from "./convoLinks";
 import { acceptImages, imageUploadError, readBytes } from "./images";
 import { mirrorSiteScrollbar } from "./siteScrollbar";
 import { MessageSoundPlayer, mutedParties } from "./sound";
+import { convoNiceTime } from "../common/timestamps";
 import {
-  convoNiceTime,
-  createTimestamp,
-  showsTimestamp,
-} from "../common/timestamps";
+  createMessageGroup,
+  createMessageLine,
+  joinsGroup,
+  MessageGroup,
+} from "./roomLayout";
 
 /**
  * Facebook-style chat UI: a column of avatar bubbles (bottom right) for recent
@@ -118,8 +115,6 @@ export interface ChatDockOptions {
   client: ConvoClient;
   maxBubbles: number;
   typingIndicators: boolean;
-  /** Show timestamps under messages, as Message Timestamps does on convo.php. */
-  timestamps: boolean;
   /** Which side of the page the dock sits on (default right). */
   side?: "left" | "right";
   /** Avatar bubbles (default) or a Messenger-style conversation list. */
@@ -165,8 +160,10 @@ interface ChatWindow {
   pendingBox: HTMLElement;
   typing: HTMLElement;
   input: HTMLTextAreaElement;
+  /** Message lines by mid. */
   rendered: Map<number, HTMLElement>;
-  timestamps: Map<number, HTMLElement>;
+  /** The newest sender group, which the next message may join. */
+  lastGroup: MessageGroup | null;
   pending: PendingSend[];
   loaded: boolean;
   loading: boolean;
@@ -1155,7 +1152,11 @@ export class ChatDock {
     const pendingBox = el("div", { style: "display: contents" });
     const list = el(
       "div",
-      { class: "hfx-chat-messages", role: "log", "aria-live": "polite" },
+      {
+        class: "hfx-chat-messages hfx-gc-messages",
+        role: "log",
+        "aria-live": "polite",
+      },
       [older, pendingBox]
     );
     const typing = el("div", {
@@ -1171,7 +1172,7 @@ export class ChatDock {
     const root = el(
       "section",
       {
-        class: `hfx-chat-window${minimized ? " hfx-chat-minimized" : ""}`,
+        class: `hfx-chat-window hfx-gc-window${minimized ? " hfx-chat-minimized" : ""}`,
         "data-party": partyId,
       },
       [
@@ -1198,7 +1199,7 @@ export class ChatDock {
       typing,
       input,
       rendered: new Map(),
-      timestamps: new Map(),
+      lastGroup: null,
       pending: [],
       loaded: false,
       loading: false,
@@ -1322,42 +1323,29 @@ export class ChatDock {
   }
 
   /** Add newly loaded messages in order, keeping the scroll position sensible. */
+  /**
+   * Show the chat's messages in the grouped layout. New ones join the last
+   * sender group or start one; when older ones arrive (Load older, or a gap
+   * filled after reconnecting), everything is redrawn and the view kept.
+   */
   private renderMessages(win: ChatWindow): void {
     const messages = this.client.getMessages(win.partyId);
     const list = win.list;
     const nearBottom =
       list.scrollHeight - list.scrollTop - list.clientHeight < 60;
     const previousHeight = list.scrollHeight;
-    const firstRendered = Math.min(
-      ...Array.from(win.rendered.keys()),
-      Infinity
-    );
-    let addedNewer = false;
+    const firstBatch = win.rendered.size === 0;
+    const lastRendered = Math.max(...Array.from(win.rendered.keys()), 0);
+    const fresh = messages.filter((message) => !win.rendered.has(message.mid));
 
-    let previous: Element =
-      win.list.querySelector(".hfx-chat-list-notice") ?? win.older;
-    messages.forEach((message, index) => {
-      let node = win.rendered.get(message.mid);
-      if (!node) {
-        node = this.renderBubble(message);
-        win.rendered.set(message.mid, node);
-        previous.after(node);
-        if (message.mid > firstRendered) addedNewer = true;
-      }
-      const prior = messages[index - 1];
-      node.classList.toggle(
-        "hfx-chat-group-start",
-        !prior || prior.uid !== message.uid
-      );
-      previous = node;
-
-      // Timestamps follow their message, and move when a newer message joins its minute
-      const timestamp = this.timestampFor(win, message, messages[index + 1]);
-      if (timestamp) {
-        if (node.nextSibling !== timestamp) node.after(timestamp);
-        previous = timestamp;
-      }
-    });
+    if (fresh.some((message) => message.mid < lastRendered)) {
+      list.querySelectorAll(".hfx-gc-group").forEach((group) => group.remove());
+      win.rendered.clear();
+      win.lastGroup = null;
+      messages.forEach((message) => this.appendLine(win, message));
+    } else {
+      fresh.forEach((message) => this.appendLine(win, message));
+    }
     if (messages.length) this.setListNotice(win, "");
 
     // Drop pending sends whose echo has arrived
@@ -1371,54 +1359,32 @@ export class ChatDock {
     if (win.pending.length !== before) this.renderPending(win);
 
     win.older.hidden = !win.loaded || !win.hasOlder;
-    if (addedNewer || firstRendered === Infinity) {
-      if (nearBottom || firstRendered === Infinity) this.scrollToBottom(win);
-    } else {
+    const addedNewer = fresh.some((message) => message.mid > lastRendered);
+    if (firstBatch || (addedNewer && nearBottom)) {
+      this.scrollToBottom(win);
+    } else if (fresh.length && !addedNewer) {
       // Older messages were added above: keep the view where it was
       list.scrollTop += list.scrollHeight - previousHeight;
     }
   }
 
-  /**
-   * The message's timestamp element if it should show one (same rule as
-   * Message Timestamps), removing a stale one otherwise.
-   */
-  private timestampFor(
-    win: ChatWindow,
-    message: ChatMessage,
-    next: ChatMessage | undefined
-  ): HTMLElement | null {
-    const existing = win.timestamps.get(message.mid);
-    const minute = convoNiceTime(message.dateline);
-    const nextMinute =
-      next && next.uid === message.uid ? convoNiceTime(next.dateline) : null;
-    if (!this.options.timestamps || !showsTimestamp(minute, nextMinute)) {
-      existing?.remove();
-      win.timestamps.delete(message.mid);
-      return null;
+  /** Add a message's line to the last group, or a new group for it. */
+  private appendLine(win: ChatWindow, message: ChatMessage): void {
+    const line = createMessageLine(message, this.origin, {
+      "data-mid": message.mid,
+    });
+    win.rendered.set(message.mid, line);
+    const group = win.lastGroup;
+    if (group && joinsGroup(group, message)) {
+      group.lines.appendChild(line);
+      group.dateline = message.dateline;
+      return;
     }
-    if (existing) return existing;
-    const timestamp = createTimestamp(minute);
-    timestamp.classList.add(
-      message.uid === this.client.me?.uid
-        ? "hfx-chat-stamp-mine"
-        : "hfx-chat-stamp-theirs"
-    );
-    win.timestamps.set(message.mid, timestamp);
-    return timestamp;
-  }
-
-  private renderBubble(message: ChatMessage): HTMLElement {
-    const mine = message.uid === this.client.me?.uid;
-    return el(
-      "div",
-      {
-        class: `hfx-chat-msg ${mine ? "hfx-chat-mine" : "hfx-chat-theirs"}`,
-        title: convoNiceTime(message.dateline),
-        "data-mid": message.mid,
-      },
-      renderMessage(message, this.origin)
-    );
+    const user =
+      this.client.users.get(message.uid) ??
+      (message.uid === this.client.me?.uid ? this.client.me : undefined);
+    win.lastGroup = createMessageGroup(message, user, line, this.origin);
+    win.list.insertBefore(win.lastGroup.root, win.pendingBox);
   }
 
   private renderPending(win: ChatWindow): void {
@@ -1426,7 +1392,7 @@ export class ChatDock {
       const bubble = el(
         "div",
         {
-          class: `hfx-chat-msg hfx-chat-mine ${pending.failed ? "hfx-chat-failed" : "hfx-chat-pending"}`,
+          class: `hfx-gc-pending ${pending.failed ? "hfx-chat-failed" : "hfx-chat-pending"}`,
           title: pending.failed ? "Not confirmed" : "Sending…",
         },
         pending.text

@@ -7,7 +7,6 @@ export const CHAT_DOCK_CSS = `
   --hfx-chat-text: #cecece;
   --hfx-chat-muted: #8a8a8a;
   --hfx-chat-mine: #4e4e4e;
-  --hfx-chat-theirs: #2a2a2a;
   --hfx-chat-accent: #4d2f5d;
   --hfx-chat-badge: #d9534f;
   /* Online matches convo.php's inbox dot */
@@ -578,16 +577,6 @@ export const CHAT_DOCK_CSS = `
   padding: 4px 0;
   text-align: center;
 }
-.hfx-chat-msg {
-  max-width: 78%;
-  padding: 6px 11px;
-  border-radius: 16px;
-  word-break: break-word;
-  white-space: normal;
-  line-height: 1.35;
-}
-.hfx-chat-msg.hfx-chat-group-start { margin-top: 6px; }
-.hfx-chat-msg a { color: #9ecbff; text-decoration: underline; }
 /* HF links shown by their label (mentions, threads): the name in its group style */
 #hfx-chat-dock a.hfx-chat-preview { text-decoration: none; }
 #hfx-chat-dock .hfx-chat-preview strong {
@@ -595,20 +584,12 @@ export const CHAT_DOCK_CSS = `
   line-height: inherit !important;
   letter-spacing: normal !important;
 }
-.hfx-chat-msg img { max-width: 100%; height: auto; border-radius: 8px; display: block; }
-.hfx-chat-mine { align-self: flex-end; background: var(--hfx-chat-mine); color: #fff; }
-.hfx-chat-theirs { align-self: flex-start; background: var(--hfx-chat-theirs); border: 1px solid var(--hfx-chat-border); }
-/* Message Timestamps sets an inline margin for convo.php; align them with each side's bubbles */
-.hfx-chat-stamp-mine { align-self: flex-end; margin: 2px 6px 4px 0 !important; }
-.hfx-chat-stamp-theirs { align-self: flex-start; margin: 2px 0 4px 6px !important; }
-.hfx-chat-pending { opacity: 0.6; }
-.hfx-chat-failed { border: 1px solid var(--hfx-chat-badge); }
+/* A DM send that wasn't confirmed: its text, then the reason with Retry and Discard */
+.hfx-gc-pending.hfx-chat-failed { color: #ff8a80; font-style: normal; }
 .hfx-chat-msg-error {
-  align-self: flex-end;
-  max-width: 85%;
+  margin: 2px 10px 0 50px;
   color: #ff8a80;
   font-size: 11px;
-  text-align: right;
 }
 .hfx-chat-msg-error button {
   margin-left: 6px;

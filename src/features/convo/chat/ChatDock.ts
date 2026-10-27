@@ -14,7 +14,12 @@ import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
 import type { GroupInfo } from "./groupList";
 import { fetchConvoParty } from "./convoLinks";
-import { acceptImages, imageUploadError, readBytes } from "./images";
+import {
+  acceptImages,
+  attachButton,
+  imageUploadError,
+  readBytes,
+} from "./images";
 import { mirrorSiteScrollbar } from "./siteScrollbar";
 import { MessageSoundPlayer, mutedParties } from "./sound";
 import { convoNiceTime } from "../common/timestamps";
@@ -1180,7 +1185,10 @@ export class ChatDock {
         list,
         notice,
         typing,
-        el("div", { class: "hfx-chat-compose" }, input),
+        el("div", { class: "hfx-chat-compose" }, [
+          attachButton((file) => this.uploadImage(win, file)),
+          input,
+        ]),
       ]
     );
 

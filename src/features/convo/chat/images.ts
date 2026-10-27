@@ -74,6 +74,48 @@ export function acceptImages(
   });
 }
 
+/** The image types HF takes, for the file picker. */
+export const IMAGE_ACCEPT = "image/png,image/jpeg,image/gif";
+
+const plusIcon = (): SVGSVGElement => {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2.5");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(ns, "path");
+  path.setAttribute("d", "M12 5v14M5 12h14");
+  svg.appendChild(path);
+  return svg;
+};
+
+/**
+ * A plus button that opens a file picker for one image and hands the chosen
+ * file to onFile, which runs the same checks as a paste or drop.
+ */
+export function attachButton(onFile: (file: File) => void): HTMLButtonElement {
+  const picker = document.createElement("input");
+  picker.type = "file";
+  picker.accept = IMAGE_ACCEPT;
+  picker.addEventListener("change", () => {
+    const file = picker.files?.[0];
+    // Cleared so picking the same file again still fires change
+    picker.value = "";
+    if (file) onFile(file);
+  });
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "hfx-chat-attach";
+  button.title = "Attach an image";
+  button.setAttribute("aria-label", "Attach an image");
+  button.appendChild(plusIcon());
+  button.addEventListener("click", () => picker.click());
+  return button;
+}
+
 /** A file's bytes. Blob.arrayBuffer() where available, FileReader otherwise. */
 export function readBytes(file: Blob): Promise<ArrayBuffer> {
   if (typeof file.arrayBuffer === "function") return file.arrayBuffer();

@@ -145,6 +145,8 @@ describe("GroupChatWindow", () => {
     expect(
       win.root.querySelector(":scope > .hfx-chat-notice")!.textContent
     ).toBe("Images can't be sent to group chats from HFX yet.");
+    // No + button where images can't be sent
+    expect(win.root.querySelector(".hfx-chat-attach")).toBeNull();
   });
 
   it("offers members to mention on @, and Enter picks one instead of sending", async () => {

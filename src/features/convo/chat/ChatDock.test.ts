@@ -1,4 +1,4 @@
-import { transferEvent } from "../../../test-utils/transferEvent";
+import { chooseFile, transferEvent } from "../../../test-utils/transferEvent";
 import { FakeConvoSocket } from "../../../test-utils/FakeConvoSocket";
 import { ChatDock, DEFAULT_DOCK_STATE, OpenChat, shortTime } from "./ChatDock";
 import { GlobalChatWindow } from "./GlobalChatWindow";
@@ -308,6 +308,21 @@ describe("ChatDock images", () => {
     expect(partyId).toBe(PARTY);
     expect(Array.from(new Uint8Array(bytes))).toEqual([1, 2, 3]);
     expect(requestId).toBe("req");
+  });
+
+  it("uploads an image chosen with the + button left of the input", async () => {
+    await mount();
+    const compose = chatWindow().querySelector(".hfx-chat-compose")!;
+    const button =
+      compose.querySelector<HTMLButtonElement>(".hfx-chat-attach")!;
+    expect(button.nextElementSibling).toBe(compose.querySelector("textarea"));
+    chooseFile(button, file());
+    await flush();
+    await flush();
+    // Chosen on purpose, so no paste confirmation
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(client.sendImage).toHaveBeenCalledTimes(1);
+    expect((client.sendImage.mock.calls[0] as unknown[])[0]).toBe(PARTY);
   });
 
   it("refuses other file types with HF's message", async () => {

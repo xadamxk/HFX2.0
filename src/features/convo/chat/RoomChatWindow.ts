@@ -2,7 +2,12 @@ import { el, ElChild } from "../../../core/Dom";
 import type { ChatUser, ConvoStatus } from "./ConvoClient";
 import { avatarUrl, mentionsUser } from "./formatMessage";
 import { isCommand, RoomMessage } from "./GlobalRoomClient";
-import { acceptImages, imageUploadError, readBytes } from "./images";
+import {
+  acceptImages,
+  attachButton,
+  imageUploadError,
+  readBytes,
+} from "./images";
 import { MentionPicker } from "./mentions";
 import {
   createMessageGroup,
@@ -186,6 +191,10 @@ export abstract class RoomChatWindow {
         this.typing,
         el("div", { class: "hfx-chat-compose" }, [
           this.mentions.root,
+          // Only rooms that take images (not group chats yet)
+          this.source.sendImage
+            ? attachButton((file) => this.uploadImage(file))
+            : null,
           this.input,
         ]),
       ]

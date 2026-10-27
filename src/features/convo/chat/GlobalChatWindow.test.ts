@@ -1,4 +1,4 @@
-import { transferEvent } from "../../../test-utils/transferEvent";
+import { chooseFile, transferEvent } from "../../../test-utils/transferEvent";
 import { FakeConvoSocket } from "../../../test-utils/FakeConvoSocket";
 import { GlobalChatWindow, groupTime, typingText } from "./GlobalChatWindow";
 import { GlobalRoomClient } from "./GlobalRoomClient";
@@ -328,6 +328,23 @@ describe("GlobalChatWindow", () => {
     expect(data.requestId).toBe("req-1");
     // Acked, so the pending line is gone even before an echo
     expect(win.root.querySelector(".hfx-gc-pending")).toBeNull();
+  });
+
+  it("uploads an image chosen with the + button", async () => {
+    await open();
+    socket.ackReplies.convo_imageupload = () => ({ ok: true });
+    const button = win.root.querySelector<HTMLButtonElement>(
+      ".hfx-chat-compose .hfx-chat-attach"
+    )!;
+    chooseFile(
+      button,
+      new File([new Uint8Array([7, 8])], "a.gif", { type: "image/gif" })
+    );
+    await flush();
+    await flush();
+    expect(socket.acked.some(([event]) => event === "convo_imageupload")).toBe(
+      true
+    );
   });
 
   it("refuses images that are too big", async () => {

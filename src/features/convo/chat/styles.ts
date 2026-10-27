@@ -610,9 +610,26 @@ export const CHAT_DOCK_CSS = `
 .hfx-chat-typing:empty { display: none; }
 .hfx-chat-compose {
   display: flex;
+  align-items: flex-end;
+  gap: 4px;
   border-top: 1px solid var(--hfx-chat-border);
   padding: 6px;
 }
+/* The + before the input: pick an image to upload */
+.hfx-chat-attach {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--hfx-chat-text);
+  cursor: pointer;
+}
+.hfx-chat-attach svg { display: block; width: 18px; height: 18px; }
+.hfx-chat-attach:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.hfx-chat-attach:focus-visible { outline: 1px solid #555; }
 .hfx-chat-compose textarea {
   flex: 1;
   height: 32px;

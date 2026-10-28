@@ -423,8 +423,8 @@ export abstract class RoomChatWindow {
         });
       }
     }
-    this.trimLines();
-    this.unread.refresh((key) => this.lines.get(key));
+    // The line only needs putting back if its message may have gone
+    if (this.trimLines()) this.unread.refresh((key) => this.lines.get(key));
     if (
       firstBatch ||
       nearBottom ||
@@ -514,16 +514,19 @@ export abstract class RoomChatWindow {
     );
   }
 
-  /** Drop lines the source no longer keeps. */
-  private trimLines(): void {
+  /** Drop lines the source no longer keeps; returns whether any went. */
+  private trimLines(): boolean {
     const kept = new Set(this.source.messages.map((message) => message.key));
+    let trimmed = false;
     for (const [key, line] of this.lines) {
       if (kept.has(key)) continue;
       const group = line.closest(".hfx-gc-group");
       line.remove();
       this.lines.delete(key);
       if (group && !group.querySelector(".hfx-gc-line")) group.remove();
+      trimmed = true;
     }
+    return trimmed;
   }
 
   /** A people panel: section labels and users, each mentioned on click. */

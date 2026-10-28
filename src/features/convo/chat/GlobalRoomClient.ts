@@ -8,7 +8,7 @@ import {
   fetchConvoTicket,
   HELPBOT_UID,
   parseUser,
-  sendCommand,
+  guardedCommand,
   SendError,
   sendWithAck,
   toInt,
@@ -241,30 +241,14 @@ export class GlobalRoomClient {
    * answer. /rain spends Bytes, so it waits its turn like a message.
    */
   async command(request: CommandRequest): Promise<unknown> {
-    if (request.mutation && this.sending)
-      throw new SendError(
-        "Please wait for the pending send to finish.",
-        "not-sent"
-      );
-    if (!this.socket.connected || this.status !== "ready") {
-      throw new SendError(
-        "Global chat is disconnected. Your command was not sent.",
-        "not-sent"
-      );
-    }
-    if (!request.mutation) return sendCommand(this.socket, request);
-    this.sending = true;
-    try {
-      return await sendCommand(this.socket, {
-        ...request,
-        data: {
-          ...(request.data as object),
-          requestId: this.createRequestId(),
-        },
-      });
-    } finally {
-      this.sending = false;
-    }
+    // This socket is only ever in the global room, so it's always the current chat
+    return guardedCommand(this.socket, request, {
+      ready: this.socket.connected && this.status === "ready",
+      disconnected: "Global chat is disconnected. Your command was not sent.",
+      isSending: this.sending,
+      setSending: (sending) => (this.sending = sending),
+      createRequestId: () => this.createRequestId(),
+    });
   }
 
   /** Send something to the room, waiting for the server's ack. One at a time. */

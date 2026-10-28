@@ -316,6 +316,7 @@ export function commandRequest(
         event: "convo_rain",
         data: { players: command.players, myps: command.bytes },
         mutation: true,
+        inChat: true,
       };
     case "send-bytes":
       return {

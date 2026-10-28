@@ -1,4 +1,5 @@
 import {
+  emojiList,
   EmojiPicker,
   insertAtCaret,
   loadRecentEmoji,
@@ -16,6 +17,12 @@ const memoryStore = () => {
     length: 0,
   } as Storage;
 };
+
+describe("emojiList", () => {
+  it("asks for the emoji style where the default is a text symbol", () => {
+    expect(emojiList("❤😀✌⚡")).toEqual(["❤\uFE0F", "😀", "✌\uFE0F", "⚡"]);
+  });
+});
 
 describe("insertAtCaret", () => {
   it("types at the caret, replacing a selection, and fires input", () => {

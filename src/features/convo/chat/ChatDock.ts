@@ -321,6 +321,16 @@ export class ChatDock {
     this.global?.suspend();
   }
 
+  /**
+   * The unsent text kept for a chat from the last page, if any. Taken once:
+   * a window opened again later on this page starts empty.
+   */
+  private takeDraft(key: string): string {
+    const draft = this.drafts.get(key) ?? "";
+    this.drafts.delete(key);
+    return draft;
+  }
+
   /** Every open window's unsent text, replacing what was kept before. */
   private saveDrafts(): void {
     this.drafts.clear();
@@ -342,6 +352,7 @@ export class ChatDock {
   }
 
   destroy(): void {
+    this.windows.forEach((win) => win.emoji.close());
     this.global?.destroy();
     this.global = null;
     this.groupWindows.forEach((win) => win.destroy());
@@ -1106,8 +1117,10 @@ export class ChatDock {
         openChat: (uid, user) => this.openChatFromRoom(uid, user),
       });
       this.global = global;
-      global.draft = this.drafts.get("global") ?? "";
       this.heads.after(global.root);
+      // In the page first, so a long draft sizes the input
+      const draft = this.takeDraft("global");
+      if (draft) global.draft = draft;
       this.closeWindowsThatDontFit();
     } else if (!restore) {
       this.global.setMinimized(false);
@@ -1164,9 +1177,10 @@ export class ChatDock {
         onLeft: () => this.leftGroup(gid),
         openChat: (uid, user) => this.openChatFromRoom(uid, user),
       });
-      win.draft = this.drafts.get(`group:${gid}`) ?? "";
       this.groupWindows.set(gid, win);
       this.heads.after(win.root);
+      const draft = this.takeDraft(`group:${gid}`);
+      if (draft) win.draft = draft;
       this.closeWindowsThatDontFit();
     } else if (!restore) {
       win.setMinimized(false);
@@ -1291,7 +1305,7 @@ export class ChatDock {
       "aria-label": "Message",
       maxlength: 5000,
     });
-    input.value = this.drafts.get(`dm:${partyId}`) ?? "";
+    input.value = this.takeDraft(`dm:${partyId}`);
     const compose = el("div", { class: "hfx-chat-compose" });
     const commands = new CommandPicker(
       input,
@@ -1646,7 +1660,8 @@ export class ChatDock {
     const ran = await runCommand(command, {
       partyId: win.partyId,
       origin: this.origin,
-      request: (request) => this.client.command(request),
+      request: (request) =>
+        this.client.command(request, { group: false, id: win.partyId }),
       reply: (content) => this.showReply(win, content),
       notice: (message) => this.showNotice(win, message),
       // Only group convos can be left; DM windows are one-to-one

@@ -465,7 +465,8 @@ describe("ChatDock commands", () => {
     });
     await enter("/stats");
     expect(client.command).toHaveBeenCalledWith(
-      expect.objectContaining({ event: "convo_checkstats" })
+      expect.objectContaining({ event: "convo_checkstats" }),
+      { group: false, id: PARTY }
     );
     expect(notice().textContent).toContain("Bytes Balance: 1.00");
   });
@@ -532,6 +533,18 @@ describe("ChatDock drafts, unread line and keys", () => {
     input().value = "  ";
     dock!.suspend();
     expect(sessionStorage.getItem("hfx-chat-drafts")).toBeNull();
+  });
+
+  it("puts a kept draft back only once per page", async () => {
+    sessionStorage.setItem(
+      "hfx-chat-drafts",
+      JSON.stringify({ [`dm:${PARTY}`]: "sent already" })
+    );
+    await mount();
+    expect(input().value).toBe("sent already");
+    win().querySelector<HTMLElement>("button[title=Close]")!.click();
+    dock!.openChat(PARTY);
+    expect(input().value).toBe("");
   });
 
   it("marks where new messages start while you weren't looking", async () => {

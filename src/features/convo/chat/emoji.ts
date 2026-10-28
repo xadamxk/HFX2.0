@@ -6,28 +6,37 @@ import { el } from "../../../core/Dom";
  * kept in this site's localStorage, for this browser only.
  */
 
+/**
+ * Each emoji in a string, in emoji style. Some (❤ ✌ ⚠ …) default to a plain
+ * text symbol unless followed by U+FE0F, which asks for the colour emoji.
+ */
+export const emojiList = (emoji: string): string[] =>
+  Array.from(emoji).map((e) =>
+    /\p{Emoji_Presentation}/u.test(e) ? e : `${e}️`
+  );
+
 export const EMOJI_SECTIONS: { label: string; emoji: string[] }[] = [
   {
     label: "Smileys",
-    emoji: Array.from(
+    emoji: emojiList(
       "😀😃😄😁😆😅😂🤣🙂🙃😉😊😇🥰😍🤩😘😋😛😜🤪😝🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬😌😔😪😴😷🤒🤕🤢🤮🥵🥶🥴😵🤯🤠🥳😎🤓🧐😕😟🙁😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀💩🤡👻👽🤖"
     ),
   },
   {
     label: "Gestures",
-    emoji: Array.from(
+    emoji: emojiList(
       "👍👎👌🤌✌🤞🤟🤘🤙👈👉👆👇☝👋🤚🖐✋👏🙌🤝🙏💪🫡🤷🤦🙋🙈🙉🙊"
     ),
   },
   {
     label: "Hearts & symbols",
-    emoji: Array.from(
+    emoji: emojiList(
       "❤🧡💛💚💙💜🖤🤍💔💯💢💥💫💦💤🔥✨⭐🌟⚡✅❌❗❓⚠🚫💬👀🎉🎊"
     ),
   },
   {
     label: "Things",
-    emoji: Array.from(
+    emoji: emojiList(
       "💰💵💸💳💎🪙📈📉🏆🥇🎁🎮💻📱🔒🔑🛠⚙📌📎📝📢🔔⏰⌛☕🍺🍻🍕🍔🚀"
     ),
   },

@@ -115,7 +115,12 @@ describe("parseCommand", () => {
     });
 
     expect(commandRequest({ kind: "rain", players: 5, bytes: 10 }, -1)).toEqual(
-      { event: "convo_rain", data: { players: 5, myps: 10 }, mutation: true }
+      {
+        event: "convo_rain",
+        data: { players: 5, myps: 10 },
+        mutation: true,
+        inChat: true,
+      }
     );
     expect(commandRequest({ kind: "stats" }, 7)).toMatchObject({
       event: "convo_checkstats",

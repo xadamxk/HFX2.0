@@ -387,7 +387,8 @@ export const CHAT_DOCK_CSS = `
   top: 0;
   left: 24px;
   z-index: 2;
-  display: none;
+  display: block;
+  opacity: 0;
   width: 22px;
   height: 20px;
   padding: 2px 3px;
@@ -397,8 +398,9 @@ export const CHAT_DOCK_CSS = `
   color: var(--hfx-chat-muted);
   cursor: pointer;
 }
+/* Faded out, not removed, so keyboard users can tab to it */
 .hfx-gc-line:hover > .hfx-gc-reply,
-.hfx-gc-reply:focus-visible { display: block; }
+.hfx-gc-reply:focus-visible { opacity: 1; }
 .hfx-gc-reply:hover { background: #3a3a3a; color: #fff; }
 .hfx-gc-reply svg { display: block; width: 16px; height: 16px; }
 .hfx-gc-line a { color: #9ecbff; text-decoration: underline; }

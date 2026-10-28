@@ -380,7 +380,11 @@ export async function runCommand(
         const answer = (await target.request(
           commandRequest(command, target.partyId)
         )) as Answer;
-        if (typeof answer?.message === "string") {
+        // In the global chat it shows in the room, as on convo.php
+        if (
+          typeof answer?.message === "string" &&
+          target.partyId !== GLOBAL_PARTY
+        ) {
           target.reply(renderTrustedHtml(answer.message, target.origin));
         }
         return true;

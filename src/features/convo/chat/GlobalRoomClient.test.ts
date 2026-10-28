@@ -188,6 +188,34 @@ describe("GlobalRoomClient", () => {
     expect(onMessages).toHaveBeenCalledTimes(1);
   });
 
+  it("shows Stanley's messages that have no id, such as rain results, even with Stanley hidden", async () => {
+    socket = new FakeSocket();
+    client = new GlobalRoomClient({
+      postKey: "abc",
+      origin: "https://hackforums.net",
+      createSocket: () => socket as unknown as SocketIOClient,
+      hideHelpbot: true,
+    });
+    await ready();
+    socket.fire("convo_receivemessage", roomMessage({ mid: 40 }));
+    const rain = {
+      uid: 1337,
+      message: "<strong>Me</strong> has rained 10 Bytes each on: Nova",
+      party_id: -1,
+      users: { 1337: { uid: 1337, username: "Stanley", avatar: "" } },
+      trustedHtml: true,
+    };
+    socket.fire("convo_receivemessage", rain);
+    socket.fire("convo_receivemessage", rain);
+    expect(client.messages.map((m) => [m.uid, m.mid])).toEqual([
+      [NOVA.uid, 40],
+      [1337, 40],
+      [1337, 40],
+    ]);
+    expect(new Set(client.messages.map((m) => m.key)).size).toBe(3);
+    expect(client.messages[1]).toMatchObject({ html: true });
+  });
+
   it("starts over when the server restarts", async () => {
     await ready("boot-1");
     socket.fire("convo_receivemessage_bulk", [roomMessage()]);
@@ -283,8 +311,8 @@ describe("GlobalRoomClient", () => {
     await expect(
       client.command(commandRequest({ kind: "stats" }, -1))
     ).resolves.toEqual(stats);
-    // It has no message id, so it isn't added to the room
-    expect(client.messages).toEqual([]);
+    // It shows in the room too, as on convo.php
+    expect(client.messages.map((m) => m.text)).toEqual(["Bytes Balance: 1.00"]);
   });
 
   it("doesn't send commands while disconnected", async () => {

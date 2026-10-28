@@ -169,6 +169,8 @@ export class GlobalRoomClient {
   private readonly hideHelpbot: boolean;
   private bootId: string | null = null;
   private sending = false;
+  /** Stanley's id-less messages so far, for their keys. */
+  private notices = 0;
   private ownTyping = false;
 
   constructor(options: GlobalRoomClientOptions) {
@@ -385,13 +387,15 @@ export class GlobalRoomClient {
   private receive(raws: any[]): void {
     const added: RoomMessage[] = [];
     for (const raw of raws) {
-      const message = parseRoomMessage(raw);
+      const notice = this.parseNotice(raw);
+      const message = notice ?? parseRoomMessage(raw);
       if (!message || this.seen.has(message.key)) continue;
       this.seen.add(message.key);
       if (this.seen.size > SEEN_LIMIT) {
         this.seen.delete(this.seen.values().next().value!);
       }
-      if (this.hideHelpbot && message.uid === HELPBOT_UID) continue;
+      // "Hide Stanley" is for his automated notices, not command results
+      if (this.hideHelpbot && message.uid === HELPBOT_UID && !notice) continue;
       for (const rawUser of Object.values<any>(raw.users ?? {})) {
         const user = parseUser(rawUser);
         if (user) this.users.set(user.uid, user);
@@ -406,6 +410,21 @@ export class GlobalRoomClient {
       this.messages.splice(0, this.messages.length - MESSAGE_LIMIT);
     }
     this.fire("messages", added, false);
+  }
+
+  /**
+   * One of Stanley's room messages without a message id, which convo.php
+   * shows like any other: command results such as "X has rained 10 Bytes
+   * each on: …" (sent to the room) and /stats (sent to you). Each gets its
+   * own key, and the newest message id so far, so it sorts as the latest.
+   */
+  private parseNotice(raw: Record<string, unknown> | null): RoomMessage | null {
+    if (!raw || toInt(raw.uid) !== HELPBOT_UID || toInt(raw.mid)) return null;
+    const latest = this.messages[this.messages.length - 1]?.mid ?? 0;
+    const message = parseRoomMessage({ ...raw, mid: Math.max(latest, 1) });
+    if (!message) return null;
+    message.key = `${String(raw.bootId ?? this.bootId ?? "")}:notice:${++this.notices}`;
+    return message;
   }
 
   private stopTyping(uid: number): void {

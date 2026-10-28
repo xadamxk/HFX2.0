@@ -172,6 +172,15 @@ describe("runCommand", () => {
     );
   });
 
+  it("leaves /stats' answer to the room in the global chat", async () => {
+    target.request.mockResolvedValue({
+      uid: 1337,
+      message: "Bytes Balance: 1.00",
+    });
+    await runCommand({ kind: "stats" }, { ...target, partyId: -1 });
+    expect(target.reply).not.toHaveBeenCalled();
+  });
+
   it("opens the donate form for /send, or links it when the tab is blocked", async () => {
     target.request.mockResolvedValue({ uid: 2331053, username: "Mix" });
     await runCommand({ kind: "send-bytes", username: "Mix" }, target);

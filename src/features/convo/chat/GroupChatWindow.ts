@@ -113,7 +113,7 @@ export class GroupRoom implements RoomSource {
   }
 
   command(request: CommandRequest): Promise<unknown> {
-    return this.client.command(request, { group: true, id: this.gid });
+    return this.client.command(request);
   }
 
   load(): Promise<void> {

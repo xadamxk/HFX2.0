@@ -3,6 +3,7 @@ import type { CommandRequest } from "./ConvoClient";
 import { HELPBOT_UID, toInt, wasNotDelivered } from "./ConvoClient";
 import { ConvoStorage, updateConvoStorage } from "./convoStorage";
 import { renderTrustedHtml } from "./formatMessage";
+import { GLOBAL_PARTY } from "./GlobalRoomClient";
 
 /**
  * HF Convo's slash commands, run the way convo.php's preSendScan
@@ -113,15 +114,17 @@ const BAN: CommandInfo = {
 
 /**
  * The commands that do something in a kind of chat: /leave only in groups
- * (and global chat, where it closes the window), /ban only for global chat
- * moderators.
+ * (and global chat, where it closes the window), /rain only in global chat
+ * (HF: "Join public chat first."), /ban only for global chat moderators.
  */
 export function commandsFor(
   chat: "dm" | "group" | "global",
   moderator = false
 ): CommandInfo[] {
   const list = COMMANDS.filter(
-    (command) => command.name !== "/leave" || chat !== "dm"
+    (command) =>
+      (command.name !== "/leave" || chat !== "dm") &&
+      (command.name !== "/rain" || chat === "global")
   );
   return chat === "global" && moderator ? [...list, BAN] : list;
 }
@@ -316,7 +319,6 @@ export function commandRequest(
         event: "convo_rain",
         data: { players: command.players, myps: command.bytes },
         mutation: true,
-        inChat: true,
       };
     case "send-bytes":
       return {
@@ -383,6 +385,14 @@ export async function runCommand(
         }
         return true;
       }
+      case "rain":
+        // HF only rains on a socket that joined the global room
+        if (target.partyId !== GLOBAL_PARTY) {
+          target.reply("/rain only works in the global chat.");
+          return true;
+        }
+        await target.request(commandRequest(command, target.partyId));
+        return true;
       case "send-bytes": {
         const user = (await target.request(
           commandRequest(command, target.partyId)

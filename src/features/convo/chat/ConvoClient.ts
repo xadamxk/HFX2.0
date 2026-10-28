@@ -177,11 +177,6 @@ export interface CommandRequest {
   data: unknown;
   /** Spends Bytes like a message send: one pending at a time, with a requestId. */
   mutation?: boolean;
-  /**
-   * It names no chat, so the server applies it to the socket's current chat:
-   * the one convo_loadmessages last loaded (on convo.php, the open chat).
-   */
-  inChat?: boolean;
   reply?: { event: string; accept?: (payload: unknown) => boolean };
 }
 
@@ -239,14 +234,12 @@ export interface CommandClient {
 
 /**
  * A client's command(): refused while disconnected, and one that spends Bytes
- * (`mutation`) waits its turn like a message and gets a requestId. `before`
- * runs once it's allowed, just before it's sent.
+ * (`mutation`) waits its turn like a message and gets a requestId.
  */
 export async function guardedCommand(
   socket: SocketIOClient,
   request: CommandRequest,
-  client: CommandClient,
-  before?: () => Promise<void>
+  client: CommandClient
 ): Promise<unknown> {
   if (request.mutation && client.isSending)
     throw new SendError(
@@ -254,13 +247,9 @@ export async function guardedCommand(
       "not-sent"
     );
   if (!client.ready) throw new SendError(client.disconnected, "not-sent");
-  if (!request.mutation) {
-    await before?.();
-    return sendCommand(socket, request);
-  }
+  if (!request.mutation) return sendCommand(socket, request);
   client.setSending(true);
   try {
-    await before?.();
     return await sendCommand(socket, {
       ...request,
       data: {
@@ -667,36 +656,14 @@ export class ConvoClient {
    * Send a command's event (see commands.ts), resolving with the server's
    * answer. Ones that spend Bytes (/rain) follow the one-pending-send rule.
    */
-  async command(
-    request: CommandRequest,
-    /** The chat it was typed in, for commands that act on the current chat. */
-    chat?: { group: boolean; id: number }
-  ): Promise<unknown> {
-    return guardedCommand(
-      this.socket,
-      request,
-      {
-        ready: this.socket.connected && this.status === "ready",
-        disconnected: "Convo is disconnected. Your command was not sent.",
-        isSending: this.sending,
-        setSending: (sending) => (this.sending = sending),
-        createRequestId: () => this.createRequestId(),
-      },
-      async () => {
-        // DMs and groups share this socket: make the chat it was typed in
-        // the current one first, as having it open on convo.php does
-        if (!request.inChat || !chat || this.isLastLoaded(chat.group, chat.id))
-          return;
-        try {
-          await this.loadNewer(chat.group, chat.id);
-        } catch {
-          throw new SendError(
-            "Couldn't switch Convo to this chat. Your command was not sent.",
-            "not-sent"
-          );
-        }
-      }
-    );
+  async command(request: CommandRequest): Promise<unknown> {
+    return guardedCommand(this.socket, request, {
+      ready: this.socket.connected && this.status === "ready",
+      disconnected: "Convo is disconnected. Your command was not sent.",
+      isSending: this.sending,
+      setSending: (sending) => (this.sending = sending),
+      createRequestId: () => this.createRequestId(),
+    });
   }
 
   /** Forget a group the user left. */

@@ -465,8 +465,7 @@ describe("ChatDock commands", () => {
     });
     await enter("/stats");
     expect(client.command).toHaveBeenCalledWith(
-      expect.objectContaining({ event: "convo_checkstats" }),
-      { group: false, id: PARTY }
+      expect.objectContaining({ event: "convo_checkstats" })
     );
     expect(notice().textContent).toContain("Bytes Balance: 1.00");
   });

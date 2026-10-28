@@ -54,7 +54,10 @@ describe("applyCommand", () => {
 });
 
 describe("commandsFor", () => {
-  it("offers /leave only where it does something, and /ban only to moderators", () => {
+  it("offers /leave and /rain only where they do something, and /ban only to moderators", () => {
+    expect(names(commandsFor("dm"))).not.toContain("/rain");
+    expect(names(commandsFor("group"))).not.toContain("/rain");
+    expect(names(commandsFor("global"))).toContain("/rain");
     expect(names(commandsFor("dm"))).not.toContain("/leave");
     expect(names(commandsFor("group"))).toContain("/leave");
     expect(names(commandsFor("group", true))).not.toContain("/ban");
@@ -104,8 +107,10 @@ describe("CommandPicker", () => {
   });
 
   it("inserts the highlighted command on Enter or Tab", () => {
+    // In a DM there is no /rain: /roll, then /markup and /price
     type("/r");
     expect(key("ArrowDown").used).toBe(true);
+    expect(key("ArrowUp").used).toBe(true);
     const enter = key("Enter");
     expect(enter.used).toBe(true);
     expect(enter.event.defaultPrevented).toBe(true);

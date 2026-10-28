@@ -1660,8 +1660,7 @@ export class ChatDock {
     const ran = await runCommand(command, {
       partyId: win.partyId,
       origin: this.origin,
-      request: (request) =>
-        this.client.command(request, { group: false, id: win.partyId }),
+      request: (request) => this.client.command(request),
       reply: (content) => this.showReply(win, content),
       notice: (message) => this.showNotice(win, message),
       // Only group convos can be left; DM windows are one-to-one

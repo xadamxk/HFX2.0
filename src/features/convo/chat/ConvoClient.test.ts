@@ -1,6 +1,5 @@
 import { ConvoClient, parseMessage, partyUids, presence } from "./ConvoClient";
 import type { SocketIOClient } from "./SocketIOClient";
-import { commandRequest } from "./commands";
 
 const ME = {
   uid: 10,
@@ -347,39 +346,6 @@ describe("ConvoClient", () => {
     ]);
     socket.ackReplies.convo_loadmessages = () => ({ ok: true });
     await expect(client.loadOlder(PARTY)).resolves.toBe(false);
-  });
-
-  describe("a command that acts on the current chat (/rain)", () => {
-    const rain = commandRequest({ kind: "rain", players: 1, bytes: 50 }, PARTY);
-    const events = () =>
-      socket.acked.map(([event, data]) => {
-        const load = data as { party: number; is_group: boolean };
-        return event === "convo_loadmessages"
-          ? `load ${load.is_group ? "group" : "dm"} ${load.party}`
-          : event;
-      });
-
-    it("makes the chat it was typed in the current one first", async () => {
-      await ready();
-      socket.ackReplies.convo_loadmessages = () => ({ ok: true });
-      socket.ackReplies.convo_rain = () => ({ ok: true });
-      await client.loadGroupHistory(48);
-      await client.command(rain, { group: false, id: PARTY });
-      expect(events().slice(-2)).toEqual([`load dm ${PARTY}`, "convo_rain"]);
-      // Already current: straight out
-      await client.command(rain, { group: false, id: PARTY });
-      expect(events().slice(-2)).toEqual(["convo_rain", "convo_rain"]);
-    });
-
-    it("isn't sent if the chat can't be switched to", async () => {
-      await ready();
-      socket.ackReplies.convo_loadmessages = () => ({ ok: false });
-      await expect(
-        client.command(rain, { group: true, id: 48 })
-      ).rejects.toMatchObject({ failure: "not-sent" });
-      expect(events()).not.toContain("convo_rain");
-      expect(client.isSending).toBe(false);
-    });
   });
 
   it("sends with a requestId and allows one pending send", async () => {

@@ -119,7 +119,6 @@ describe("parseCommand", () => {
         event: "convo_rain",
         data: { players: 5, myps: 10 },
         mutation: true,
-        inChat: true,
       }
     );
     expect(commandRequest({ kind: "stats" }, 7)).toMatchObject({
@@ -203,6 +202,21 @@ describe("runCommand", () => {
     await expect(
       runCommand({ kind: "rain", players: 5, bytes: 10 }, target)
     ).resolves.toBe(true);
+  });
+
+  it("rains only in the global chat, where HF allows it", async () => {
+    await runCommand({ kind: "rain", players: 1, bytes: 50 }, target);
+    expect(target.request).not.toHaveBeenCalled();
+    expect(target.reply).toHaveBeenCalledWith(
+      "/rain only works in the global chat."
+    );
+    await runCommand(
+      { kind: "rain", players: 1, bytes: 50 },
+      { ...target, partyId: -1 }
+    );
+    expect(target.request).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "convo_rain" })
+    );
   });
 
   it("leaves through the window", async () => {

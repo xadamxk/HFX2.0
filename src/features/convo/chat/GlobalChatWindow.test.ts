@@ -266,16 +266,83 @@ describe("GlobalChatWindow", () => {
     );
   });
 
-  it("refuses commands without sending", async () => {
-    await open();
-    input().value = "/flip 500";
-    input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-    await flush();
-    expect(
-      socket.acked.filter(([event]) => event === "convo_newmessage")
-    ).toHaveLength(0);
-    expect(notice().textContent).toContain("only work on convo.php");
-    expect(input().value).toBe("/flip 500");
+  describe("commands", () => {
+    const enter = async (text: string) => {
+      input().value = text;
+      input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+      await flush();
+      await flush();
+    };
+    const sent = (event: string) =>
+      socket.acked.filter(([name]) => name === event);
+
+    afterEach(() => {
+      document.cookie =
+        "convoStorage=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=localhost";
+    });
+
+    it("answers /help here and sends ones the server runs as messages", async () => {
+      await open();
+      await enter("/help");
+      expect(sent("convo_newmessage")).toEqual([]);
+      expect(notice().textContent).toContain("/flip WAGER");
+      expect(notice().textContent).not.toContain("/ban");
+      expect(input().value).toBe("");
+
+      await enter("/flip 500");
+      expect(sent("convo_newmessage")).toEqual([
+        [
+          "convo_newmessage",
+          { partyID: -1, message: "/flip 500", requestId: "req-1" },
+        ],
+      ]);
+    });
+
+    it("rains, and bans only as a moderator", async () => {
+      await open();
+      socket.ackReplies.convo_rain = () => ({ ok: true });
+      await enter("/rain 5 10");
+      expect(sent("convo_rain")).toEqual([
+        ["convo_rain", { players: 5, myps: 10, requestId: "req-1" }],
+      ]);
+
+      // Not a moderator: convo.php sends it as a message
+      await enter("/ban 5 60");
+      expect(sent("convo_group_kick")).toEqual([]);
+      expect(sent("convo_newmessage")).toHaveLength(1);
+
+      socket.fire("convo_group_level", 1);
+      socket.ackReplies.convo_group_kick = () => ({ ok: true });
+      await enter("/ban 5 60");
+      expect(sent("convo_group_kick")).toEqual([
+        ["convo_group_kick", { uid: "5", period: "60" }],
+      ]);
+    });
+
+    it("leaves by closing the window", async () => {
+      await open();
+      await enter("/leave");
+      expect(onClose).toHaveBeenCalled();
+      expect(sent("do_leave_convo")).toEqual([]);
+    });
+
+    it("hides other people's flips after /flip hide", async () => {
+      await open();
+      await enter("/flip hide 50");
+      expect(notice().textContent).toContain(
+        "You will only see flips 50 and greater."
+      );
+      socket.fire("convo_receivemessage_bulk", [
+        room({ mid: 1, message: "/flip 10" }),
+        room({ mid: 2, message: "/flip 50" }),
+        room({ mid: 3, uid: ME.uid, message: "/flip 1" }),
+      ]);
+      expect(
+        Array.from(win.root.querySelectorAll(".hfx-gc-line")).map(
+          (line) => line.textContent
+        )
+      ).toEqual(["/flip 50", "/flip 1"]);
+    });
   });
 
   it("puts the text back when the server refuses it, but not when unconfirmed", async () => {

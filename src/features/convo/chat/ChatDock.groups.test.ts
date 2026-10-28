@@ -59,6 +59,7 @@ describe("ChatDock group chats", () => {
     list: jest.Mock;
     mapNames: jest.Mock;
     addToList: jest.Mock;
+    removeFromList: jest.Mock;
   };
 
   const newClient = () => {
@@ -87,6 +88,7 @@ describe("ChatDock group chats", () => {
       list: jest.fn(async () => LIST_OVERRIDE ?? LIST),
       mapNames: jest.fn(async () => ({ 99: "New Crew" })),
       addToList: jest.fn(),
+      removeFromList: jest.fn(),
       sound: options.groupSound ?? "mentions",
     };
     dock = new ChatDock({
@@ -303,6 +305,30 @@ describe("ChatDock group chats", () => {
     expect(groupLoads()).toEqual([]);
   });
 
+  it("forgets a group left with /leave", async () => {
+    await mount({ state: { groupsExpanded: true } });
+    document
+      .querySelector<HTMLElement>('.hfx-chat-head-group[data-group="48"]')!
+      .click();
+    await flush();
+    const confirm = jest.spyOn(window, "confirm").mockReturnValue(true);
+    socket.ackReplies.do_leave_convo = () => ({ ok: true });
+    const input = document.querySelector<HTMLTextAreaElement>(
+      '.hfx-chat-window[data-party="g48"] textarea'
+    )!;
+    input.value = "/leave";
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    await flush();
+    confirm.mockRestore();
+    expect(socket.acked).toContainEqual(["do_leave_convo", 48]);
+    expect(document.querySelector('[data-party="g48"]')).toBeNull();
+    expect(document.querySelector('[data-group="48"]')).toBeNull();
+    expect(client.groups.has(48)).toBe(false);
+    expect(groups.removeFromList).toHaveBeenCalledWith(48);
+    expect(saved[saved.length - 1].open).toEqual([]);
+  });
+
   it("keeps group activity across page loads", async () => {
     await mount();
     socket.fire("convo_receivemessage", groupMessage());
@@ -349,6 +375,7 @@ describe("ChatDock group chats", () => {
         },
         mapNames: async () => ({}),
         addToList: jest.fn(),
+        removeFromList: jest.fn(),
         sound: "mentions",
       },
       state: {

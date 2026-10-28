@@ -47,6 +47,7 @@ class FakeClient {
   setTyping = jest.fn();
   sendImage = jest.fn(async () => ({ requestId: "req" }));
   send = jest.fn(async () => ({ requestId: "req" }));
+  command = jest.fn(async (): Promise<unknown> => undefined);
   connect = jest.fn();
   disconnect = jest.fn();
   createRequestId = () => "req";
@@ -385,6 +386,89 @@ describe("ChatDock sending", () => {
     expect(client.disconnect).toHaveBeenCalledTimes(1);
     dock!.resume();
     expect(client.connect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ChatDock commands", () => {
+  const win = () =>
+    document.querySelector<HTMLElement>(
+      `.hfx-chat-window[data-party="${PARTY}"]`
+    )!;
+  const input = () => win().querySelector("textarea")!;
+  const notice = () => win().querySelector(":scope > .hfx-chat-notice")!;
+  const enter = async (text: string) => {
+    input().value = text;
+    input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    await flush();
+  };
+
+  afterEach(() => {
+    document.cookie =
+      "convoStorage=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=localhost";
+  });
+
+  it("answers /help in the window, sending nothing", async () => {
+    await mount();
+    await enter("/help");
+    expect(client.send).not.toHaveBeenCalled();
+    expect(client.command).not.toHaveBeenCalled();
+    expect(input().value).toBe("");
+    expect(notice().classList).toContain("hfx-chat-reply");
+    expect(notice().textContent).toContain("/flip WAGER");
+  });
+
+  it("sends commands the server runs as messages", async () => {
+    await mount();
+    await enter("/flip 100");
+    expect(client.send).toHaveBeenCalledWith(PARTY, "/flip 100", "req");
+  });
+
+  it("shows /stats' answer from Stanley", async () => {
+    await mount();
+    client.command.mockResolvedValueOnce({
+      uid: 1337,
+      message: "Bytes Balance: 1.00",
+    });
+    await enter("/stats");
+    expect(client.command).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "convo_checkstats" })
+    );
+    expect(notice().textContent).toContain("Bytes Balance: 1.00");
+  });
+
+  it("puts a refused command back in the input", async () => {
+    await mount();
+    client.command.mockRejectedValueOnce(
+      new SendError("Member not found.", "refused")
+    );
+    await enter("/send Nobody");
+    expect(notice().textContent).toBe("Member not found.");
+    expect(notice().classList).not.toContain("hfx-chat-reply");
+    expect(input().value).toBe("/send Nobody");
+  });
+
+  it("says /leave is for group chats", async () => {
+    await mount();
+    await enter("/leave");
+    expect(client.command).not.toHaveBeenCalled();
+    expect(notice().textContent).toContain("/leave only works in group chats.");
+  });
+
+  it("hides other people's flips after /flip hide", async () => {
+    await mount();
+    await enter("/flip hide");
+    expect(notice().textContent).toContain("You will only see your own flips.");
+    client.add(
+      { text: "/flip 100" },
+      { uid: ME.uid, text: "/flip 5" },
+      { text: "after" }
+    );
+    expect(
+      Array.from(win().querySelectorAll(".hfx-gc-line")).map(
+        (line) => line.textContent
+      )
+    ).toEqual(["/flip 5", "after"]);
   });
 });
 

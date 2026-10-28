@@ -28,8 +28,10 @@ describe("GroupChatWindow", () => {
   let socket: FakeConvoSocket;
   let client: ConvoClient;
   let win: GroupChatWindow;
+  let onLeft: jest.Mock;
 
   const open = async (minimized = false) => {
+    onLeft = jest.fn();
     win = new GroupChatWindow({
       client,
       gid: GID,
@@ -38,6 +40,7 @@ describe("GroupChatWindow", () => {
       typingIndicators: true,
       onClose: jest.fn(),
       onChange: jest.fn(),
+      onLeft,
       origin: "https://hackforums.net",
     });
     document.body.appendChild(win.root);
@@ -214,16 +217,36 @@ describe("GroupChatWindow", () => {
     ]);
   });
 
-  it("refuses commands and images", async () => {
+  it("leaves the group with /leave once confirmed", async () => {
     await open();
+    const confirm = jest.spyOn(window, "confirm").mockReturnValue(false);
+    socket.ackReplies.do_leave_convo = () => ({ ok: true });
     const input = win.root.querySelector("textarea")!;
+    const notice = () =>
+      win.root.querySelector(":scope > .hfx-chat-notice")!.textContent;
     input.value = "/leave";
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
     await flush();
+    expect(socket.acked.some(([event]) => event === "do_leave_convo")).toBe(
+      false
+    );
+    expect(notice()).toBe("You're still in Brotherhood.");
+    expect(input.value).toBe("/leave");
+
+    confirm.mockReturnValue(true);
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    await flush();
+    confirm.mockRestore();
+    expect(socket.acked).toContainEqual(["do_leave_convo", GID]);
+    expect(onLeft).toHaveBeenCalled();
     expect(
       socket.acked.some(([event]) => event === "convo_newmessage_group")
     ).toBe(false);
+  });
 
+  it("refuses images", async () => {
+    await open();
     win.root.dispatchEvent(
       transferEvent("drop", [
         new File([new Uint8Array([1])], "a.png", { type: "image/png" }),

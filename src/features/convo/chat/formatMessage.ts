@@ -1,5 +1,6 @@
 import { el, safeHttpUrl } from "../../../core/Dom";
 import type { ChatImage, ChatMessage } from "./ConvoClient";
+import { readConvoStorage } from "./convoStorage";
 
 /** The parts of a DM or global room message that rendering needs. */
 export type RenderableMessage = Pick<
@@ -146,16 +147,7 @@ export function parseEmbed(raw: unknown): string | undefined {
 
 /** Whether embeds are turned off on convo.php (`/embed hide`, kept in the convoStorage cookie). */
 export function embedsHidden(cookie: string = document.cookie): boolean {
-  const raw = cookie
-    .split(/;\s*/)
-    .find((part) => part.startsWith("convoStorage="))
-    ?.slice("convoStorage=".length);
-  if (!raw) return false;
-  try {
-    return JSON.parse(decodeURIComponent(raw))?.hideEmbeds === true;
-  } catch {
-    return false;
-  }
+  return readConvoStorage({ cookie }).hideEmbeds === true;
 }
 
 /**

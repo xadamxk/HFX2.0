@@ -178,6 +178,9 @@ class ChatBubbles extends Feature {
               addToList: (group) => {
                 this.addToGroupList(group);
               },
+              removeFromList: (gid) => {
+                this.removeFromGroupList(gid);
+              },
               sound: settings.groupSound === "all" ? "all" : "mentions",
             }
           : undefined,
@@ -244,28 +247,48 @@ class ChatBubbles extends Feature {
     return groups;
   }
 
-  /**
-   * Add a group found through a message to the cached list. Additions run one
-   * at a time: each reads the list and writes it back, so overlapping ones
-   * would drop each other's group.
-   */
+  /** Add a group found through a message to the cached list. */
   private addToGroupList(group: GroupInfo): Promise<void> {
-    this.groupListWrites = this.groupListWrites
-      .then(() => this.addToGroupListNow(group))
-      .catch((error) =>
-        this.logger.error(`Couldn't add a group: ${error?.message}`, error)
-      );
-    return this.groupListWrites;
+    return this.changeGroupList((groups) =>
+      groups.some((existing) => existing.gid === group.gid)
+        ? null
+        : [...groups, { gid: group.gid, name: group.name }]
+    );
   }
 
-  private async addToGroupListNow(group: GroupInfo): Promise<void> {
-    const cached = (await this.settingsService.getStorageItem(
-      this,
-      GROUP_LIST
-    )) as GroupListCache | null;
-    const groups = cached?.groups ?? [];
-    if (groups.some((existing) => existing.gid === group.gid)) return;
-    await this.saveGroupList([...groups, { gid: group.gid, name: group.name }]);
+  /** Drop a group the user left (/leave) from the cached list. */
+  private removeFromGroupList(gid: number): Promise<void> {
+    return this.changeGroupList((groups) =>
+      groups.some((group) => group.gid === gid)
+        ? groups.filter((group) => group.gid !== gid)
+        : null
+    );
+  }
+
+  /**
+   * Change the cached group list (`change` returns null for no change).
+   * Changes run one at a time: each reads the list and writes it back, so
+   * overlapping ones would undo each other.
+   */
+  private changeGroupList(
+    change: (groups: GroupInfo[]) => GroupInfo[] | null
+  ): Promise<void> {
+    this.groupListWrites = this.groupListWrites
+      .then(async () => {
+        const cached = (await this.settingsService.getStorageItem(
+          this,
+          GROUP_LIST
+        )) as GroupListCache | null;
+        const groups = change(cached?.groups ?? []);
+        if (groups) await this.saveGroupList(groups);
+      })
+      .catch((error) =>
+        this.logger.error(
+          `Couldn't update the group list: ${error?.message}`,
+          error
+        )
+      );
+    return this.groupListWrites;
   }
 
   private saveGroupList(groups: GroupInfo[]): Promise<void> {

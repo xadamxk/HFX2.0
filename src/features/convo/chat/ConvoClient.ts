@@ -153,7 +153,7 @@ export const wasNotDelivered = (error: unknown): boolean =>
 export async function sendWithAck(
   socket: SocketIOClient,
   event: string,
-  data: Record<string, unknown>,
+  data: unknown,
   unconfirmed: string
 ): Promise<void> {
   let result: { ok?: boolean; error?: string } | undefined;
@@ -169,6 +169,57 @@ export async function sendWithAck(
   }
   if (!result?.ok)
     throw new SendError(result?.error || "Convo request failed.", "refused");
+}
+
+/** A command's socket event, and the event the server answers it with before acking. */
+export interface CommandRequest {
+  event: string;
+  data: unknown;
+  /** Spends Bytes like a message send: one pending at a time, with a requestId. */
+  mutation?: boolean;
+  reply?: { event: string; accept?: (payload: unknown) => boolean };
+}
+
+const REPLY_GRACE_MS = 2000;
+
+/**
+ * Emit a command and wait for its ack, resolving with the server's answer
+ * (`request.reply`) if it has one. The answer comes just before the ack.
+ */
+export async function sendCommand(
+  socket: SocketIOClient,
+  request: CommandRequest
+): Promise<unknown> {
+  const reply = request.reply;
+  let answer: unknown;
+  let answered: () => void = () => undefined;
+  const handler = (payload: unknown) => {
+    if (answer !== undefined || (reply?.accept && !reply.accept(payload)))
+      return;
+    answer = payload;
+    answered();
+  };
+  if (reply) socket.on(reply.event, handler);
+  try {
+    await sendWithAck(
+      socket,
+      request.event,
+      request.data,
+      "Convo didn't confirm the command. Check before trying again."
+    );
+    if (reply && answer === undefined) {
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, REPLY_GRACE_MS);
+        answered = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+      });
+    }
+  } finally {
+    if (reply) socket.off(reply.event, handler);
+  }
+  return answer;
 }
 
 export const toInt = (value: unknown): number => {
@@ -559,6 +610,44 @@ export class ConvoClient {
     } finally {
       this.sending = false;
     }
+  }
+
+  /**
+   * Send a command's event (see commands.ts), resolving with the server's
+   * answer. Ones that spend Bytes (/rain) follow the one-pending-send rule.
+   */
+  async command(request: CommandRequest): Promise<unknown> {
+    if (request.mutation && this.sending)
+      throw new SendError(
+        "Please wait for the pending send to finish.",
+        "not-sent"
+      );
+    if (!this.socket.connected || this.status !== "ready") {
+      throw new SendError(
+        "Convo is disconnected. Your command was not sent.",
+        "not-sent"
+      );
+    }
+    if (!request.mutation) return sendCommand(this.socket, request);
+    this.sending = true;
+    try {
+      return await sendCommand(this.socket, {
+        ...request,
+        data: {
+          ...(request.data as object),
+          requestId: this.createRequestId(),
+        },
+      });
+    } finally {
+      this.sending = false;
+    }
+  }
+
+  /** Forget a group the user left. */
+  removeGroup(gid: number): void {
+    if (!this.groups.delete(gid)) return;
+    this.groupMessages.delete(gid);
+    this.fire("groups");
   }
 
   /** An id for a send, echoed back on the message so it can be matched. */

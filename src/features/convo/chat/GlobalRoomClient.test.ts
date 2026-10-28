@@ -1,9 +1,5 @@
-import {
-  GlobalRoomClient,
-  isCommand,
-  parseRoomMessage,
-  rankOf,
-} from "./GlobalRoomClient";
+import { commandRequest } from "./commands";
+import { GlobalRoomClient, parseRoomMessage, rankOf } from "./GlobalRoomClient";
 import type { SocketIOClient } from "./SocketIOClient";
 
 const ME = { uid: 10, username: "Me", avatar: "", usergroup: 2, group: 2 };
@@ -27,6 +23,13 @@ class FakeSocket {
   };
   on(event: string, handler: (...args: any[]) => void) {
     this.handlers.set(event, [...(this.handlers.get(event) ?? []), handler]);
+    return this;
+  }
+  off(event: string, handler: unknown) {
+    this.handlers.set(
+      event,
+      (this.handlers.get(event) ?? []).filter((h) => h !== handler)
+    );
     return this;
   }
   connect = jest.fn(() => {
@@ -106,14 +109,6 @@ describe("rankOf", () => {
     expect(rankOf({ usergroup: 9 })).toBe(5);
     expect(rankOf({ usergroup: 2 })).toBe(6);
     expect(rankOf({ usergroup: 99 })).toBe(6);
-  });
-});
-
-describe("isCommand", () => {
-  it("spots HF Convo commands", () => {
-    expect(isCommand("/flip 100")).toBe(true);
-    expect(isCommand("  /rain")).toBe(true);
-    expect(isCommand("hi /flip")).toBe(false);
   });
 });
 
@@ -226,19 +221,77 @@ describe("GlobalRoomClient", () => {
     ]);
   });
 
-  it("sends to party -1 and refuses commands", async () => {
+  it("sends to party -1, including commands the server runs", async () => {
     await ready();
     await client.send("  hi all  ", "req-x");
-    expect(socket.acked).toContainEqual([
-      "convo_newmessage",
-      { partyID: -1, message: "hi all", requestId: "req-x" },
-    ]);
-    await expect(client.send("/flip 1000")).rejects.toThrow(
-      "only work on convo.php"
+    await client.send("/flip 1000", "req-y");
+    expect(socket.acked).toEqual(
+      expect.arrayContaining([
+        [
+          "convo_newmessage",
+          { partyID: -1, message: "hi all", requestId: "req-x" },
+        ],
+        [
+          "convo_newmessage",
+          { partyID: -1, message: "/flip 1000", requestId: "req-y" },
+        ],
+      ])
     );
-    expect(
-      socket.acked.filter(([event]) => event === "convo_newmessage")
-    ).toHaveLength(1);
+  });
+
+  it("keeps the moderator level the room sends", async () => {
+    await ready();
+    expect(client.groupLevel).toBe(0);
+    socket.fire("convo_group_level", "2");
+    expect(client.groupLevel).toBe(2);
+  });
+
+  it("rains with a requestId, one pending send at a time", async () => {
+    await ready();
+    let ack: (value: unknown) => void = () => undefined;
+    socket.ackReplies.convo_rain = () =>
+      new Promise((resolve) => (ack = resolve));
+    const rain = client.command(
+      commandRequest({ kind: "rain", players: 5, bytes: 10 }, -1)
+    );
+    await flush();
+    expect(socket.acked).toContainEqual([
+      "convo_rain",
+      { players: 5, myps: 10, requestId: "req-1" },
+    ]);
+    // A message can't go while the rain is pending
+    await expect(client.send("hi")).rejects.toMatchObject({
+      failure: "not-sent",
+    });
+    ack({ ok: true });
+    await rain;
+    expect(client.isSending).toBe(false);
+  });
+
+  it("answers /stats with Stanley's reply", async () => {
+    await ready();
+    const stats = {
+      uid: 1337,
+      message: "Bytes Balance: 1.00",
+      party_id: -1,
+      trustedHtml: true,
+    };
+    socket.ackReplies.convo_checkstats = () => {
+      socket.fire("convo_receivemessage", stats);
+      return { ok: true };
+    };
+    await expect(
+      client.command(commandRequest({ kind: "stats" }, -1))
+    ).resolves.toEqual(stats);
+    // It has no message id, so it isn't added to the room
+    expect(client.messages).toEqual([]);
+  });
+
+  it("doesn't send commands while disconnected", async () => {
+    await expect(
+      client.command(commandRequest({ kind: "stats" }, -1))
+    ).rejects.toMatchObject({ failure: "not-sent" });
+    expect(socket.acked).toEqual([]);
   });
 
   it("refuses to send while disconnected", async () => {
@@ -261,9 +314,6 @@ describe("GlobalRoomClient", () => {
       failure: "not-sent",
     });
     await ready();
-    await expect(client.send("/flip 5")).rejects.toMatchObject({
-      failure: "not-sent",
-    });
     socket.ackReplies.convo_newmessage = () => ({
       ok: false,
       error: "Slow down.",

@@ -1,8 +1,10 @@
 import { el, ElChild } from "../../../core/Dom";
-import type { ChatUser, ConvoStatus } from "./ConvoClient";
+import type { ChatUser, CommandRequest, ConvoStatus } from "./ConvoClient";
 import { wasNotDelivered } from "./ConvoClient";
+import { parseCommand, runCommand, showReply } from "./commands";
+import { hiddenBySettings, readConvoStorage } from "./convoStorage";
 import { avatarUrl, mentionsUser } from "./formatMessage";
-import { isCommand, RoomMessage } from "./GlobalRoomClient";
+import type { RoomMessage } from "./GlobalRoomClient";
 import {
   acceptImages,
   attachButton,
@@ -43,6 +45,10 @@ export interface RoomSource {
   send(text: string, requestId: string): Promise<unknown>;
   /** Leave out when the room can't take images. */
   sendImage?(image: ArrayBuffer, requestId: string): Promise<unknown>;
+  /** Send a command's event through the room's socket (see commands.ts). */
+  command(request: CommandRequest): Promise<unknown>;
+  /** Moderator level (convo_group_level); above 0 can /ban. */
+  readonly groupLevel?: number;
   setTyping(typing: boolean): void;
   /** Events: status(status), messages(added, reset), typing(), error(message). */
   on(event: string, listener: (...args: any[]) => void): unknown;
@@ -243,6 +249,14 @@ export abstract class RoomChatWindow {
 
   // ---- Subclass hooks -------------------------------------------------------
 
+  /** The room's party id, which commands like /send pass to the server. */
+  protected abstract readonly partyId: number;
+
+  /** /leave: leave the room. Throws if it didn't. */
+  protected async leave(): Promise<void> {
+    this.options.onClose();
+  }
+
   protected onMinimizedChange(_minimized: boolean): void {}
 
   /** Who typing @ offers to mention, sorted. None: typing @ shows no list. */
@@ -312,7 +326,10 @@ export abstract class RoomChatWindow {
    * `existing` messages were there before the window opened: not new arrivals.
    */
   private addMessages(added: RoomMessage[], existing = false): void {
-    const fresh = added.filter((message) => !this.lines.has(message.key));
+    const visible = this.visibleFilter();
+    const fresh = added.filter(
+      (message) => !this.lines.has(message.key) && visible(message)
+    );
     if (!fresh.length) return;
     const firstMid = this.firstMid();
     const olderArrived =
@@ -321,7 +338,9 @@ export abstract class RoomChatWindow {
       const previousHeight = this.list.scrollHeight;
       const previousTop = this.list.scrollTop;
       this.clearMessages();
-      this.source.messages.forEach((message) => this.appendLine(message));
+      this.source.messages
+        .filter(visible)
+        .forEach((message) => this.appendLine(message));
       this.trimLines();
       this.list.scrollTop =
         previousTop + (this.list.scrollHeight - previousHeight);
@@ -353,6 +372,13 @@ export abstract class RoomChatWindow {
     ) {
       this.scrollToBottom();
     }
+  }
+
+  /** Leaves out flips and jackpot plays hidden with /flip hide or /jackpot hide. */
+  private visibleFilter(): (message: RoomMessage) => boolean {
+    const storage = readConvoStorage();
+    const me = this.source.me?.uid;
+    return (message) => !hiddenBySettings(message, me, storage);
   }
 
   private firstMid(): number | undefined {
@@ -485,8 +511,20 @@ export abstract class RoomChatWindow {
   private async send(): Promise<void> {
     const text = this.input.value.trim();
     if (!text) return;
-    if (isCommand(text)) {
-      this.showNotice("Commands like /flip only work on convo.php.");
+    const command = parseCommand(text, (this.source.groupLevel ?? 0) > 0);
+    if (command.kind !== "message") {
+      this.input.value = "";
+      this.input.style.height = "";
+      this.stopOwnTyping();
+      const ran = await runCommand(command, {
+        partyId: this.partyId,
+        origin: this.origin,
+        request: (request) => this.source.command(request),
+        reply: (content) => this.showReply(content),
+        notice: (message) => this.showNotice(message),
+        leave: () => this.leave(),
+      });
+      if (!ran && !this.input.value) this.input.value = text;
       return;
     }
     if (this.source.isSending) {
@@ -604,11 +642,18 @@ export abstract class RoomChatWindow {
 
   protected showNotice(text: string): void {
     clearTimeout(this.noticeTimer);
+    this.notice.classList.remove("hfx-chat-reply");
     this.notice.textContent = text;
     this.notice.hidden = false;
     this.noticeTimer = setTimeout(() => {
       this.notice.hidden = true;
     }, 6000);
+  }
+
+  /** A command's answer, shown until dismissed. */
+  private showReply(content: string | Node): void {
+    clearTimeout(this.noticeTimer);
+    showReply(this.notice, content);
   }
 
   protected scrollToBottom(): void {

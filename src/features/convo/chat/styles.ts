@@ -599,6 +599,38 @@ export const CHAT_DOCK_CSS = `
   padding: 4px 0;
   text-align: center;
 }
+/* A command's answer (/help, /stats…): only you see it, until dismissed */
+.hfx-chat-notice.hfx-chat-reply {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 8px 4px;
+  padding: 6px 4px 6px 8px;
+  max-height: 160px;
+  overflow-y: auto;
+  border-radius: 6px;
+  background: var(--hfx-chat-header);
+  color: var(--hfx-chat-text);
+  text-align: left;
+}
+.hfx-chat-notice.hfx-chat-reply[hidden] { display: none; }
+.hfx-chat-reply-text {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.hfx-chat-reply-close {
+  flex: none;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--hfx-chat-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.hfx-chat-reply-close:hover { color: var(--hfx-chat-text); }
 /* HF links shown by their label (mentions, threads): the name in its group style */
 #hfx-chat-dock a.hfx-chat-preview { text-decoration: none; }
 #hfx-chat-dock .hfx-chat-preview strong {

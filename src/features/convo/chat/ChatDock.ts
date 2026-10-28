@@ -13,6 +13,8 @@ import {
   Presence,
   wasNotDelivered,
 } from "./ConvoClient";
+import { parseCommand, runCommand, showReply } from "./commands";
+import { hiddenBySettings, readConvoStorage } from "./convoStorage";
 import { avatarUrl, mentionsUser, previewText } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
@@ -72,6 +74,8 @@ export interface DockGroups {
   mapNames: () => Promise<Record<number, string>>;
   /** Add a group found through a message to the cached list. */
   addToList: (group: GroupInfo) => void;
+  /** Drop a group the user left from the cached list. */
+  removeFromList: (gid: number) => void;
   /** Which new group messages make the message sound. */
   sound: "mentions" | "all";
 }
@@ -1082,6 +1086,7 @@ export class ChatDock {
         origin: this.origin,
         onClose: () => this.closeGroup(gid),
         onChange: () => this.save(),
+        onLeft: () => this.leftGroup(gid),
       });
       this.groupWindows.set(gid, win);
       this.heads.after(win.root);
@@ -1104,6 +1109,14 @@ export class ChatDock {
     this.groupWindows.delete(gid);
     this.save();
     this.renderHeads();
+  }
+
+  /** The user left a group with /leave: forget it. */
+  private leftGroup(gid: number): void {
+    this.closeGroup(gid);
+    this.listedGroups.delete(gid);
+    this.client.removeGroup(gid);
+    this.options.groups?.removeFromList(gid);
   }
 
   closeChat(partyId: number): void {
@@ -1362,14 +1375,19 @@ export class ChatDock {
     win.older.after(notice);
   }
 
-  /** Add newly loaded messages in order, keeping the scroll position sensible. */
   /**
    * Show the chat's messages in the grouped layout. New ones join the last
    * sender group or start one; when older ones arrive (Load older, or a gap
    * filled after reconnecting), everything is redrawn and the view kept.
    */
   private renderMessages(win: ChatWindow): void {
-    const messages = this.client.getMessages(win.partyId);
+    const all = this.client.getMessages(win.partyId);
+    // Leave out flips and jackpot plays hidden with /flip hide or /jackpot hide
+    const storage = readConvoStorage();
+    const me = this.client.me?.uid;
+    const messages = all.filter(
+      (message) => !hiddenBySettings(message, me, storage)
+    );
     const list = win.list;
     const nearBottom =
       list.scrollHeight - list.scrollTop - list.clientHeight < 60;
@@ -1386,11 +1404,11 @@ export class ChatDock {
     } else {
       fresh.forEach((message) => this.appendLine(win, message));
     }
-    if (messages.length) this.setListNotice(win, "");
+    if (all.length) this.setListNotice(win, "");
 
     // Drop pending sends whose echo has arrived
     const echoed = new Set(
-      messages.map((message) => message.requestId).filter(Boolean)
+      all.map((message) => message.requestId).filter(Boolean)
     );
     const before = win.pending.length;
     win.pending = win.pending.filter(
@@ -1466,7 +1484,9 @@ export class ChatDock {
 
   private async send(win: ChatWindow, retryText?: string): Promise<void> {
     const text = (retryText ?? win.input.value).trim();
-    if (!text || !this.canSend(win, "message")) return;
+    if (!text) return;
+    if (retryText === undefined && (await this.runCommand(win, text))) return;
+    if (!this.canSend(win, "message")) return;
     if (retryText === undefined) {
       win.input.value = "";
       this.autoGrow(win.input);
@@ -1486,6 +1506,27 @@ export class ChatDock {
         if (!win.input.value) win.input.value = text;
       }
     );
+  }
+
+  /** Run what was typed if convo.php would run it as a command; false if it's a message. */
+  private async runCommand(win: ChatWindow, text: string): Promise<boolean> {
+    const command = parseCommand(text);
+    if (command.kind === "message") return false;
+    win.input.value = "";
+    this.autoGrow(win.input);
+    this.stopOwnTyping(win);
+    const ran = await runCommand(command, {
+      partyId: win.partyId,
+      origin: this.origin,
+      request: (request) => this.client.command(request),
+      reply: (content) => this.showReply(win, content),
+      notice: (message) => this.showNotice(win, message),
+      // Only group convos can be left; DM windows are one-to-one
+      leave: async () =>
+        this.showReply(win, "/leave only works in group chats."),
+    });
+    if (!ran && !win.input.value) win.input.value = text;
+    return true;
   }
 
   /** A pasted or dropped image: HF's checks, then upload it like a message. */
@@ -1570,11 +1611,18 @@ export class ChatDock {
 
   private showNotice(win: ChatWindow, text: string): void {
     clearTimeout(win.noticeTimer);
+    win.notice.classList.remove("hfx-chat-reply");
     win.notice.textContent = text;
     win.notice.hidden = false;
     win.noticeTimer = setTimeout(() => {
       win.notice.hidden = true;
     }, 6000);
+  }
+
+  /** A command's answer, shown until dismissed. */
+  private showReply(win: ChatWindow, content: string | Node): void {
+    clearTimeout(win.noticeTimer);
+    showReply(win.notice, content);
   }
 
   /** Track who's typing; shown in their window and on their bubble. */

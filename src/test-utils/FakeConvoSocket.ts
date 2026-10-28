@@ -19,6 +19,14 @@ export class FakeConvoSocket {
     return this;
   }
 
+  off(event: string, handler: (...args: any[]) => void): this {
+    this.handlers.set(
+      event,
+      (this.handlers.get(event) ?? []).filter((h) => h !== handler)
+    );
+    return this;
+  }
+
   connect(): void {
     this.connected = true;
     this.connects++;

@@ -2,11 +2,13 @@ import { Logger } from "../../../core/Logger";
 import {
   ChatImage,
   ChatUser,
+  CommandRequest,
   ConvoStatus,
   convoSocketUrl,
   fetchConvoTicket,
   HELPBOT_UID,
   parseUser,
+  sendCommand,
   SendError,
   sendWithAck,
   toInt,
@@ -25,9 +27,9 @@ import { SocketIOClient } from "./SocketIOClient";
  *   and the latest 20 messages as `convo_receivemessage_bulk`. Older messages
  *   can't be loaded ("You do not belong to this conversation").
  * - Message ids restart when the server does, so messages carry a `bootId`.
- * - Messages are sent with `convo_newmessage {partyID: -1}`; HF turns text
- *   starting with "/" into commands (e.g. /flip wagers Bytes), which this
- *   client refuses to send.
+ * - Messages are sent with `convo_newmessage {partyID: -1}`. The server runs
+ *   some commands sent as messages (/flip 100); see commands.ts for the rest.
+ * - `convo_group_level` is the user's moderator level here (0: none).
  */
 
 export const GLOBAL_PARTY = -1;
@@ -121,11 +123,6 @@ export function parseRoomMessage(raw: any): RoomMessage | null {
   return message;
 }
 
-/** Whether a message would be run as an HF Convo command (/flip, /rain, …). */
-export function isCommand(text: string): boolean {
-  return text.trim().startsWith("/");
-}
-
 export interface GlobalRoomEvents {
   status: (status: ConvoStatus, reason?: string) => void;
   /** New messages were added; `reset` means the room restarted and earlier ones are gone. */
@@ -157,6 +154,8 @@ export class GlobalRoomClient {
   /** Who's in the room, sorted like HF's online list. */
   online: RoomUser[] = [];
   onlineCount = 0;
+  /** Moderator level in the room (convo_group_level); above 0 can /ban. */
+  groupLevel = 0;
   /** Users typing right now. */
   readonly typing = new Map<number, string>();
   private readonly typingTimers = new Map<
@@ -218,12 +217,6 @@ export class GlobalRoomClient {
   async send(text: string, requestId = this.createRequestId()): Promise<void> {
     const message = text.trim();
     if (!message) throw new SendError("Message is empty.", "not-sent");
-    if (isCommand(message)) {
-      throw new SendError(
-        "Commands like /flip only work on convo.php. Your message was not sent.",
-        "not-sent"
-      );
-    }
     await this.mutate("convo_newmessage", {
       partyID: GLOBAL_PARTY,
       message,
@@ -241,6 +234,37 @@ export class GlobalRoomClient {
       imageData,
       requestId,
     });
+  }
+
+  /**
+   * Send a command's event (see commands.ts), resolving with the server's
+   * answer. /rain spends Bytes, so it waits its turn like a message.
+   */
+  async command(request: CommandRequest): Promise<unknown> {
+    if (request.mutation && this.sending)
+      throw new SendError(
+        "Please wait for the pending send to finish.",
+        "not-sent"
+      );
+    if (!this.socket.connected || this.status !== "ready") {
+      throw new SendError(
+        "Global chat is disconnected. Your command was not sent.",
+        "not-sent"
+      );
+    }
+    if (!request.mutation) return sendCommand(this.socket, request);
+    this.sending = true;
+    try {
+      return await sendCommand(this.socket, {
+        ...request,
+        data: {
+          ...(request.data as object),
+          requestId: this.createRequestId(),
+        },
+      });
+    } finally {
+      this.sending = false;
+    }
   }
 
   /** Send something to the room, waiting for the server's ack. One at a time. */
@@ -299,6 +323,9 @@ export class GlobalRoomClient {
       this.connect();
     });
     socket.on("convo_group_count", (data: any) => this.onOnline(data));
+    socket.on("convo_group_level", (level: unknown) => {
+      this.groupLevel = toInt(level);
+    });
     socket.on("convo_receivemessage", (data: any) => this.receive([data]));
     socket.on("convo_receivemessage_bulk", (data: any) => {
       if (Array.isArray(data)) this.receive(data);

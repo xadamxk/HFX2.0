@@ -3,11 +3,13 @@ import { el } from "../../../core/Dom";
 import type {
   ChatMessage,
   ChatUser,
+  CommandRequest,
   ConvoClient,
   ConvoClientEvents,
   ConvoStatus,
 } from "./ConvoClient";
-import { HISTORY_PAGE_SIZE } from "./ConvoClient";
+import { HISTORY_PAGE_SIZE, SendError } from "./ConvoClient";
+import { commandRequest } from "./commands";
 import type { RoomMessage } from "./GlobalRoomClient";
 import {
   RoomChatWindow,
@@ -110,6 +112,10 @@ export class GroupRoom implements RoomSource {
     this.client.setGroupTyping(this.gid, typing);
   }
 
+  command(request: CommandRequest): Promise<unknown> {
+    return this.client.command(request);
+  }
+
   load(): Promise<void> {
     return this.client.loadGroupHistory(this.gid);
   }
@@ -199,11 +205,14 @@ export interface GroupChatWindowOptions extends RoomWindowOptions {
   client: ConvoClient;
   gid: number;
   name: string;
+  /** The user left the group with /leave. */
+  onLeft: () => void;
 }
 
 /** A private group convo window: the grouped room layout, with Load older and members. */
 export class GroupChatWindow extends RoomChatWindow {
   readonly gid: number;
+  protected readonly partyId: number;
   readonly room: GroupRoom;
   private readonly client: ConvoClient;
   private readonly membersButton: HTMLButtonElement;
@@ -241,6 +250,7 @@ export class GroupChatWindow extends RoomChatWindow {
       listTop: [olderButton],
     });
     this.gid = options.gid;
+    this.partyId = options.gid;
     this.room = room;
     this.client = options.client;
     this.membersButton = membersButton;
@@ -277,6 +287,16 @@ export class GroupChatWindow extends RoomChatWindow {
 
   protected onMinimizedChange(minimized: boolean): void {
     if (!minimized) this.ensureLoaded();
+  }
+
+  /** /leave: leave the group on HF, as convo.php does, once confirmed. */
+  protected async leave(): Promise<void> {
+    const name = this.client.groups.get(this.gid)?.name ?? `Group ${this.gid}`;
+    if (!window.confirm(`Leave ${name}? This leaves the group on HF.`)) {
+      throw new SendError(`You're still in ${name}.`, "not-sent");
+    }
+    await this.room.command(commandRequest({ kind: "leave" }, this.gid));
+    (this.options as GroupChatWindowOptions).onLeft();
   }
 
   protected onPanelToggle(open: boolean): void {

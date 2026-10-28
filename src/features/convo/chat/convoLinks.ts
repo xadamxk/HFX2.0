@@ -4,8 +4,9 @@ import type { ChatUser } from "./ConvoClient";
  * HF's own "start a convo" links (convo.php?action=user&uid=N: the Convo
  * button on profiles and posts) opened in the dock instead of convo.php.
  * convo.php redirects such a link to the chat (convo.php?id=<party>), which
- * is the id the dock needs. Anything else (no chat with them yet, a failed
- * request, a dock that isn't connected) goes to convo.php as usual.
+ * is the id the dock needs; for someone you've never messaged, it creates the
+ * chat first (seen 2026-10-27). Anything else (a failed request, a dock that
+ * isn't connected) goes to convo.php as usual.
  */
 
 /** The uid an HF convo link starts a chat with, or 0 if it isn't one. */
@@ -28,8 +29,8 @@ export function convoLinkUid(link: HTMLAnchorElement, origin: string): number {
 }
 
 /**
- * The chat id convo.php sends a user's convo link to, or 0 when it doesn't
- * redirect to one. Made only when the link is clicked; the page itself isn't
+ * The chat id convo.php sends a user's convo link to (creating the chat if
+ * you've never messaged them), or 0 when it doesn't redirect to one. Made only when the link is clicked; the page itself isn't
  * read.
  */
 export async function fetchConvoParty(

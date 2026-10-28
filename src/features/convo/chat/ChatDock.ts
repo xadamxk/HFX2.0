@@ -50,6 +50,11 @@ export interface OpenChat {
   partyId: number;
   minimized: boolean;
   kind?: "group";
+  /**
+   * A DM's other person, so a chat the inbox doesn't list (a new, empty one,
+   * or an older one) still shows who it's with on the next page.
+   */
+  with?: Pick<ChatUser, "uid" | "username" | "avatar" | "group">;
 }
 
 export type DockFilter = "all" | "dm" | "group";
@@ -238,6 +243,8 @@ export class ChatDock {
   private readonly windows = new Map<number, ChatWindow>();
   /** Chat ids found for users' convo links on this page: uid → party. */
   private readonly partyByUid = new Map<number, number>();
+  /** Names clicked in rooms whose chat is still being looked up. */
+  private readonly opening = new Set<number>();
   /** Unsent text from the last page in this tab, by chat (see drafts.ts). */
   private readonly drafts = loadDrafts();
   private readonly client: ConvoClient;
@@ -431,8 +438,17 @@ export class ChatDock {
     // Oldest first, so the newest ends up next to the bubbles
     toRestore.reverse().forEach((chat) => {
       const restore = { minimized: chat.minimized, restore: true };
-      if (chat.kind === "group") this.openGroup(chat.partyId, restore);
-      else this.openChat(chat.partyId, restore);
+      if (chat.kind === "group") {
+        this.openGroup(chat.partyId, restore);
+        return;
+      }
+      // The inbox, which may not have arrived, may not list it either
+      if (chat.with && !this.client.conversations.has(chat.partyId))
+        this.client.addConversation(chat.partyId, {
+          ...chat.with,
+          lastActive: 0,
+        });
+      this.openChat(chat.partyId, restore);
     });
     this.windowsRestored = true;
     this.saveGroupActivity();
@@ -1046,10 +1062,14 @@ export class ChatDock {
 
   /**
    * A name clicked in a group or the global chat: the DM with them in the
-   * dock, or convo.php's page for them when there's no chat yet (or the dock
-   * isn't connected), as their Convo button does.
+   * dock, as their Convo button does. For someone you've never messaged, the
+   * lookup is what creates the chat (convo.php does on that link), so it opens
+   * empty. If it can't open (not connected, the lookup failed), convo.php's
+   * page for them opens instead. Clicks while a lookup is going are ignored.
    */
   private openChatFromRoom(uid: number, user?: ChatUser): void {
+    if (this.opening.has(uid)) return;
+    this.opening.add(uid);
     const fallback = () =>
       followLink(
         el("a", {
@@ -1062,7 +1082,8 @@ export class ChatDock {
       .then((opened) => {
         if (!opened) fallback();
       })
-      .catch(fallback);
+      .catch(fallback)
+      .finally(() => this.opening.delete(uid));
   }
 
   /** Open the global room's window; its socket connects while it's expanded. */
@@ -1803,7 +1824,16 @@ export class ChatDock {
 
   private save(): void {
     // Newest first, matching the dock order
-    const open = this.openWindowRoots().map(openChatOf);
+    const open = this.openWindowRoots().map((root) => {
+      const chat = openChatOf(root);
+      const other =
+        chat.kind || chat.partyId === GLOBAL_PARTY
+          ? undefined
+          : this.client.conversations.get(chat.partyId)?.other;
+      if (!other) return chat;
+      const { uid, username, avatar, group } = other;
+      return { ...chat, with: { uid, username, avatar, group } };
+    });
     this.state = { ...this.state, open };
     this.options.saveState(this.state);
   }

@@ -51,6 +51,11 @@ class FakeClient {
   connect = jest.fn();
   disconnect = jest.fn();
   createRequestId = () => "req";
+  addConversation(partyId: number, other: Conversation["other"]) {
+    if (this.conversations.has(partyId)) return;
+    this.conversations.set(partyId, { partyId, other, dateline: 0, unread: 0 });
+    this.fire("conversations");
+  }
 
   /** Add messages as the socket would and notify the dock. */
   add(...messages: Partial<ChatMessage>[]) {
@@ -546,6 +551,30 @@ describe("ChatDock drafts, unread line and keys", () => {
     expect(win().querySelector(".hfx-chat-unread-divider")).toBeNull();
   });
 
+  it("remembers who a DM window is with, for chats the inbox doesn't list", async () => {
+    const NEW_PARTY = 476368;
+    const KLON = { uid: 4606941, username: "Klonopin", avatar: "a.png" };
+    await mount({
+      openChats: [{ partyId: NEW_PARTY, minimized: true, with: KLON }],
+    });
+    const restored = document.querySelector<HTMLElement>(
+      `.hfx-chat-window[data-party="${NEW_PARTY}"]`
+    )!;
+    expect(
+      restored.querySelector(".hfx-chat-header-name, .hfx-chat-title a")!
+        .textContent
+    ).toBe("Klonopin");
+    // And it's saved with the window
+    restored.querySelector<HTMLElement>("button[title=Minimize]")!.click();
+    expect(saveState.mock.lastCall[0].open).toEqual([
+      {
+        partyId: NEW_PARTY,
+        minimized: false,
+        with: { ...KLON, group: undefined },
+      },
+    ]);
+  });
+
   it("minimizes the window on Esc", async () => {
     await mount();
     input().dispatchEvent(
@@ -605,11 +634,14 @@ describe("ChatDock drafts, unread line and keys", () => {
       expect(open).not.toHaveBeenCalled();
     });
 
-    it("go to convo.php for someone you have no chat with", async () => {
+    it("go to convo.php when the chat can't be looked up, once per click", async () => {
       const name = await joinGlobal({ uid: 999, username: "Stranger" });
+      // A second click while the first is still looking is ignored
+      name.click();
       name.click();
       await flush();
       await flush();
+      expect(open).toHaveBeenCalledTimes(1);
       expect(open).toHaveBeenCalledWith(
         "https://hackforums.net/convo.php?action=user&uid=999",
         "_blank",

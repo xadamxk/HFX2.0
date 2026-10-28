@@ -1,10 +1,11 @@
 import { el, ElChild } from "../../../core/Dom";
 import type { ChatUser, CommandRequest, ConvoStatus } from "./ConvoClient";
 import { wasNotDelivered } from "./ConvoClient";
-import { parseCommand, runCommand, showReply } from "./commands";
+import { CommandPicker } from "./commandPicker";
+import { commandsFor, parseCommand, runCommand, showReply } from "./commands";
 import { hiddenBySettings, readConvoStorage } from "./convoStorage";
 import { avatarUrl, mentionsUser } from "./formatMessage";
-import type { RoomMessage } from "./GlobalRoomClient";
+import { GLOBAL_PARTY, RoomMessage } from "./GlobalRoomClient";
 import {
   acceptImages,
   attachButton,
@@ -103,6 +104,7 @@ export abstract class RoomChatWindow {
   private readonly notice: HTMLElement;
   private readonly typing: HTMLElement;
   private readonly mentions: MentionPicker;
+  private readonly commands: CommandPicker;
   private readonly lines = new Map<string, HTMLElement>();
   private lastGroup: MessageGroup | null = null;
   private pending: { requestId: string; node: HTMLElement }[] = [];
@@ -176,8 +178,18 @@ export abstract class RoomChatWindow {
       this.origin,
       () => this.onInputChange()
     );
+    this.commands = new CommandPicker(
+      this.input,
+      () =>
+        commandsFor(
+          this.partyId === GLOBAL_PARTY ? "global" : "group",
+          (this.source.groupLevel ?? 0) > 0
+        ),
+      () => this.onInputChange()
+    );
     this.input.addEventListener("keydown", (event) => {
-      if (this.mentions.handleKey(event)) return;
+      if (this.mentions.handleKey(event) || this.commands.handleKey(event))
+        return;
       if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
         event.preventDefault();
         this.send();
@@ -198,6 +210,7 @@ export abstract class RoomChatWindow {
         this.typing,
         el("div", { class: "hfx-chat-compose" }, [
           this.mentions.root,
+          this.commands.root,
           // Only rooms that take images (not group chats yet)
           this.source.sendImage
             ? attachButton((file) => this.uploadImage(file))
@@ -225,6 +238,7 @@ export abstract class RoomChatWindow {
     if (minimized) {
       this.stopOwnTyping();
       this.mentions.close();
+      this.commands.close();
     }
     this.onMinimizedChange(minimized);
     if (!minimized) this.scrollToBottom();

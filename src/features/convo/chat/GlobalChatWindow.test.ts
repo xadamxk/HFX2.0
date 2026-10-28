@@ -319,6 +319,22 @@ describe("GlobalChatWindow", () => {
       ]);
     });
 
+    it("offers /ban in the / list only to moderators", async () => {
+      await open();
+      const listed = () => {
+        input().focus();
+        input().value = "/b";
+        input().setSelectionRange(2, 2);
+        input().dispatchEvent(new Event("input"));
+        return Array.from(
+          win.root.querySelectorAll(".hfx-gc-command-usage")
+        ).map((usage) => usage.textContent);
+      };
+      expect(listed()).toEqual(["/embed show/hide"]);
+      socket.fire("convo_group_level", 1);
+      expect(listed()).toEqual(["/ban UID TIME", "/embed show/hide"]);
+    });
+
     it("leaves by closing the window", async () => {
       await open();
       await enter("/leave");

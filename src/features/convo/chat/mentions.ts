@@ -1,6 +1,7 @@
 import { el } from "../../../core/Dom";
 import type { ChatUser } from "./ConvoClient";
 import { avatarUrl } from "./formatMessage";
+import { SuggestionPicker, Token } from "./suggestions";
 
 /**
  * Mentions in room chats: typing @ opens a list of the room's members, and
@@ -11,12 +12,8 @@ const MAX_MATCHES = 8;
 // Longer than any HF username: past this, the @ isn't a mention being typed
 const MAX_QUERY = 30;
 
-export interface MentionQuery {
-  /** Where the @ is. */
-  start: number;
-  /** What's typed after it, up to the caret. */
-  query: string;
-}
+/** A mention being typed: where the @ is and what follows it. */
+export type MentionQuery = Token;
 
 /**
  * The mention being typed at the caret, if any: an @ at the start or after
@@ -71,148 +68,35 @@ export function applyMention(
   };
 }
 
-let pickerCount = 0;
-
 /** The member list shown above a compose box while a mention is typed. */
-export class MentionPicker {
-  readonly root: HTMLElement;
-  private readonly id = `hfx-mentions-${++pickerCount}`;
-  private mention: MentionQuery | null = null;
-  private matches: ChatUser[] = [];
-  private active = 0;
-
+export class MentionPicker extends SuggestionPicker<ChatUser> {
   constructor(
-    private readonly input: HTMLTextAreaElement,
+    input: HTMLTextAreaElement,
     /** Who can be mentioned, sorted; read each time the list opens. */
-    private readonly candidates: () => ChatUser[],
-    private readonly origin: string,
+    candidates: () => ChatUser[],
+    origin: string,
     /** The input's text changed by picking someone. */
-    private readonly onInsert: () => void
+    onInsert: () => void
   ) {
-    this.root = el("div", {
-      class: "hfx-gc-mentions",
-      id: this.id,
-      role: "listbox",
-      "aria-label": "Mention a member",
-      hidden: true,
-    });
-    input.setAttribute("aria-autocomplete", "list");
-    input.addEventListener("input", () => this.update());
-    input.addEventListener("click", () => this.update());
-    input.addEventListener("keyup", (event) => {
-      if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
-        this.update();
-    });
-    input.addEventListener("blur", () => this.close());
-  }
-
-  get isOpen(): boolean {
-    return !this.root.hidden;
-  }
-
-  /** Open, filter or close the list for what's at the caret. */
-  update(): void {
-    const { selectionStart, selectionEnd, value } = this.input;
-    this.mention =
-      selectionStart === selectionEnd
-        ? mentionQuery(value, selectionStart)
-        : null;
-    this.matches = this.mention
-      ? matchMembers(this.candidates(), this.mention.query)
-      : [];
-    this.active = 0;
-    this.render();
-  }
-
-  /** Handle a key while the list is open; returns whether it was used. */
-  handleKey(event: KeyboardEvent): boolean {
-    if (!this.isOpen || event.isComposing) return false;
-    switch (event.key) {
-      case "ArrowDown":
-      case "ArrowUp": {
-        const step = event.key === "ArrowDown" ? 1 : -1;
-        const count = this.matches.length;
-        this.active = (this.active + step + count) % count;
-        this.render();
-        break;
-      }
-      case "Enter":
-      case "Tab":
-        if (event.shiftKey) return false;
-        this.pick(this.matches[this.active]);
-        break;
-      case "Escape":
-        event.stopPropagation();
-        this.close();
-        break;
-      default:
-        return false;
-    }
-    event.preventDefault();
-    return true;
-  }
-
-  close(): void {
-    this.mention = null;
-    this.matches = [];
-    this.render();
-  }
-
-  private pick(user: ChatUser): void {
-    if (!this.mention) return;
-    const result = applyMention(
-      this.input.value,
-      this.mention,
-      this.input.selectionStart,
-      user.username
-    );
-    this.input.value = result.value;
-    this.input.focus();
-    this.input.setSelectionRange(result.caret, result.caret);
-    this.close();
-    this.onInsert();
-  }
-
-  private render(): void {
-    const open = this.matches.length > 0;
-    this.root.hidden = !open;
-    this.input.setAttribute("aria-expanded", String(open));
-    if (!open) {
-      this.root.replaceChildren();
-      this.input.removeAttribute("aria-controls");
-      this.input.removeAttribute("aria-activedescendant");
-      return;
-    }
-    this.input.setAttribute("aria-controls", this.id);
-    const rows = this.matches.map((user, index) => {
-      const selected = index === this.active;
-      const row = el(
-        "div",
-        {
-          class: `hfx-gc-user hfx-gc-mention-option${selected ? " hfx-gc-mention-active" : ""}`,
-          id: `${this.id}-${index}`,
-          role: "option",
-          "aria-selected": String(selected),
-        },
-        [
-          el("img", { src: avatarUrl(user.avatar, this.origin), alt: "" }),
+    super(
+      input,
+      {
+        label: "Mention a member",
+        optionClass: "hfx-gc-user hfx-gc-mention-option",
+        find: mentionQuery,
+        match: (query) => matchMembers(candidates(), query),
+        apply: (value, token, caret, user) =>
+          applyMention(value, token, caret, user.username),
+        render: (user) => [
+          el("img", { src: avatarUrl(user.avatar, origin), alt: "" }),
           el(
             "span",
             { class: user.group ? `group${user.group}` : null },
             user.username
           ),
-        ]
-      );
-      // Keep focus (and the caret) in the input
-      row.addEventListener("mousedown", (event) => event.preventDefault());
-      row.addEventListener("click", () => this.pick(user));
-      return row;
-    });
-    this.root.replaceChildren(...rows);
-    this.input.setAttribute(
-      "aria-activedescendant",
-      `${this.id}-${this.active}`
+        ],
+      },
+      onInsert
     );
-    rows[this.active].scrollIntoView?.({ block: "nearest" });
   }
 }

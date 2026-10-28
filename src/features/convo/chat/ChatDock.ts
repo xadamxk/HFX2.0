@@ -13,7 +13,8 @@ import {
   Presence,
   wasNotDelivered,
 } from "./ConvoClient";
-import { parseCommand, runCommand, showReply } from "./commands";
+import { CommandPicker } from "./commandPicker";
+import { commandsFor, parseCommand, runCommand, showReply } from "./commands";
 import { hiddenBySettings, readConvoStorage } from "./convoStorage";
 import { avatarUrl, mentionsUser, previewText } from "./formatMessage";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
@@ -1212,6 +1213,14 @@ export class ChatDock {
       "aria-label": "Message",
       maxlength: 5000,
     });
+    const commands = new CommandPicker(
+      input,
+      () => commandsFor("dm"),
+      () => {
+        this.autoGrow(input);
+        this.onOwnTyping(win);
+      }
+    );
     const root = el(
       "section",
       {
@@ -1224,6 +1233,7 @@ export class ChatDock {
         notice,
         typing,
         el("div", { class: "hfx-chat-compose" }, [
+          commands.root,
           attachButton((file) => this.uploadImage(win, file)),
           input,
         ]),
@@ -1276,6 +1286,7 @@ export class ChatDock {
         this.loadOlder(win);
     });
     input.addEventListener("keydown", (event) => {
+      if (commands.handleKey(event)) return;
       if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
         event.preventDefault();
         this.send(win);

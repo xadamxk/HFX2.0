@@ -418,6 +418,33 @@ describe("ChatDock commands", () => {
     expect(notice().textContent).toContain("/flip WAGER");
   });
 
+  it("lists commands on /, and Enter on one typed in full runs it", async () => {
+    await mount();
+    input().focus();
+    input().value = "/";
+    input().setSelectionRange(1, 1);
+    input().dispatchEvent(new Event("input"));
+    const picker = win().querySelector<HTMLElement>(".hfx-gc-mentions")!;
+    const listed = Array.from(
+      picker.querySelectorAll(".hfx-gc-command-usage")
+    ).map((usage) => usage.textContent);
+    expect(listed).toContain("/stats");
+    // /leave does nothing in a DM
+    expect(listed).not.toContain("/leave");
+
+    input().value = "/help";
+    input().setSelectionRange(5, 5);
+    input().dispatchEvent(new Event("input"));
+    expect(picker.hidden).toBe(false);
+    input().dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", cancelable: true })
+    );
+    await flush();
+    expect(picker.hidden).toBe(true);
+    expect(notice().textContent).toContain("/flip WAGER");
+    expect(client.send).not.toHaveBeenCalled();
+  });
+
   it("sends commands the server runs as messages", async () => {
     await mount();
     await enter("/flip 100");

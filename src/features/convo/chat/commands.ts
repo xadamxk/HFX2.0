@@ -34,29 +34,108 @@ export type Command =
 const lines = (...rows: [string, string][]) =>
   rows.map(([usage, about]) => `${usage}\n    ${about}`).join("\n");
 
+/** A command as /help and the / picker list it. */
+export interface CommandInfo {
+  /** What's typed, e.g. "/flip". */
+  name: string;
+  usage: string;
+  about: string;
+  /** It takes arguments, so picking it leaves a space after it. */
+  args?: boolean;
+}
+
+/** convo.php's /help list, in its order. */
+export const COMMANDS: CommandInfo[] = [
+  { name: "/stats", usage: "/stats", about: "Check your statistics." },
+  {
+    name: "/flip",
+    usage: "/flip WAGER",
+    about: "Place a Bytes wager on a coin flip.",
+    args: true,
+  },
+  { name: "/help", usage: "/help", about: "View a list of Convo commands." },
+  {
+    name: "/jackpot",
+    usage: "/jackpot play",
+    about: "Wager 25 Bytes for a chance to win the jackpot.",
+    args: true,
+  },
+  { name: "/leave", usage: "/leave", about: "Leave a group convo." },
+  {
+    name: "/markup",
+    usage: "/markup",
+    about: "A cheatsheet for Convo markup.",
+  },
+  {
+    name: "/price",
+    usage: "/price CRYPTO_SYMBOL",
+    about: "View the price of cryptocurrencies.",
+    args: true,
+  },
+  {
+    name: "/rain",
+    usage: "/rain MEMBER_COUNT BYTES_EACH",
+    about: "Send a number of Bytes to a set of members.",
+    args: true,
+  },
+  {
+    name: "/roll",
+    usage: "/roll LOW:HIGH",
+    about: "A random number between (and including) LOW and HIGH.",
+    args: true,
+  },
+  {
+    name: "/send",
+    usage: "/send USERNAME",
+    about: "Send Bytes to a member.",
+    args: true,
+  },
+  {
+    name: "/embed",
+    usage: "/embed show/hide",
+    about: "Show or hide image and video embeds.",
+    args: true,
+  },
+  {
+    name: "/votekick",
+    usage: "/votekick UID",
+    about: "Three members can votekick for a 30 minute Convo ban.",
+    args: true,
+  },
+];
+
+const BAN: CommandInfo = {
+  name: "/ban",
+  usage: "/ban UID TIME",
+  about: "Ban a member from global chat (TIME -1: permanent).",
+  args: true,
+};
+
+/**
+ * The commands that do something in a kind of chat: /leave only in groups
+ * (and global chat, where it closes the window), /ban only for global chat
+ * moderators.
+ */
+export function commandsFor(
+  chat: "dm" | "group" | "global",
+  moderator = false
+): CommandInfo[] {
+  const list = COMMANDS.filter(
+    (command) => command.name !== "/leave" || chat !== "dm"
+  );
+  return chat === "global" && moderator ? [...list, BAN] : list;
+}
+
+const helpRows = (commands: CommandInfo[]): [string, string][] =>
+  commands.map(({ usage, about }) => [usage, about]);
+
 export const HELP_TEXT = lines(
-  ["/stats", "Check your statistics."],
-  ["/flip WAGER", "Place a Bytes wager on a coin flip."],
-  ["/help", "View a list of Convo commands."],
+  ...helpRows(COMMANDS.slice(0, 3)),
   ["@username@", "Tags a member."],
-  ["/jackpot play", "Wager 25 Bytes for a chance to win the jackpot."],
-  ["/leave", "Leave a group convo."],
-  ["/markup", "A cheatsheet for Convo markup."],
-  ["/price CRYPTO_SYMBOL", "View the price of cryptocurrencies."],
-  [
-    "/rain MEMBER_COUNT BYTES_EACH",
-    "Send a number of Bytes to a set of members.",
-  ],
-  ["/roll LOW:HIGH", "A random number between (and including) LOW and HIGH."],
-  ["/send USERNAME", "Send Bytes to a member."],
-  ["/embed show/hide", "Show or hide image and video embeds."],
-  ["/votekick UID", "Three members can votekick for a 30 minute Convo ban."]
+  ...helpRows(COMMANDS.slice(3))
 );
 
-const MODERATOR_HELP = lines([
-  "/ban UID TIME",
-  "Ban a member from global chat (TIME -1: permanent).",
-]);
+const MODERATOR_HELP = lines(...helpRows([BAN]));
 
 export const MARKUP_TEXT = lines(
   ["*text* or _text_", "Italic"],

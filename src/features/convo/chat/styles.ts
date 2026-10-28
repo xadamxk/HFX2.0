@@ -735,4 +735,16 @@ export const CHAT_DOCK_CSS = `
   scrollbar-color: var(--hfx-chat-scroll-thumb) var(--hfx-chat-scroll-track);
 }
 .hfx-gc-mentions .hfx-gc-mention-active { background: rgba(255, 255, 255, 0.12); }
+/* Commands offered after typing / at the start of a message */
+.hfx-gc-command {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 12px;
+  color: var(--hfx-chat-text);
+  cursor: pointer;
+}
+.hfx-gc-command:hover { background: rgba(255, 255, 255, 0.06); }
+.hfx-gc-command-usage { font-weight: bold; }
+.hfx-gc-command-about { color: var(--hfx-chat-muted); font-size: 11px; }
 `;

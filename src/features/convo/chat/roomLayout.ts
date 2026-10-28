@@ -101,14 +101,35 @@ export function createMessageGroup(
   return { uid: message.uid, dateline: message.dateline, root, lines };
 }
 
-/** One message's line; its full time shows on hover. */
+/** A curved "reply" arrow. */
+const replyIcon = () => {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(ns, "path");
+  path.setAttribute("d", "M10 8L5 13l5 5M5 13h9a5 5 0 0 0 5-5V6");
+  svg.appendChild(path);
+  return svg;
+};
+
+/**
+ * One message's line; its full time shows on hover. With `reply`, a reply
+ * button shows to its left on hover.
+ */
 export function createMessageLine(
   message: RenderableMessage & { dateline: number },
   origin: string,
   attrs: Record<string, string | number> = {},
-  mention = false
+  mention = false,
+  reply?: { username: string; onClick: () => void }
 ): HTMLElement {
-  return el(
+  const line = el(
     "div",
     {
       class: `hfx-gc-line${mention ? " hfx-gc-mention" : ""}`,
@@ -117,4 +138,21 @@ export function createMessageLine(
     },
     renderMessage(message, origin)
   );
+  if (reply) {
+    const button = el(
+      "button",
+      {
+        type: "button",
+        class: "hfx-gc-reply",
+        title: `Reply to ${reply.username}`,
+        "aria-label": `Reply to ${reply.username}`,
+      },
+      replyIcon()
+    );
+    // Keep the input's caret where it is until the mention goes in
+    button.addEventListener("mousedown", (event) => event.preventDefault());
+    button.addEventListener("click", reply.onClick);
+    line.prepend(button);
+  }
+  return line;
 }

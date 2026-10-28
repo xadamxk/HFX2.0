@@ -288,6 +288,49 @@ describe("GlobalChatWindow", () => {
     expect(onChange).toHaveBeenCalled();
   });
 
+  it("replies by mentioning the sender, from a button on others' messages", async () => {
+    await open();
+    socket.fire("convo_receivemessage_bulk", [
+      room({ mid: 1 }),
+      room({ mid: 2, uid: ME.uid, message: "mine" }),
+    ]);
+    const lines = Array.from(win.root.querySelectorAll(".hfx-gc-line"));
+    const reply = lines[0].querySelector<HTMLButtonElement>(".hfx-gc-reply")!;
+    expect(reply.title).toBe("Reply to Nova");
+    // Not on your own
+    expect(lines[1].querySelector(".hfx-gc-reply")).toBeNull();
+    reply.click();
+    expect(input().value).toBe("@Nova@ ");
+    input().value = "hey";
+    reply.click();
+    expect(input().value).toBe("hey @Nova@ ");
+    expect(document.activeElement).toBe(input());
+  });
+
+  it("has an emoji button that types at the caret", async () => {
+    await open();
+    const button = win.root.querySelector<HTMLButtonElement>(
+      ".hfx-chat-compose .hfx-chat-emoji"
+    )!;
+    button.click();
+    win.root
+      .querySelector<HTMLButtonElement>(".hfx-chat-emoji-option")!
+      .click();
+    expect(input().value).toBe("😀");
+    // Esc closes the panel, not the window
+    input().dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Escape",
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    expect(
+      win.root.querySelector<HTMLElement>(".hfx-chat-emoji-panel")!.hidden
+    ).toBe(true);
+    expect(win.minimized).toBe(false);
+  });
+
   it("shows and replaces its unsent text as a draft", async () => {
     await open();
     win.draft = "kept from the last page";

@@ -8,6 +8,7 @@ import type {
   ConvoStatus,
 } from "./ConvoClient";
 import {
+  HELPBOT_UID,
   HISTORY_PAGE_SIZE,
   presence,
   Presence,
@@ -17,6 +18,8 @@ import { CommandPicker } from "./commandPicker";
 import { commandsFor, parseCommand, runCommand, showReply } from "./commands";
 import { hiddenBySettings, readConvoStorage } from "./convoStorage";
 import { avatarUrl, mentionsUser, previewText } from "./formatMessage";
+import { EmojiPicker } from "./emoji";
+import { appendMention } from "./mentions";
 import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
@@ -190,6 +193,7 @@ interface ChatWindow {
   rendered: Map<number, HTMLElement>;
   /** The "New messages" line and jump button. */
   unread: UnreadMarker;
+  emoji: EmojiPicker;
   /** The newest sender group, which the next message may join. */
   lastGroup: MessageGroup | null;
   pending: PendingSend[];
@@ -1197,6 +1201,7 @@ export class ChatDock {
     if (!win) return;
     this.stopOwnTyping(win);
     clearTimeout(win.noticeTimer);
+    win.emoji.close();
     win.root.remove();
     this.windows.delete(partyId);
     this.save();
@@ -1209,6 +1214,7 @@ export class ChatDock {
     win.root.classList.toggle("hfx-chat-minimized", minimized);
     if (minimized) {
       this.stopOwnTyping(win);
+      win.emoji.close();
     } else {
       this.ensureLoaded(win);
       this.scrollToBottom(win);
@@ -1286,6 +1292,7 @@ export class ChatDock {
       maxlength: 5000,
     });
     input.value = this.drafts.get(`dm:${partyId}`) ?? "";
+    const compose = el("div", { class: "hfx-chat-compose" });
     const commands = new CommandPicker(
       input,
       () => commandsFor("dm"),
@@ -1294,23 +1301,19 @@ export class ChatDock {
         this.onOwnTyping(win);
       }
     );
+    compose.append(
+      commands.root,
+      attachButton((file) => this.uploadImage(win, file)),
+      input
+    );
+    const emoji = new EmojiPicker(input, compose);
     const root = el(
       "section",
       {
         class: `hfx-chat-window hfx-gc-window${minimized ? " hfx-chat-minimized" : ""}`,
         "data-party": partyId,
       },
-      [
-        header,
-        list,
-        notice,
-        typing,
-        el("div", { class: "hfx-chat-compose" }, [
-          commands.root,
-          attachButton((file) => this.uploadImage(win, file)),
-          input,
-        ]),
-      ]
+      [header, list, notice, typing, compose]
     );
 
     const win: ChatWindow = {
@@ -1330,6 +1333,7 @@ export class ChatDock {
       input,
       rendered: new Map(),
       unread: new UnreadMarker(list),
+      emoji,
       lastGroup: null,
       pending: [],
       loaded: false,
@@ -1533,9 +1537,27 @@ export class ChatDock {
 
   /** Add a message's line to the last group, or a new group for it. */
   private appendLine(win: ChatWindow, message: ChatMessage): void {
-    const line = createMessageLine(message, this.origin, {
-      "data-mid": message.mid,
-    });
+    // Reply mentions them; not on your own messages or Stanley's
+    const sender = this.client.users.get(message.uid);
+    const reply =
+      sender &&
+      message.uid !== this.client.me?.uid &&
+      message.uid !== HELPBOT_UID
+        ? {
+            username: sender.username,
+            onClick: () => {
+              appendMention(win.input, sender.username);
+              this.autoGrow(win.input);
+            },
+          }
+        : undefined;
+    const line = createMessageLine(
+      message,
+      this.origin,
+      { "data-mid": message.mid },
+      false,
+      reply
+    );
     win.rendered.set(message.mid, line);
     const group = win.lastGroup;
     if (group && joinsGroup(group, message)) {

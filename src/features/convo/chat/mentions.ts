@@ -51,6 +51,17 @@ export function matchMembers(
   return [...starts, ...contains].slice(0, limit);
 }
 
+/** Add @username@ and a space at the end of what's typed, and focus the input there. */
+export function appendMention(
+  input: HTMLTextAreaElement,
+  username: string
+): void {
+  const value = input.value;
+  input.value = `${value}${value && !/\s$/.test(value) ? " " : ""}@${username}@ `;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+}
+
 /** Replace the typed @query with @username@ and a space; returns the new caret too. */
 export function applyMention(
   value: string,

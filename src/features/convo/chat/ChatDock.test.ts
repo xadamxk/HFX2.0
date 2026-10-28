@@ -575,6 +575,15 @@ describe("ChatDock drafts, unread line and keys", () => {
     ]);
   });
 
+  it("replies to the other person from a button on their messages", async () => {
+    await mount();
+    client.add({ text: "theirs" }, { uid: ME.uid, text: "mine" });
+    const lines = Array.from(win().querySelectorAll(".hfx-gc-line"));
+    expect(lines[1].querySelector(".hfx-gc-reply")).toBeNull();
+    lines[0].querySelector<HTMLButtonElement>(".hfx-gc-reply")!.click();
+    expect(input().value).toBe("@Charlie@ ");
+  });
+
   it("minimizes the window on Esc", async () => {
     await mount();
     input().dispatchEvent(

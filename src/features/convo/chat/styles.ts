@@ -380,6 +380,27 @@ export const CHAT_DOCK_CSS = `
   word-break: break-word;
 }
 .hfx-gc-line:hover { background: rgba(255, 255, 255, 0.04); }
+/* Reply (mention the sender), in the space left of the text, shown on hover */
+.hfx-gc-line { position: relative; }
+.hfx-gc-reply {
+  position: absolute;
+  top: 0;
+  left: 24px;
+  z-index: 2;
+  display: none;
+  width: 22px;
+  height: 20px;
+  padding: 2px 3px;
+  border: none;
+  border-radius: 4px;
+  background: var(--hfx-chat-header);
+  color: var(--hfx-chat-muted);
+  cursor: pointer;
+}
+.hfx-gc-line:hover > .hfx-gc-reply,
+.hfx-gc-reply:focus-visible { display: block; }
+.hfx-gc-reply:hover { background: #3a3a3a; color: #fff; }
+.hfx-gc-reply svg { display: block; width: 16px; height: 16px; }
 .hfx-gc-line a { color: #9ecbff; text-decoration: underline; }
 /* Font Awesome link icons in Helpbot notices, like HF draws them */
 .hfx-chat-icon { margin-left: 3px; font-size: 10px; color: #7fd67f; vertical-align: super; }
@@ -703,7 +724,8 @@ export const CHAT_DOCK_CSS = `
   padding: 6px;
 }
 /* The + before the input: pick an image to upload */
-.hfx-chat-attach {
+.hfx-chat-attach,
+.hfx-chat-emoji {
   flex: none;
   width: 32px;
   height: 32px;
@@ -714,9 +736,50 @@ export const CHAT_DOCK_CSS = `
   color: var(--hfx-chat-text);
   cursor: pointer;
 }
-.hfx-chat-attach svg { display: block; width: 18px; height: 18px; }
-.hfx-chat-attach:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
-.hfx-chat-attach:focus-visible { outline: 1px solid #555; }
+.hfx-chat-attach svg,
+.hfx-chat-emoji svg { display: block; width: 18px; height: 18px; }
+.hfx-chat-attach:hover,
+.hfx-chat-emoji:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.hfx-chat-attach:focus-visible,
+.hfx-chat-emoji:focus-visible { outline: 1px solid #555; }
+.hfx-chat-emoji[aria-expanded="true"] { background: rgba(255, 255, 255, 0.1); color: #fff; }
+/* Emoji, just above the compose box on the right */
+.hfx-chat-emoji-panel {
+  position: absolute;
+  bottom: 100%;
+  right: 6px;
+  z-index: 3;
+  width: 252px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 6px 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--hfx-chat-border);
+  border-radius: 6px;
+  background: var(--hfx-chat-header);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.5);
+}
+.hfx-chat-emoji-panel[hidden] { display: none; }
+.hfx-chat-emoji-label {
+  padding: 4px 2px 2px;
+  color: var(--hfx-chat-muted);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.hfx-chat-emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); }
+.hfx-chat-emoji-option {
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  font-size: 18px;
+  line-height: 28px;
+  cursor: pointer;
+}
+.hfx-chat-emoji-option:hover,
+.hfx-chat-emoji-option:focus-visible { background: rgba(255, 255, 255, 0.12); outline: none; }
 /*
  * One 16px line between 7px paddings and the border fills the 32px box, so the
  * text sits in the middle. HF styles every textarea (custom_v4.css sets
@@ -763,6 +826,7 @@ export const CHAT_DOCK_CSS = `
 #hfx-chat-dock .hfx-chat-list-rows,
 #hfx-chat-dock .hfx-gc-online,
 #hfx-chat-dock .hfx-gc-mentions,
+#hfx-chat-dock .hfx-chat-emoji-panel,
 #hfx-chat-dock .hfx-chat-compose textarea {
   scrollbar-width: thin;
   scrollbar-color: var(--hfx-chat-scroll-thumb) var(--hfx-chat-scroll-track);

@@ -12,7 +12,8 @@ import {
   imageUploadError,
   readBytes,
 } from "./images";
-import { MentionPicker } from "./mentions";
+import { EmojiPicker } from "./emoji";
+import { appendMention, MentionPicker } from "./mentions";
 import {
   createMessageGroup,
   createMessageLine,
@@ -113,6 +114,7 @@ export abstract class RoomChatWindow {
   private readonly mentions: MentionPicker;
   private readonly commands: CommandPicker;
   private readonly unread: UnreadMarker;
+  private readonly emoji: EmojiPicker;
   private readonly lines = new Map<string, HTMLElement>();
   private lastGroup: MessageGroup | null = null;
   private pending: { requestId: string; node: HTMLElement }[] = [];
@@ -206,6 +208,16 @@ export abstract class RoomChatWindow {
     });
     this.input.addEventListener("input", () => this.onInputChange());
 
+    const compose = el("div", { class: "hfx-chat-compose" }, [
+      this.mentions.root,
+      this.commands.root,
+      // Only rooms that take images (not group chats yet)
+      this.source.sendImage
+        ? attachButton((file) => this.uploadImage(file))
+        : null,
+      this.input,
+    ]);
+    this.emoji = new EmojiPicker(this.input, compose);
     this.root = el(
       "section",
       {
@@ -217,15 +229,7 @@ export abstract class RoomChatWindow {
         el("div", { class: "hfx-gc-body" }, [this.list, this.panel]),
         this.notice,
         this.typing,
-        el("div", { class: "hfx-chat-compose" }, [
-          this.mentions.root,
-          this.commands.root,
-          // Only rooms that take images (not group chats yet)
-          this.source.sendImage
-            ? attachButton((file) => this.uploadImage(file))
-            : null,
-          this.input,
-        ]),
+        compose,
       ]
     );
 
@@ -267,6 +271,7 @@ export abstract class RoomChatWindow {
       this.stopOwnTyping();
       this.mentions.close();
       this.commands.close();
+      this.emoji.close();
     }
     this.onMinimizedChange(minimized);
     if (!minimized) this.scrollToBottom();
@@ -276,6 +281,7 @@ export abstract class RoomChatWindow {
   destroy(): void {
     this.stopOwnTyping();
     clearTimeout(this.noticeTimer);
+    this.emoji.close();
     this.root.remove();
   }
 
@@ -490,11 +496,21 @@ export abstract class RoomChatWindow {
       message.uid !== me.uid &&
       !message.html &&
       mentionsUser(message.text, me, this.origin);
+    // Reply mentions the sender; not on your own messages or Stanley's
+    const sender = this.source.users.get(message.uid);
+    const reply =
+      sender && message.uid !== me?.uid && message.uid !== HELPBOT_UID
+        ? {
+            username: sender.username,
+            onClick: () => this.insertMention(sender.username),
+          }
+        : undefined;
     return createMessageLine(
       message,
       this.origin,
       { "data-key": message.key },
-      !!mention
+      !!mention,
+      reply
     );
   }
 
@@ -587,9 +603,8 @@ export abstract class RoomChatWindow {
 
   /** HF's mention syntax is @username@. */
   private insertMention(username: string): void {
-    const value = this.input.value;
-    this.input.value = `${value}${value.trim() ? " " : ""}@${username}@ `;
-    this.input.focus();
+    appendMention(this.input, username);
+    this.resizeInput();
   }
 
   private async send(): Promise<void> {

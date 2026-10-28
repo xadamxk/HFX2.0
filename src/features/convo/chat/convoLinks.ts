@@ -61,6 +61,7 @@ export function pageUserHint(
 ): ChatUser | undefined {
   let username = "";
   let avatar = "";
+  let group = 0;
   for (const link of Array.from(
     doc.querySelectorAll<HTMLAnchorElement>('a[href*="member.php"]')
   )) {
@@ -72,17 +73,23 @@ export function pageUserHint(
     }
     if (
       url.searchParams.get("action") !== "profile" ||
-      Number(url.searchParams.get("uid")) !== uid
+      Number(url.searchParams.get("uid")) !== uid ||
+      // "Profile of <name>" in a profile page's breadcrumb isn't the name
+      link.closest(".breadcrumb")
     ) {
       continue;
     }
-    if (!username) username = link.textContent?.trim() ?? "";
+    if (!username) {
+      username = link.textContent?.trim() ?? "";
+      const styled = link.querySelector('span[class^="group"]');
+      group = Number(styled?.className.match(/^group(\d+)/)?.[1] ?? 0);
+    }
     const img = link.querySelector("img");
     if (!avatar && img) avatar = sitePath(img.src, origin);
     if (username && avatar) break;
   }
   if (!username) return undefined;
-  return { uid, username, avatar, lastActive: 0 };
+  return { uid, username, avatar, lastActive: 0, ...(group ? { group } : {}) };
 }
 
 /** An HF image URL as the path Convo uses for avatars ("uploads/avatars/…"). */

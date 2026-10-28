@@ -89,6 +89,17 @@ describe("pageUserHint", () => {
       username: "Charlie Sheen",
       avatar: "uploads/avatars/avatar_123.png?dateline=1",
       lastActive: 0,
+      group: 2,
+    });
+  });
+
+  it("skips a profile page's breadcrumb", () => {
+    document.body.innerHTML = `
+      <div class="breadcrumb"><a href="member.php?action=profile&amp;uid=4606941">Profile of Klonopin</a></div>
+      <a href="member.php?action=profile&amp;uid=4606941"><span class="group50">Klonopin</span></a>`;
+    expect(pageUserHint(4606941, HF)).toMatchObject({
+      username: "Klonopin",
+      group: 50,
     });
   });
 

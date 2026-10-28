@@ -21,7 +21,9 @@ import { GLOBE_ICON, GlobalChatWindow } from "./GlobalChatWindow";
 import { GLOBAL_PARTY } from "./GlobalRoomClient";
 import { GROUP_ICON, GroupChatWindow } from "./GroupChatWindow";
 import type { GroupInfo } from "./groupList";
-import { fetchConvoParty } from "./convoLinks";
+import { fetchConvoParty, followLink } from "./convoLinks";
+import { loadDrafts, saveDrafts } from "./drafts";
+import { isNearBottom, UnreadMarker } from "./unreadMarker";
 import {
   acceptImages,
   attachButton,
@@ -143,6 +145,8 @@ export interface ChatDockOptions {
     minimized: boolean;
     onClose: () => void;
     onChange: () => void;
+    /** A name clicked in the room: open a DM with them. */
+    openChat: (uid: number, user?: ChatUser) => void;
   }) => GlobalChatWindow;
   state: DockState;
   saveState: (state: DockState) => void;
@@ -179,6 +183,8 @@ interface ChatWindow {
   input: HTMLTextAreaElement;
   /** Message lines by mid. */
   rendered: Map<number, HTMLElement>;
+  /** The "New messages" line and jump button. */
+  unread: UnreadMarker;
   /** The newest sender group, which the next message may join. */
   lastGroup: MessageGroup | null;
   pending: PendingSend[];
@@ -232,6 +238,8 @@ export class ChatDock {
   private readonly windows = new Map<number, ChatWindow>();
   /** Chat ids found for users' convo links on this page: uid → party. */
   private readonly partyByUid = new Map<number, number>();
+  /** Unsent text from the last page in this tab, by chat (see drafts.ts). */
+  private readonly drafts = loadDrafts();
   private readonly client: ConvoClient;
   private readonly origin: string;
   private state: DockState;
@@ -292,10 +300,27 @@ export class ChatDock {
     }, 60000);
   }
 
-  /** The page is being left (maybe into the back/forward cache): close the sockets. */
+  /**
+   * The page is being left (maybe into the back/forward cache): keep unsent
+   * text for the next page and close the sockets.
+   */
   suspend(): void {
+    this.saveDrafts();
     this.client.disconnect();
     this.global?.suspend();
+  }
+
+  /** Every open window's unsent text, replacing what was kept before. */
+  private saveDrafts(): void {
+    this.drafts.clear();
+    this.windows.forEach((win, partyId) =>
+      this.drafts.set(`dm:${partyId}`, win.input.value)
+    );
+    this.groupWindows.forEach((win, gid) =>
+      this.drafts.set(`group:${gid}`, win.draft)
+    );
+    if (this.global) this.drafts.set("global", this.global.draft);
+    saveDrafts(this.drafts);
   }
 
   /** The page came back from the back/forward cache: reconnect and catch up. */
@@ -336,7 +361,7 @@ export class ChatDock {
       }
       const win = this.windows.get(partyId);
       if (!win) return;
-      this.renderMessages(win);
+      this.renderMessages(win, live);
       if (live && this.isActive(win)) client.markRead(partyId);
     });
     client.on("groups", () => {
@@ -977,6 +1002,7 @@ export class ChatDock {
       this.windows.set(partyId, win);
       // The newest window sits next to the bubbles
       this.heads.after(win.root);
+      this.autoGrow(win.input);
       this.closeWindowsThatDontFit();
     } else if (!restore) {
       this.setMinimized(win, false);
@@ -1018,6 +1044,27 @@ export class ChatDock {
     return true;
   }
 
+  /**
+   * A name clicked in a group or the global chat: the DM with them in the
+   * dock, or convo.php's page for them when there's no chat yet (or the dock
+   * isn't connected), as their Convo button does.
+   */
+  private openChatFromRoom(uid: number, user?: ChatUser): void {
+    const fallback = () =>
+      followLink(
+        el("a", {
+          href: `${this.origin}/convo.php?action=user&uid=${uid}`,
+          target: "_blank",
+        }),
+        window
+      );
+    this.openChatWithUser(uid, user)
+      .then((opened) => {
+        if (!opened) fallback();
+      })
+      .catch(fallback);
+  }
+
   /** Open the global room's window; its socket connects while it's expanded. */
   private openGlobal({
     focus = false,
@@ -1031,8 +1078,10 @@ export class ChatDock {
         minimized,
         onClose: () => this.closeGlobal(),
         onChange: () => this.save(),
+        openChat: (uid, user) => this.openChatFromRoom(uid, user),
       });
       this.global = global;
+      global.draft = this.drafts.get("global") ?? "";
       this.heads.after(global.root);
       this.closeWindowsThatDontFit();
     } else if (!restore) {
@@ -1088,7 +1137,9 @@ export class ChatDock {
         onClose: () => this.closeGroup(gid),
         onChange: () => this.save(),
         onLeft: () => this.leftGroup(gid),
+        openChat: (uid, user) => this.openChatFromRoom(uid, user),
       });
+      win.draft = this.drafts.get(`group:${gid}`) ?? "";
       this.groupWindows.set(gid, win);
       this.heads.after(win.root);
       this.closeWindowsThatDontFit();
@@ -1213,6 +1264,7 @@ export class ChatDock {
       "aria-label": "Message",
       maxlength: 5000,
     });
+    input.value = this.drafts.get(`dm:${partyId}`) ?? "";
     const commands = new CommandPicker(
       input,
       () => commandsFor("dm"),
@@ -1256,6 +1308,7 @@ export class ChatDock {
       typing,
       input,
       rendered: new Map(),
+      unread: new UnreadMarker(list),
       lastGroup: null,
       pending: [],
       loaded: false,
@@ -1274,11 +1327,19 @@ export class ChatDock {
     });
     root.addEventListener("focusin", () => {
       this.lastActive = partyId;
+      win.unread.looked();
       this.markReadIfActive(win);
     });
     list.addEventListener("pointerdown", () => {
       this.lastActive = partyId;
+      win.unread.looked();
       if (document.hasFocus()) this.markRead(win);
+    });
+    // Esc minimizes (the / list uses it first to close)
+    root.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      this.setMinimized(win, true);
     });
     older.addEventListener("click", () => this.loadOlder(win));
     list.addEventListener("scroll", () => {
@@ -1391,7 +1452,7 @@ export class ChatDock {
    * sender group or start one; when older ones arrive (Load older, or a gap
    * filled after reconnecting), everything is redrawn and the view kept.
    */
-  private renderMessages(win: ChatWindow): void {
+  private renderMessages(win: ChatWindow, live = false): void {
     const all = this.client.getMessages(win.partyId);
     // Leave out flips and jackpot plays hidden with /flip hide or /jackpot hide
     const storage = readConvoStorage();
@@ -1400,8 +1461,7 @@ export class ChatDock {
       (message) => !hiddenBySettings(message, me, storage)
     );
     const list = win.list;
-    const nearBottom =
-      list.scrollHeight - list.scrollTop - list.clientHeight < 60;
+    const nearBottom = isNearBottom(list);
     const previousHeight = list.scrollHeight;
     const firstBatch = win.rendered.size === 0;
     const lastRendered = Math.max(...Array.from(win.rendered.keys()), 0);
@@ -1412,8 +1472,21 @@ export class ChatDock {
       win.rendered.clear();
       win.lastGroup = null;
       messages.forEach((message) => this.appendLine(win, message));
+      win.unread.refresh((key) => win.rendered.get(Number(key)));
     } else {
       fresh.forEach((message) => this.appendLine(win, message));
+      // New messages from them, not history
+      if (live && !firstBatch) {
+        for (const message of fresh) {
+          if (message.uid === me || message.quiet) continue;
+          win.unread.arrived(
+            String(message.mid),
+            win.rendered.get(message.mid)!,
+            this.isActive(win),
+            nearBottom
+          );
+        }
+      }
     }
     if (all.length) this.setListNotice(win, "");
 
@@ -1498,6 +1571,7 @@ export class ChatDock {
     if (!text) return;
     if (retryText === undefined && (await this.runCommand(win, text))) return;
     if (!this.canSend(win, "message")) return;
+    win.unread.clear();
     if (retryText === undefined) {
       win.input.value = "";
       this.autoGrow(win.input);

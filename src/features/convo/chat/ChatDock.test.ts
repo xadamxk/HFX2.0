@@ -97,7 +97,7 @@ const mount = async (
     side: options.side,
     layout: options.layout,
     createGlobal: options.global
-      ? ({ minimized, onClose, onChange }) => {
+      ? ({ minimized, onClose, onChange, openChat }) => {
           const socket = new FakeConvoSocket();
           globalSockets.push(socket);
           return new GlobalChatWindow({
@@ -106,6 +106,7 @@ const mount = async (
             typingIndicators: true,
             onClose,
             onChange,
+            openChat,
             origin: "https://hackforums.net",
             createClient: () =>
               new GlobalRoomClient({
@@ -496,6 +497,125 @@ describe("ChatDock commands", () => {
         (line) => line.textContent
       )
     ).toEqual(["/flip 5", "after"]);
+  });
+});
+
+describe("ChatDock drafts, unread line and keys", () => {
+  const win = () =>
+    document.querySelector<HTMLElement>(
+      `.hfx-chat-window[data-party="${PARTY}"]`
+    )!;
+  const input = () => win().querySelector("textarea")!;
+
+  afterEach(() => sessionStorage.clear());
+
+  it("keeps unsent text for the next page in this tab", async () => {
+    sessionStorage.setItem(
+      "hfx-chat-drafts",
+      JSON.stringify({ [`dm:${PARTY}`]: "half a thought" })
+    );
+    await mount();
+    expect(input().value).toBe("half a thought");
+
+    input().value = "something else";
+    dock!.suspend();
+    expect(JSON.parse(sessionStorage.getItem("hfx-chat-drafts")!)).toEqual({
+      [`dm:${PARTY}`]: "something else",
+    });
+
+    // Sent or emptied: nothing is kept
+    input().value = "  ";
+    dock!.suspend();
+    expect(sessionStorage.getItem("hfx-chat-drafts")).toBeNull();
+  });
+
+  it("marks where new messages start while you weren't looking", async () => {
+    await mount();
+    client.add({ text: "seen" });
+    expect(win().querySelector(".hfx-chat-unread-divider")).toBeNull();
+    client.add({ text: "missed", dateline: T + 3600 });
+    const divider = win().querySelector(".hfx-chat-unread-divider")!;
+    expect(divider.textContent).toBe("New messages");
+    // Above the group the missed message starts
+    expect(divider.nextElementSibling!.textContent).toContain("missed");
+
+    // Sending clears it
+    input().value = "reply";
+    input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await flush();
+    expect(win().querySelector(".hfx-chat-unread-divider")).toBeNull();
+  });
+
+  it("minimizes the window on Esc", async () => {
+    await mount();
+    input().dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Escape",
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    expect(win().classList).toContain("hfx-chat-minimized");
+  });
+
+  describe("names in the global chat", () => {
+    let open: jest.SpyInstance;
+    beforeEach(() => {
+      open = jest.spyOn(window, "open").mockReturnValue(null);
+    });
+    afterEach(() => open.mockRestore());
+
+    const joinGlobal = async (sender: { uid: number; username: string }) => {
+      await mount({ open: false, global: true });
+      client.fire("conversations");
+      document.querySelector<HTMLElement>(".hfx-chat-head-global")!.click();
+      const socket = globalSockets[0];
+      socket.fire("convo_ready", { user: ME, bootId: "b" });
+      await flush();
+      socket.fire("convo_receivemessage", {
+        uid: sender.uid,
+        mid: 1,
+        party_id: -1,
+        message: "hello room",
+        dateline: T,
+        bootId: "b",
+        users: { [sender.uid]: { ...sender, avatar: "" } },
+      });
+      return document.querySelector<HTMLElement>(
+        '.hfx-chat-window[data-party="-1"] .hfx-gc-name'
+      )!;
+    };
+
+    it("open your chat with them, and Shift+click mentions them", async () => {
+      const name = await joinGlobal(OTHER);
+      expect(name.title).toBe("Message Charlie (Shift+click to mention)");
+      name.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, shiftKey: true })
+      );
+      expect(
+        document.querySelector<HTMLTextAreaElement>(
+          '.hfx-chat-window[data-party="-1"] textarea'
+        )!.value
+      ).toBe("@Charlie@ ");
+      expect(win()).toBeNull();
+
+      name.click();
+      await flush();
+      expect(win()).not.toBeNull();
+      expect(open).not.toHaveBeenCalled();
+    });
+
+    it("go to convo.php for someone you have no chat with", async () => {
+      const name = await joinGlobal({ uid: 999, username: "Stranger" });
+      name.click();
+      await flush();
+      await flush();
+      expect(open).toHaveBeenCalledWith(
+        "https://hackforums.net/convo.php?action=user&uid=999",
+        "_blank",
+        "noopener"
+      );
+    });
   });
 });
 

@@ -580,6 +580,39 @@ export const CHAT_DOCK_CSS = `
   gap: 2px;
   overscroll-behavior: contain;
 }
+/* Above the first message that came while you weren't looking */
+.hfx-chat-unread-divider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+  color: #e0868a;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.hfx-chat-unread-divider::before,
+.hfx-chat-unread-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid #c4565c;
+}
+/* Shown when messages come while you're scrolled up; stays at the bottom of the view */
+.hfx-chat-jump {
+  position: sticky;
+  bottom: 0;
+  align-self: center;
+  flex: none;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--hfx-chat-accent);
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.hfx-chat-jump[hidden] { display: none; }
 .hfx-chat-older {
   align-self: center;
   margin: 2px 0 8px;

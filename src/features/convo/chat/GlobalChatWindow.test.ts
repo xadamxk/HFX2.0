@@ -266,6 +266,45 @@ describe("GlobalChatWindow", () => {
     );
   });
 
+  it("minimizes on Esc, after closing the @ list first", async () => {
+    await open();
+    socket.fire("convo_group_count", { count: 1, users: { [NOVA.uid]: NOVA } });
+    input().focus();
+    input().value = "@";
+    input().setSelectionRange(1, 1);
+    input().dispatchEvent(new Event("input"));
+    const esc = () =>
+      input().dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "Escape",
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    esc();
+    expect(win.minimized).toBe(false);
+    esc();
+    expect(win.minimized).toBe(true);
+    expect(onChange).toHaveBeenCalled();
+  });
+
+  it("shows and replaces its unsent text as a draft", async () => {
+    await open();
+    win.draft = "kept from the last page";
+    expect(input().value).toBe("kept from the last page");
+    input().value = "changed";
+    expect(win.draft).toBe("changed");
+  });
+
+  it("marks new messages that came while you weren't looking", async () => {
+    await open();
+    socket.fire("convo_receivemessage_bulk", [room({ mid: 1 })]);
+    socket.fire("convo_receivemessage", room({ mid: 2, message: "missed" }));
+    const divider = win.root.querySelector(".hfx-chat-unread-divider")!;
+    expect(divider).not.toBeNull();
+    expect(divider.nextElementSibling!.textContent).toBe("missed");
+  });
+
   describe("commands", () => {
     const enter = async (text: string) => {
       input().value = text;

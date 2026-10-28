@@ -186,10 +186,11 @@ class ChatBubbles extends Feature {
           : undefined,
       createGlobal:
         settings.globalChat !== false
-          ? ({ minimized, onClose, onChange }) =>
+          ? ({ minimized, onClose, onChange, openChat }) =>
               new GlobalChatWindow({
                 postKey,
                 minimized,
+                openChat,
                 typingIndicators: settings.typingIndicators !== false,
                 sound,
                 hideHelpbot: settings.hideStanley === true,

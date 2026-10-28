@@ -1,6 +1,6 @@
 import { el, ElChild } from "../../../core/Dom";
 import type { ChatUser, CommandRequest, ConvoStatus } from "./ConvoClient";
-import { wasNotDelivered } from "./ConvoClient";
+import { HELPBOT_UID, wasNotDelivered } from "./ConvoClient";
 import { CommandPicker } from "./commandPicker";
 import { commandsFor, parseCommand, runCommand, showReply } from "./commands";
 import { hiddenBySettings, readConvoStorage } from "./convoStorage";
@@ -20,6 +20,8 @@ import {
   MessageGroup,
   userLabel,
 } from "./roomLayout";
+
+import { isNearBottom, UnreadMarker } from "./unreadMarker";
 
 export { groupTime } from "./roomLayout";
 
@@ -62,6 +64,11 @@ export interface RoomWindowOptions {
   onClose: () => void;
   /** The window was minimized or expanded. */
   onChange: () => void;
+  /**
+   * Open a DM with someone whose name was clicked. Leave out to make clicking
+   * a name mention them instead (Shift+click always mentions).
+   */
+  openChat?: (uid: number, user?: ChatUser) => void;
   origin?: string;
 }
 
@@ -105,6 +112,7 @@ export abstract class RoomChatWindow {
   private readonly typing: HTMLElement;
   private readonly mentions: MentionPicker;
   private readonly commands: CommandPicker;
+  private readonly unread: UnreadMarker;
   private readonly lines = new Map<string, HTMLElement>();
   private lastGroup: MessageGroup | null = null;
   private pending: { requestId: string; node: HTMLElement }[] = [];
@@ -160,6 +168,7 @@ export abstract class RoomChatWindow {
         this.pendingBox,
       ]
     );
+    this.unread = new UnreadMarker(this.list);
     this.panel = el("div", { class: "hfx-gc-online", hidden: true });
     this.notice = el("div", { class: "hfx-chat-notice", hidden: true });
     this.typing = el("div", {
@@ -221,6 +230,15 @@ export abstract class RoomChatWindow {
     );
 
     acceptImages(this.root, (file) => this.uploadImage(file));
+    // Looking at the window: the next message missed moves the "New messages" line
+    this.root.addEventListener("focusin", () => this.unread.looked());
+    this.list.addEventListener("pointerdown", () => this.unread.looked());
+    // Esc minimizes (the @ and / lists use it first to close)
+    this.root.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      event.preventDefault();
+      this.setMinimized(true);
+    });
     this.bindSource();
     // What the source already holds, e.g. a group's messages loaded or
     // received before this window opened
@@ -229,6 +247,16 @@ export abstract class RoomChatWindow {
 
   focus(): void {
     if (!this.minimized) this.input.focus();
+  }
+
+  /** Unsent text, which the dock keeps across page changes. */
+  get draft(): string {
+    return this.input.value;
+  }
+
+  set draft(text: string) {
+    this.input.value = text;
+    this.resizeInput();
   }
 
   setMinimized(minimized: boolean): void {
@@ -316,7 +344,10 @@ export abstract class RoomChatWindow {
       this.status.textContent = this.minimized ? "" : this.statusText(status);
     });
     source.on("messages", (added: RoomMessage[], reset: boolean) => {
-      if (reset) this.clearMessages();
+      if (reset) {
+        this.clearMessages();
+        this.unread.clear();
+      }
       this.addMessages(added);
     });
     source.on("typing", () => {
@@ -356,19 +387,27 @@ export abstract class RoomChatWindow {
         .filter(visible)
         .forEach((message) => this.appendLine(message));
       this.trimLines();
+      this.unread.refresh((key) => this.lines.get(key));
       this.list.scrollTop =
         previousTop + (this.list.scrollHeight - previousHeight);
       return;
     }
 
     const firstBatch = this.lines.size === 0;
-    const nearBottom =
-      this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight <
-      60;
+    const nearBottom = isNearBottom(this.list);
     for (const message of fresh) {
       const line = this.appendLine(message);
       if (!existing)
         this.onNewMessage(message, line.classList.contains("hfx-gc-mention"));
+      // Not what's there when the window opens, or history: messages that came
+      if (
+        !existing &&
+        !firstBatch &&
+        !message.quiet &&
+        message.uid !== this.source.me?.uid
+      ) {
+        this.unread.arrived(message.key, line, this.isActive(), nearBottom);
+      }
       // The echo of our own send replaces its pending line
       if (message.requestId) {
         this.pending = this.pending.filter((pending) => {
@@ -379,6 +418,7 @@ export abstract class RoomChatWindow {
       }
     }
     this.trimLines();
+    this.unread.refresh((key) => this.lines.get(key));
     if (
       firstBatch ||
       nearBottom ||
@@ -422,10 +462,16 @@ export abstract class RoomChatWindow {
     const username = user?.username ?? `User ${message.uid}`;
     const nameButton = el(
       "button",
-      { type: "button", class: "hfx-gc-name", title: `Mention ${username}` },
+      {
+        type: "button",
+        class: "hfx-gc-name",
+        title: this.nameTitle(message.uid, username),
+      },
       userLabel(user, message.uid)
     );
-    nameButton.addEventListener("click", () => this.insertMention(username));
+    nameButton.addEventListener("click", (event) =>
+      this.onNameClick(event, message.uid, username)
+    );
     const group = createMessageGroup(
       message,
       user,
@@ -485,7 +531,7 @@ export abstract class RoomChatWindow {
           {
             type: "button",
             class: "hfx-gc-user",
-            title: `Mention ${user.username}`,
+            title: this.nameTitle(user.uid, user.username),
           },
           [
             el("img", { src: avatarUrl(user.avatar, this.origin), alt: "" }),
@@ -496,9 +542,9 @@ export abstract class RoomChatWindow {
             ),
           ]
         );
-        row.addEventListener("click", () => {
+        row.addEventListener("click", (event) => {
           this.togglePanel(false);
-          this.insertMention(user.username);
+          this.onNameClick(event, user.uid, user.username);
         });
         rows.push(row);
       }
@@ -514,6 +560,30 @@ export abstract class RoomChatWindow {
   }
 
   protected onPanelToggle(_open: boolean): void {}
+
+  /** Whether clicking this user's name opens a DM with them (not yourself or Stanley). */
+  private messages(uid: number): boolean {
+    return (
+      !!this.options.openChat &&
+      uid !== this.source.me?.uid &&
+      uid !== HELPBOT_UID
+    );
+  }
+
+  private nameTitle(uid: number, username: string): string {
+    return this.messages(uid)
+      ? `Message ${username} (Shift+click to mention)`
+      : `Mention ${username}`;
+  }
+
+  /** A name clicked: open a DM with them, or mention them (Shift+click, as on convo.php). */
+  private onNameClick(event: MouseEvent, uid: number, username: string): void {
+    if (event.shiftKey || !this.messages(uid)) {
+      this.insertMention(username);
+      return;
+    }
+    this.options.openChat!(uid, this.source.users.get(uid));
+  }
 
   /** HF's mention syntax is @username@. */
   private insertMention(username: string): void {
@@ -554,6 +624,7 @@ export abstract class RoomChatWindow {
     this.input.value = "";
     this.input.style.height = "";
     this.stopOwnTyping();
+    this.unread.clear();
 
     await this.deliver(
       `Sending: ${text}`,
@@ -628,9 +699,13 @@ export abstract class RoomChatWindow {
   }
 
   private onInputChange(): void {
+    this.resizeInput();
+    this.onOwnTyping();
+  }
+
+  private resizeInput(): void {
     this.input.style.height = "";
     this.input.style.height = `${Math.min(this.input.scrollHeight, 110)}px`;
-    this.onOwnTyping();
   }
 
   private onOwnTyping(): void {

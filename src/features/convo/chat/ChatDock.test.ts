@@ -544,7 +544,14 @@ describe("ChatDock drafts, unread line and keys", () => {
     // Above the group the missed message starts
     expect(divider.nextElementSibling!.textContent).toContain("missed");
 
-    // Sending clears it
+    // Focusing the window clears it
+    input().focus();
+    expect(win().querySelector(".hfx-chat-unread-divider")).toBeNull();
+    input().blur();
+    client.add({ text: "missed again", dateline: T + 7200 });
+    expect(win().querySelector(".hfx-chat-unread-divider")).not.toBeNull();
+
+    // So does sending
     input().value = "reply";
     input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
     await flush();

@@ -2,8 +2,8 @@ import { el } from "../../../core/Dom";
 
 /**
  * "New messages" in a chat window: a line above the first message that came
- * while you weren't looking at the window, and a button to jump down when
- * messages come while you're scrolled up.
+ * while you weren't looking at the window, until you focus or click it, and a
+ * button to jump down when messages come while you're scrolled up.
  */
 
 const NEAR_BOTTOM = 60;
@@ -14,10 +14,8 @@ export const isNearBottom = (list: HTMLElement): boolean =>
 export class UnreadMarker {
   readonly divider: HTMLElement;
   readonly jump: HTMLButtonElement;
-  /** The message the line sits above. */
+  /** The message the line sits above, while it's shown. */
   private anchorKey: string | null = null;
-  /** You've looked at the window since the line was placed. */
-  private seen = true;
 
   /** `list`: the scrolling message list, whose lines are inserted before its last child. */
   constructor(private readonly list: HTMLElement) {
@@ -46,17 +44,17 @@ export class UnreadMarker {
    * looking at the window; `atBottom`: the list was at the bottom before it.
    */
   arrived(key: string, line: HTMLElement, looking: boolean, atBottom: boolean) {
-    if (!looking && this.seen) {
+    if (!looking && this.anchorKey === null) {
       this.anchorKey = key;
-      this.seen = false;
       this.place(line);
     }
     if (!atBottom) this.jump.hidden = false;
   }
 
-  /** You looked at the window: the next message you miss moves the line. */
+  /** You focused or clicked the window: the new messages are seen, so the line goes. */
   looked(): void {
-    this.seen = true;
+    this.anchorKey = null;
+    this.divider.remove();
   }
 
   /** Put the line back after the messages were redrawn. */
@@ -64,11 +62,9 @@ export class UnreadMarker {
     this.place(this.anchorKey ? lineFor(this.anchorKey) : undefined);
   }
 
-  /** You sent something, or the messages were cleared: drop the line. */
+  /** You sent something, or the messages were cleared: drop the line and the jump button. */
   clear(): void {
-    this.anchorKey = null;
-    this.seen = true;
-    this.divider.remove();
+    this.looked();
     this.jump.hidden = true;
   }
 

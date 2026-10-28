@@ -26,7 +26,7 @@ describe("UnreadMarker", () => {
     marker = new UnreadMarker(list);
   });
 
-  it("puts the line above the first message missed, until you look and miss another", () => {
+  it("puts the line above the first message missed, until you look", () => {
     const a = group("a1", "a2");
     marker.arrived("a2", a.lines[1], false, true);
     // Mid-group: right above the message
@@ -37,7 +37,9 @@ describe("UnreadMarker", () => {
     // Still above the first one missed
     expect(a.lines[1].previousElementSibling).toBe(marker.divider);
 
+    // Focusing the window takes it away; the next one missed brings it back
     marker.looked();
+    expect(marker.divider.isConnected).toBe(false);
     marker.arrived("b1", b.lines[0], false, true);
     // Starting a group: above the group
     expect(b.root.previousElementSibling).toBe(marker.divider);

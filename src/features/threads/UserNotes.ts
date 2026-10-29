@@ -25,8 +25,8 @@ interface NoteTarget {
 const CSS = `
 .hfx-user-note-toggle { margin-left: 5px; cursor: pointer; color: #999; font-size: 12px; text-decoration: none; }
 .hfx-user-note-toggle:hover, .hfx-user-note-toggle.has-note { color: #ffd666; }
-.hfx-user-note { margin: 4px auto 2px; max-width: 144px; text-align: left; }
-.hfx-user-note--profile { margin: 4px 0 0; max-width: 100%; }
+.hfx-user-note { margin: 4px 0 2px; text-align: left; }
+.hfx-user-note--profile { margin: 4px 0 0; }
 .hfx-user-note-text { padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 214, 102, 0.35);
   background: rgba(255, 214, 102, 0.1); color: #ffd666; font-size: 11px; line-height: 1.4;
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: pointer; }

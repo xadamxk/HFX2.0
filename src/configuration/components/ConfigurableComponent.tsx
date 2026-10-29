@@ -3,6 +3,7 @@ import { Configurable } from '../../core/Configurable';
 import { Feature } from '../../core/Feature';
 import { Section } from '../../core/Section';
 import { Dropdown } from '../configurables/Dropdown';
+import { RadioGroup } from '../configurables/RadioGroup';
 import { Stepper } from '../configurables/Stepper';
 import { useDebouncedSetting } from './useDebouncedSetting';
 
@@ -61,6 +62,33 @@ const DropdownField: React.FC<FieldProps<Dropdown>> = ({ configurable, feature, 
     </select>
     <p className="configurable-description">{configurable.description}</p>
   </div>
+);
+
+const RadioField: React.FC<FieldProps<RadioGroup>> = ({ configurable, feature, configurableId, currentValue, onChange }) => (
+  <fieldset className="configurable-item configurable-radio" id={configurableId}>
+    <legend>{configurable.label}</legend>
+    <div className="radio-options">
+      {configurable.options.map((option) => (
+        <label
+          key={option.value}
+          className={`radio-option${currentValue === option.value ? ' radio-option--checked' : ''}`}
+        >
+          <input
+            type="radio"
+            name={configurableId}
+            value={option.value}
+            data-feature={feature.class}
+            data-config={configurable.id}
+            checked={currentValue === option.value}
+            disabled={configurable.readonly}
+            onChange={() => onChange?.(feature.class, configurable.id, option.value)}
+          />
+          <span>{option.label}</span>
+        </label>
+      ))}
+    </div>
+    <p className="configurable-description">{configurable.description}</p>
+  </fieldset>
 );
 
 const StepperField: React.FC<FieldProps<Stepper>> = ({ configurable, feature, configurableId, currentValue, onChange }) => {
@@ -155,6 +183,8 @@ export const ConfigurableComponent: React.FC<ConfigurableComponentProps> = ({
       return <CheckboxField configurable={configurable} {...fieldProps} />;
     case 'dropdown':
       return <DropdownField configurable={configurable as Dropdown} {...fieldProps} />;
+    case 'radio':
+      return <RadioField configurable={configurable as RadioGroup} {...fieldProps} />;
     case 'number':
       return <StepperField configurable={configurable as Stepper} {...fieldProps} />;
     default:

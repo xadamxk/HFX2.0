@@ -16,7 +16,8 @@ export default {
 Mustache.parse(template);
 
 export function generate() {
-  const features = sync("./src/features/**/*.ts")
+  // Features sit directly in a section folder; deeper folders hold their helpers
+  const features = sync("./src/features/*/*.ts")
     // Tests live next to features but aren't features
     .filter((feature) => !feature.endsWith(".test.ts"))
     .map((feature) => {

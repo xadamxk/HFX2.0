@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Feature } from "../../core/Feature";
 import { Section } from "../../core/Section";
 import { ConfigurableFactory } from "./ConfigurableFactory";
+import { featurePanels } from "./featurePanels";
 import { usePopup } from "./contexts/PopupContext";
 import { RocketLaunchIcon, TrashIcon } from "@heroicons/react/24/outline";
 
@@ -36,6 +37,7 @@ const FeatureComponentBase: React.FC<FeatureComponentProps> = ({
   const hasConfigurables = (feature.configurables?.length ?? 0) > 0;
   const storageItems = feature.storageItems ?? [];
   const hasStorageItems = storageItems.length > 0;
+  const FeaturePanel = featurePanels[feature.class];
   // Storage item descriptions are optional, so identify them by id
   const storageItemIds = storageItems.map((storageItem) => storageItem.id);
 
@@ -100,7 +102,7 @@ const FeatureComponentBase: React.FC<FeatureComponentProps> = ({
       </div>
 
       {/* Show configurables with smooth collapse/expand animation */}
-      {(hasConfigurables || hasStorageItems) && (
+      {(hasConfigurables || hasStorageItems || FeaturePanel) && (
         <div
           className={`feature-configurables ${
             isEnabled ? "expanded" : "collapsed"
@@ -117,6 +119,8 @@ const FeatureComponentBase: React.FC<FeatureComponentProps> = ({
               onChange={onConfigurableChange}
             />
           ))}
+
+          {FeaturePanel && isEnabled && <FeaturePanel />}
 
           {hasStorageItems && (
             <div className="feature-storage-reset">

@@ -1,6 +1,7 @@
 import { StorageSyncService } from "./StorageSyncService";
 import { StorageService } from "./StorageService";
 import { MemoryStorage } from "../test-utils/MemoryStorage";
+import { userNotesMergeStrategy } from "./UserNotesStore";
 
 type Listener = (
   changes: { [key: string]: chrome.storage.StorageChange },
@@ -18,7 +19,9 @@ describe("StorageSyncService", () => {
     (chrome.storage as any).onChanged = { addListener: jest.fn() };
     local = new MemoryStorage();
     sync = new MemoryStorage();
-    service = new StorageSyncService(new StorageService(local, sync));
+    service = new StorageSyncService(new StorageService(local, sync), [
+      userNotesMergeStrategy,
+    ]);
     service.listen();
     const calls = (chrome.storage.onChanged.addListener as jest.Mock).mock
       .calls;
@@ -221,6 +224,135 @@ describe("StorageSyncService", () => {
       expect("A:storage" in sync.items).toBe(false);
       expect(local.items.B).toEqual({ enabled: true });
       expect(local.items["A:storage"]).toEqual({ storage_cache: "local" });
+    });
+
+    it("merges User Notes shards per uid instead of letting local win", async () => {
+      local.items = { "UserNotes:notes:1": { "1": { n: "local", t: 5 }, "17": { n: "old", t: 1 } } };
+      sync.items = {
+        "UserNotes:notes:1": { "17": { n: "other device", t: 2 } },
+        "UserNotes:notes:2": { "2": { n: "sync only", t: 3 } },
+      };
+
+      await service.reconcile();
+
+      const merged = { "1": { n: "local", t: 5 }, "17": { n: "other device", t: 2 } };
+      expect(local.items["UserNotes:notes:1"]).toEqual(merged);
+      expect(sync.items["UserNotes:notes:1"]).toEqual(merged);
+      expect(local.items["UserNotes:notes:2"]).toEqual({ "2": { n: "sync only", t: 3 } });
+    });
+  });
+
+  describe("User Notes", () => {
+    it("merges a local edit into sync without dropping another device's note", async () => {
+      local.items = { "UserNotes:notes:1": { "1": { n: "mine", t: 5 } } };
+      sync.items = { "UserNotes:notes:1": { "17": { n: "theirs", t: 4 } } };
+
+      listener({ "UserNotes:notes:1": { newValue: local.items["UserNotes:notes:1"] } }, "local");
+      await flush();
+
+      const merged = { "1": { n: "mine", t: 5 }, "17": { n: "theirs", t: 4 } };
+      expect(sync.items["UserNotes:notes:1"]).toEqual(merged);
+      expect(local.items["UserNotes:notes:1"]).toEqual(merged);
+    });
+
+    it("merges another device's change into local and pushes back notes sync lacks", async () => {
+      local.items = { "UserNotes:notes:1": { "1": { n: "mine", t: 5 } } };
+      sync.items = { "UserNotes:notes:1": { "17": { n: "theirs", t: 6 } } };
+
+      listener(
+        {
+          "UserNotes:notes:1": { newValue: sync.items["UserNotes:notes:1"] },
+          _syncIgnore: { newValue: { origin: "another-device", rand: 1 } },
+        },
+        "sync"
+      );
+      await flush();
+
+      const merged = { "1": { n: "mine", t: 5 }, "17": { n: "theirs", t: 6 } };
+      expect(local.items["UserNotes:notes:1"]).toEqual(merged);
+      expect(sync.items["UserNotes:notes:1"]).toEqual(merged);
+    });
+
+    it("propagates a deletion as a tombstone", async () => {
+      const deletedAt = Date.now();
+      local.items = { "UserNotes:notes:1": { "1": { n: "note", t: deletedAt - 10 } } };
+      sync.items = { "UserNotes:notes:1": { "1": { d: 1, t: deletedAt } } };
+
+      listener({ "UserNotes:notes:1": { newValue: sync.items["UserNotes:notes:1"] } }, "sync");
+      await flush();
+
+      expect(local.items["UserNotes:notes:1"]).toEqual({ "1": { d: 1, t: deletedAt } });
+    });
+
+    it("doesn't wipe notes when a shard is removed in one area", async () => {
+      local.items = { "UserNotes:notes:1": { "1": { n: "note", t: 5 } } };
+      sync.items = {};
+
+      listener({ "UserNotes:notes:1": { oldValue: { "1": { n: "note", t: 5 } } } }, "sync");
+      await flush();
+
+      expect(local.items["UserNotes:notes:1"]).toEqual({ "1": { n: "note", t: 5 } });
+      expect(sync.items["UserNotes:notes:1"]).toEqual({ "1": { n: "note", t: 5 } });
+    });
+
+    it("keeps a local save that a concurrent merge overwrote, from its queued change", async () => {
+      // The save wrote note 17, then a merge from another device replaced the
+      // shard without it before this change was flushed
+      local.items = { "UserNotes:notes:1": { "1": { n: "theirs", t: 6 } } };
+      sync.items = { "UserNotes:notes:1": { "1": { n: "theirs", t: 6 } } };
+
+      listener(
+        { "UserNotes:notes:1": { newValue: { "17": { n: "just saved", t: 7 } } } },
+        "local"
+      );
+      await flush();
+
+      const merged = { "1": { n: "theirs", t: 6 }, "17": { n: "just saved", t: 7 } };
+      expect(local.items["UserNotes:notes:1"]).toEqual(merged);
+      expect(sync.items["UserNotes:notes:1"]).toEqual(merged);
+    });
+
+    it("copies keys without a merge strategy as before", async () => {
+      service = new StorageSyncService(new StorageService(local, sync));
+      service.listen();
+      const calls = (chrome.storage.onChanged.addListener as jest.Mock).mock.calls;
+      const plainListener = calls[calls.length - 1][0];
+      local.items = {};
+      sync.items = { "UserNotes:notes:1": { "17": { n: "theirs", t: 4 } } };
+
+      plainListener({ "UserNotes:notes:1": { newValue: { "1": { n: "mine", t: 5 } } } }, "local");
+      await flush();
+
+      expect(sync.items["UserNotes:notes:1"]).toEqual({ "1": { n: "mine", t: 5 } });
+    });
+
+    it("leaves settings in the same batch on the usual path", async () => {
+      local.items = { "UserNotes:notes:1": { "1": { n: "note", t: 5 } } };
+      listener(
+        {
+          A: { newValue: { enabled: true } },
+          "UserNotes:notes:1": { newValue: local.items["UserNotes:notes:1"] },
+        },
+        "local"
+      );
+      await flush();
+
+      expect(sync.items.A).toEqual({ enabled: true });
+      expect(sync.items["UserNotes:notes:1"]).toEqual({ "1": { n: "note", t: 5 } });
+    });
+
+    it("writes nothing when both areas already match", async () => {
+      const shard = { "1": { n: "note", t: 5 } };
+      local.items = { "UserNotes:notes:1": shard };
+      sync.items = { "UserNotes:notes:1": shard };
+      const localSetAll = jest.spyOn(local, "setAll");
+      const syncSetAll = jest.spyOn(sync, "setAll");
+
+      listener({ "UserNotes:notes:1": { newValue: shard } }, "local");
+      await flush();
+
+      expect(localSetAll).not.toHaveBeenCalled();
+      expect(syncSetAll).not.toHaveBeenCalled();
     });
   });
 });

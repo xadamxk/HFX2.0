@@ -2,9 +2,12 @@ import { Logger } from "./core/Logger";
 import { SettingsService } from "./core/SettingsService";
 import { StorageSyncService } from "./core/StorageSyncService";
 import { StorageService } from "./core/StorageService";
+import { userNotesMergeStrategy } from "./core/UserNotesStore";
 
 const storageService = new StorageService();
-const syncService = new StorageSyncService(storageService);
+const syncService = new StorageSyncService(storageService, [
+  userNotesMergeStrategy,
+]);
 
 // MV3 service workers are stopped when idle and re-run this script when woken.
 // Listeners must be registered synchronously at the top level so they exist

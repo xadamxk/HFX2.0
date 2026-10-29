@@ -1,7 +1,23 @@
 import { StorageService } from "./StorageService";
 import { isQuotaError } from "./StorageAdapter";
 import { Logger } from "./Logger";
-import { isLocalOnlyKey, withoutStorageItems } from "./constants";
+import {
+  SYNC_QUOTA_BYTES_PER_ITEM,
+  getSyncItemSize,
+  isLocalOnlyKey,
+  withoutStorageItems,
+} from "./constants";
+
+/**
+ * How to merge a synced key's local and sync copies instead of letting one
+ * overwrite the other, for data several devices edit (e.g. User Notes).
+ * `merge` must be commutative and idempotent so every device converges.
+ */
+export interface SyncMergeStrategy<T = any> {
+  matches(key: string): boolean;
+  merge(a: T | undefined, b: T | undefined): T;
+  equals(a: T | undefined, b: T | undefined): boolean;
+}
 
 type StorageChanges = { [key: string]: chrome.storage.StorageChange };
 
@@ -26,27 +42,6 @@ const DEFAULT_CONFIG = {
   RETRY_DELAY: 200, // ms
 } as const;
 
-/** chrome.storage.sync.QUOTA_BYTES_PER_ITEM */
-const SYNC_QUOTA_BYTES_PER_ITEM = 8192;
-
-/**
- * Size of an item as chrome.storage.sync counts it: key length plus the
- * UTF-8 length of the JSON-serialized value.
- */
-export function getSyncItemSize(key: string, value: any): number {
-  return utf8Length(key) + utf8Length(JSON.stringify(value) ?? "");
-}
-
-function utf8Length(text: string): number {
-  let length = 0;
-  for (const char of text) {
-    const codePoint = char.codePointAt(0) ?? 0;
-    length +=
-      codePoint < 0x80 ? 1 : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
-  }
-  return length;
-}
-
 /**
  * The value of a key as it should exist in the other storage area: user
  * settings only, never cached data.
@@ -63,6 +58,7 @@ function toSyncedValue(value: any): any {
  *
  * Mirrors user settings between chrome.storage.local and chrome.storage.sync.
  * Cached data (`<class>:storage`, `ges_*`) and storage item fields stay local.
+ * Keys matched by a merge strategy are merged rather than copied.
  *
  * In an MV3 service worker, `listen()` must be called synchronously at the top
  * level of the worker script so the listener exists every time the worker
@@ -75,8 +71,12 @@ export class StorageSyncService {
   private maxRetries: number = DEFAULT_CONFIG.MAX_RETRIES;
   private retryDelay: number = DEFAULT_CONFIG.RETRY_DELAY;
   private readonly origin = `${Date.now()}-${Math.random()}`;
+  private merges: Promise<void> = Promise.resolve();
 
-  constructor(private storage: StorageService) {}
+  constructor(
+    private storage: StorageService,
+    private mergeStrategies: SyncMergeStrategy[] = []
+  ) {}
 
   /** Register the chrome.storage.onChanged listener. */
   listen(): void {
@@ -86,7 +86,8 @@ export class StorageSyncService {
   /**
    * One-time reconciliation, run on install/update. Local values win for keys
    * present in both areas (sync may be stale); keys only in sync are pulled
-   * into local. Cached data found in sync by older versions is removed.
+   * into local. Keys with a merge strategy are merged instead. Cached data
+   * found in sync by older versions is removed.
    */
   async reconcile(): Promise<void> {
     const [localItems, syncItems] = await Promise.all([
@@ -94,11 +95,14 @@ export class StorageSyncService {
       this.storage.getSyncStorage().getAll(),
     ]);
 
-    const toLocal: { [key: string]: any } = {};
-    const toSync: { [key: string]: any } = {};
+    const mergedKeys = [
+      ...new Set([...Object.keys(localItems), ...Object.keys(syncItems)]),
+    ].filter((key) => this.strategyFor(key));
+    const { toLocal, toSync } = this.mergeItems(mergedKeys, localItems, syncItems);
     const removeFromSync: string[] = [];
 
     for (const key of Object.keys(syncItems)) {
+      if (this.strategyFor(key)) continue;
       if (isLocalOnlyKey(key)) {
         if (key !== SYNC_IGNORE_KEY) removeFromSync.push(key);
       } else if (!(key in localItems)) {
@@ -107,7 +111,7 @@ export class StorageSyncService {
     }
 
     for (const key of Object.keys(localItems)) {
-      if (isLocalOnlyKey(key)) continue;
+      if (isLocalOnlyKey(key) || this.strategyFor(key)) continue;
       const value = toSyncedValue(localItems[key]);
       if (JSON.stringify(value) !== JSON.stringify(syncItems[key])) {
         toSync[key] = value;
@@ -166,17 +170,86 @@ export class StorageSyncService {
   private applyChanges(target: SyncedArea, changes: StorageChanges): void {
     const items: { [key: string]: any } = {};
     const removed: string[] = [];
+    const merged: { [key: string]: any } = {};
     for (const key of Object.keys(changes)) {
-      if (changes[key].newValue === undefined) {
+      if (this.strategyFor(key)) {
+        merged[key] = changes[key].newValue;
+      } else if (changes[key].newValue === undefined) {
         removed.push(key);
       } else {
         items[key] = toSyncedValue(changes[key].newValue);
       }
     }
 
+    if (Object.keys(merged).length > 0) {
+      this.syncMergedKeys(merged).catch((error) => {
+        Logger.error("Failed to merge synced changes:", error);
+      });
+    }
+    if (Object.keys(items).length === 0 && removed.length === 0) {
+      return;
+    }
     this.commit(target, items, removed).catch((error) => {
       Logger.error(`Failed to sync changes to ${target}:`, error);
     });
+  }
+
+  /**
+   * Merge keys that have a merge strategy, in either direction: the current
+   * local and sync copies, plus `changed` (each key's value from the change
+   * event), are merged and written to whichever area differs from the result.
+   * Including the changed value keeps a local write that landed between this
+   * merge's read and write: the write would otherwise be overwritten here,
+   * and its queued change would later re-read local without it. A removed key
+   * counts as empty, so it never wipes the other area. Merges run one at a
+   * time so two can't interleave their reads and writes.
+   */
+  private syncMergedKeys(changed: { [key: string]: any }): Promise<void> {
+    const keys = Object.keys(changed);
+    const run = this.merges.then(async () => {
+      const [localItems, syncItems] = await Promise.all([
+        this.storage.getLocalStorage().getMany(keys),
+        this.storage.getSyncStorage().getMany(keys),
+      ]);
+      const { toLocal, toSync } = this.mergeItems(
+        keys,
+        localItems,
+        syncItems,
+        changed
+      );
+      await this.commit(STORAGE_AREAS.LOCAL, toLocal, []);
+      await this.commit(STORAGE_AREAS.SYNC, toSync, []);
+    });
+    this.merges = run.catch((): void => undefined);
+    return run;
+  }
+
+  private strategyFor(key: string): SyncMergeStrategy | undefined {
+    return this.mergeStrategies.find((strategy) => strategy.matches(key));
+  }
+
+  /**
+   * Merge each key's local and sync copies (and, if given, an extra copy),
+   * returning the merged values that need writing to each area.
+   */
+  private mergeItems(
+    keys: string[],
+    localItems: { [key: string]: any },
+    syncItems: { [key: string]: any },
+    extraItems: { [key: string]: any } = {}
+  ): { toLocal: { [key: string]: any }; toSync: { [key: string]: any } } {
+    const toLocal: { [key: string]: any } = {};
+    const toSync: { [key: string]: any } = {};
+    for (const key of keys) {
+      const strategy = this.strategyFor(key)!;
+      const merged = strategy.merge(
+        strategy.merge(localItems[key], syncItems[key]),
+        extraItems[key]
+      );
+      if (!strategy.equals(merged, localItems[key])) toLocal[key] = merged;
+      if (!strategy.equals(merged, syncItems[key])) toSync[key] = merged;
+    }
+    return { toLocal, toSync };
   }
 
   /**

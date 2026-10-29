@@ -58,6 +58,27 @@ export function withoutStorageItems(settings: { [key: string]: any } | undefined
   return result;
 }
 
+/** chrome.storage.sync.QUOTA_BYTES_PER_ITEM */
+export const SYNC_QUOTA_BYTES_PER_ITEM = 8192;
+
+/**
+ * Size of an item as chrome.storage.sync counts it: key length plus the
+ * UTF-8 length of the JSON-serialized value.
+ */
+export function getSyncItemSize(key: string, value: any): number {
+  return utf8Length(key) + utf8Length(JSON.stringify(value) ?? "");
+}
+
+function utf8Length(text: string): number {
+  let length = 0;
+  for (const char of text) {
+    const codePoint = char.codePointAt(0) ?? 0;
+    length +=
+      codePoint < 0x80 ? 1 : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
+  }
+  return length;
+}
+
 /** Only the `storage_<id>` fields of a settings object. */
 export function onlyStorageItems(settings: { [key: string]: any } | undefined): {
   [key: string]: any;

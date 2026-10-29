@@ -33,7 +33,8 @@ const CSS = `
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: pointer; }
 .hfx-user-note-editor textarea { box-sizing: border-box; width: 100%; resize: vertical; font-size: 12px; }
 .hfx-user-note-editor-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 3px; font-size: 11px; }
-.hfx-user-note-count { margin-right: auto; color: #999; }
+.hfx-user-note-editor-footer .button { padding: 2px 7px; font-size: 11px; line-height: 1.5; min-width: 0; }
+.hfx-user-note-count { flex-basis: 100%; color: #999; }
 .hfx-user-note-error { color: #ff7b7b; font-size: 11px; margin-top: 3px; }
 `;
 

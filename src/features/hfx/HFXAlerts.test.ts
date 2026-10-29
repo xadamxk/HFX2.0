@@ -109,6 +109,21 @@ describe("HFXAlerts", () => {
     ).not.toBeNull();
   });
 
+  it("sits above #content, as wide as HF's navigation bar", async () => {
+    store({
+      storage_alertMap: { alerts: ALERT, hidden: false },
+      storage_alert: { value: ALERT, fetchedAt: Date.now() - MINUTE },
+    });
+
+    await runFromStorage();
+
+    const alert = document.getElementById("HFXAlert")!;
+    expect(alert.nextElementSibling?.id).toBe("content");
+    expect(alert.style.width).toBe("calc(95% - 50px)");
+    expect(alert.style.maxWidth).toBe("1525px");
+    expect(alert.style.boxSizing).toBe("border-box");
+  });
+
   it("keeps a dismissed alert hidden, before and after a refetch", async () => {
     store({
       storage_alertMap: { alerts: ALERT, hidden: true },

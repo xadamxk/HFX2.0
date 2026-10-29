@@ -122,7 +122,9 @@ class HFXAlerts extends Feature {
         valueChildren.push(line);
       });
 
-    content.prepend(
+    // Before #content rather than in it: #content is padded, and the alert
+    // sizes itself like HF's navigation bar (#panel) from the full width
+    content.before(
       el("div", { class: "HFXAlert", id: "HFXAlert" }, [
         el(
           "div",
@@ -142,7 +144,11 @@ class HFXAlerts extends Feature {
       alertEl.style.border = "2px solid #f4d639";
       alertEl.style.textAlign = "center";
       alertEl.style.padding = "7px 20px";
-      alertEl.style.marginBottom = "15px";
+      // #panel's width, so the alert lines up with the navigation bar
+      alertEl.style.boxSizing = "border-box";
+      alertEl.style.width = "calc(95% - 50px)";
+      alertEl.style.maxWidth = "1525px";
+      alertEl.style.margin = "25px auto 0";
       alertEl.style.fontSize = "13px";
     }
 

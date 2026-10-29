@@ -558,6 +558,82 @@ body {
     color: #1a7f37;
 }
 
+/* User Notes list */
+.user-notes-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.user-notes-toolbar .configurable-description {
+    margin: 0 auto 0 0;
+}
+
+.user-notes-filter {
+    padding: 4px 8px;
+    border: 1px solid #d1d9e0;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.user-notes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.user-notes-table th {
+    text-align: left;
+    font-weight: 600;
+    color: #59636e;
+    border-bottom: 1px solid #d1d9e0;
+    padding: 4px 6px;
+}
+
+.user-notes-table td {
+    vertical-align: top;
+    border-bottom: 1px solid #eef1f4;
+    padding: 6px;
+}
+
+.user-notes-member,
+.user-notes-date {
+    white-space: nowrap;
+}
+
+.user-notes-note {
+    width: 100%;
+}
+
+.user-notes-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.user-notes-note textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #d1d9e0;
+    border-radius: 4px;
+    font: inherit;
+    resize: vertical;
+}
+
+.user-notes-actions {
+    display: flex;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.user-notes-error {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #cf222e;
+}
+
 .storage-reset-prompt {
     font-size: 12px;
     font-weight: 600;

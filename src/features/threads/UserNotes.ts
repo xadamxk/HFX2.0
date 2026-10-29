@@ -40,6 +40,9 @@ const getCss = (noteColor: string) => `
 .hfx-user-note-toggle:hover, .hfx-user-note-toggle.has-note { color: ${noteColor}; }
 .hfx-user-note { margin: 4px 0 2px; text-align: left; }
 .hfx-user-note--profile { margin: 4px 0 0; }
+/* As wide as the note, centered under the name; long notes wrap at the column's full width */
+.hfx-user-note-text { box-sizing: border-box; width: fit-content; max-width: 100%; margin: 0 auto; }
+.hfx-user-note--profile .hfx-user-note-text { margin: 0; }
 .hfx-user-note-text { padding: 2px 6px; border-radius: 4px; border: 1px solid color-mix(in srgb, ${noteColor} 35%, transparent);
   background: color-mix(in srgb, ${noteColor} 10%, transparent); color: ${noteColor}; font-size: 11px; line-height: 1.4;
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: pointer; }

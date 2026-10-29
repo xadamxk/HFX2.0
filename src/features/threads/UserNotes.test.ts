@@ -4,7 +4,7 @@ import { Util } from "../../core/Util";
 import { MemoryStorage } from "../../test-utils/MemoryStorage";
 import Threads from "../../sections/Threads";
 import Profile from "../../sections/Profile";
-import UserNotes from "./UserNotes";
+import UserNotes, { getNoteColor } from "./UserNotes";
 
 type Listener = (
   changes: { [key: string]: chrome.storage.StorageChange },
@@ -282,5 +282,39 @@ describe("UserNotes", () => {
   it("isn't registered for the global section, so Who's Online never shows notes", () => {
     expect(UserNotes.section).toBe(Threads);
     expect(UserNotes.additionalSections?.sections).toEqual([Profile]);
+  });
+
+  describe("note color", () => {
+    beforeEach(() => {
+      document.body.innerHTML = post(1, 17, "Alice");
+    });
+
+    it("styles notes with the chosen color", async () => {
+      await UserNotes.run({ noteColor: "#3fa7ff" }, Threads);
+
+      const css = (Util.addCssToPage as jest.Mock).mock.calls[0][0] as string;
+      expect(css).toContain("color: #3fa7ff;");
+      expect(css).toContain("color-mix(in srgb, #3fa7ff 10%, transparent)");
+      expect(css).not.toContain("#ffd666");
+    });
+
+    it("defaults to yellow", () => {
+      expect(UserNotes.configurables?.[0]).toMatchObject({
+        id: "noteColor",
+        default: "#ffd666",
+      });
+      expect(getNoteColor(undefined)).toBe("#ffd666");
+    });
+
+    it.each(["red", "#12345", "#fff; } body { display: none", 42])(
+      "falls back to the default for %p",
+      (value) => {
+        expect(getNoteColor(value)).toBe("#ffd666");
+      }
+    );
+
+    it.each(["#abc", "#A1B2C3"])("accepts the hex color %p", (value) => {
+      expect(getNoteColor(value)).toBe(value);
+    });
   });
 });

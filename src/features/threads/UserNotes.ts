@@ -1,3 +1,4 @@
+import { ColorPicker } from "../../configuration/configurables/ColorPicker";
 import { Feature } from "../../core/Feature";
 import { Section } from "../../core/Section";
 import { SectionArray } from "../../core/SectionArray";
@@ -22,13 +23,24 @@ interface NoteTarget {
   editor?: HTMLDivElement;
 }
 
-const CSS = `
+const DEFAULT_NOTE_COLOR = "#ffd666";
+
+/** The note color setting if it's a hex color, so it can go into the page's CSS safely. */
+export function getNoteColor(value: unknown): string {
+  return typeof value === "string" &&
+    /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value)
+    ? value
+    : DEFAULT_NOTE_COLOR;
+}
+
+/** The note's text, border and tint all come from the note color. */
+const getCss = (noteColor: string) => `
 .hfx-user-note-toggle { margin-left: 5px; cursor: pointer; color: #999; font-size: 12px; text-decoration: none; }
-.hfx-user-note-toggle:hover, .hfx-user-note-toggle.has-note { color: #ffd666; }
+.hfx-user-note-toggle:hover, .hfx-user-note-toggle.has-note { color: ${noteColor}; }
 .hfx-user-note { margin: 4px 0 2px; text-align: left; }
 .hfx-user-note--profile { margin: 4px 0 0; }
-.hfx-user-note-text { padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 214, 102, 0.35);
-  background: rgba(255, 214, 102, 0.1); color: #ffd666; font-size: 11px; line-height: 1.4;
+.hfx-user-note-text { padding: 2px 6px; border-radius: 4px; border: 1px solid color-mix(in srgb, ${noteColor} 35%, transparent);
+  background: color-mix(in srgb, ${noteColor} 10%, transparent); color: ${noteColor}; font-size: 11px; line-height: 1.4;
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: pointer; }
 .hfx-user-note-editor textarea { box-sizing: border-box; width: 100%; resize: vertical; font-size: 12px; }
 .hfx-user-note-editor-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 3px; font-size: 11px; }
@@ -51,16 +63,24 @@ class UserNotes extends Feature {
       enabled: true,
       description:
         "Add a private note to any member. It shows next to their name on their posts and profile, and syncs between your browsers.",
+      configurables: [
+        new ColorPicker({
+          id: "noteColor",
+          label: "Note Color",
+          description: "The color of the note text and its outline.",
+          default: DEFAULT_NOTE_COLOR,
+        }),
+      ],
     });
   }
 
-  async run(_settings: unknown, section: Section) {
+  async run(settings: { noteColor?: string }, section: Section) {
     this.store = new UserNotesStore();
     this.targets =
       section === Profile ? this.findProfileTargets() : this.findPostTargets();
     if (this.targets.length === 0) return;
 
-    Util.addCssToPage(CSS);
+    Util.addCssToPage(getCss(getNoteColor(settings?.noteColor)));
     this.notes = await this.store.getAll();
     this.targets.forEach((target) => this.render(target));
 

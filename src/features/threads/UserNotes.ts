@@ -27,8 +27,7 @@ const CSS = `
 .hfx-user-note-toggle:hover, .hfx-user-note-toggle.has-note { color: #ffd666; }
 .hfx-user-note { margin: 4px auto 2px; max-width: 144px; text-align: left; }
 .hfx-user-note--profile { margin: 4px 0 0; max-width: 100%; }
-.hfx-user-note-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 214, 102, 0.35);
+.hfx-user-note-text { padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 214, 102, 0.35);
   background: rgba(255, 214, 102, 0.1); color: #ffd666; font-size: 11px; line-height: 1.4;
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: pointer; }
 .hfx-user-note-editor textarea { box-sizing: border-box; width: 100%; resize: vertical; font-size: 12px; }
@@ -159,7 +158,7 @@ class UserNotes extends Feature {
     if (note) {
       const text = el(
         "div",
-        { class: "hfx-user-note-text", title: note.note },
+        { class: "hfx-user-note-text", title: "Edit your note" },
         note.note
       );
       text.addEventListener("click", () => this.openEditor(target));

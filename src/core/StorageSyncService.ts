@@ -1,7 +1,18 @@
 import { StorageService } from "./StorageService";
 import { isQuotaError } from "./StorageAdapter";
 import { Logger } from "./Logger";
-import { isLocalOnlyKey, withoutStorageItems } from "./constants";
+import {
+  SYNC_QUOTA_BYTES_PER_ITEM,
+  getSyncItemSize,
+  isLocalOnlyKey,
+  withoutStorageItems,
+} from "./constants";
+import {
+  NoteShard,
+  isUserNotesKey,
+  mergeNoteShards,
+  sameNoteShard,
+} from "./UserNotesStore";
 
 type StorageChanges = { [key: string]: chrome.storage.StorageChange };
 
@@ -26,27 +37,6 @@ const DEFAULT_CONFIG = {
   RETRY_DELAY: 200, // ms
 } as const;
 
-/** chrome.storage.sync.QUOTA_BYTES_PER_ITEM */
-const SYNC_QUOTA_BYTES_PER_ITEM = 8192;
-
-/**
- * Size of an item as chrome.storage.sync counts it: key length plus the
- * UTF-8 length of the JSON-serialized value.
- */
-export function getSyncItemSize(key: string, value: any): number {
-  return utf8Length(key) + utf8Length(JSON.stringify(value) ?? "");
-}
-
-function utf8Length(text: string): number {
-  let length = 0;
-  for (const char of text) {
-    const codePoint = char.codePointAt(0) ?? 0;
-    length +=
-      codePoint < 0x80 ? 1 : codePoint < 0x800 ? 2 : codePoint < 0x10000 ? 3 : 4;
-  }
-  return length;
-}
-
 /**
  * The value of a key as it should exist in the other storage area: user
  * settings only, never cached data.
@@ -59,10 +49,31 @@ function toSyncedValue(value: any): any {
 }
 
 /**
+ * Merge each User Notes shard's local and sync copies, returning the merged
+ * shards that need writing to each area.
+ */
+function mergeNoteItems(
+  keys: string[],
+  localItems: { [key: string]: any },
+  syncItems: { [key: string]: any }
+): { toLocal: { [key: string]: NoteShard }; toSync: { [key: string]: NoteShard } } {
+  const toLocal: { [key: string]: NoteShard } = {};
+  const toSync: { [key: string]: NoteShard } = {};
+  for (const key of keys) {
+    const merged = mergeNoteShards(localItems[key], syncItems[key]);
+    if (!sameNoteShard(merged, localItems[key])) toLocal[key] = merged;
+    if (!sameNoteShard(merged, syncItems[key])) toSync[key] = merged;
+  }
+  return { toLocal, toSync };
+}
+
+/**
  * StorageSyncService
  *
  * Mirrors user settings between chrome.storage.local and chrome.storage.sync.
  * Cached data (`<class>:storage`, `ges_*`) and storage item fields stay local.
+ * User Notes shards are merged per uid rather than copied (see
+ * mergeNoteShards).
  *
  * In an MV3 service worker, `listen()` must be called synchronously at the top
  * level of the worker script so the listener exists every time the worker
@@ -75,6 +86,7 @@ export class StorageSyncService {
   private maxRetries: number = DEFAULT_CONFIG.MAX_RETRIES;
   private retryDelay: number = DEFAULT_CONFIG.RETRY_DELAY;
   private readonly origin = `${Date.now()}-${Math.random()}`;
+  private noteMerges: Promise<void> = Promise.resolve();
 
   constructor(private storage: StorageService) {}
 
@@ -86,7 +98,8 @@ export class StorageSyncService {
   /**
    * One-time reconciliation, run on install/update. Local values win for keys
    * present in both areas (sync may be stale); keys only in sync are pulled
-   * into local. Cached data found in sync by older versions is removed.
+   * into local. User Notes shards are merged instead. Cached data found in
+   * sync by older versions is removed.
    */
   async reconcile(): Promise<void> {
     const [localItems, syncItems] = await Promise.all([
@@ -94,11 +107,14 @@ export class StorageSyncService {
       this.storage.getSyncStorage().getAll(),
     ]);
 
-    const toLocal: { [key: string]: any } = {};
-    const toSync: { [key: string]: any } = {};
+    const noteKeys = [
+      ...new Set([...Object.keys(localItems), ...Object.keys(syncItems)]),
+    ].filter(isUserNotesKey);
+    const { toLocal, toSync } = mergeNoteItems(noteKeys, localItems, syncItems);
     const removeFromSync: string[] = [];
 
     for (const key of Object.keys(syncItems)) {
+      if (isUserNotesKey(key)) continue;
       if (isLocalOnlyKey(key)) {
         if (key !== SYNC_IGNORE_KEY) removeFromSync.push(key);
       } else if (!(key in localItems)) {
@@ -107,7 +123,7 @@ export class StorageSyncService {
     }
 
     for (const key of Object.keys(localItems)) {
-      if (isLocalOnlyKey(key)) continue;
+      if (isLocalOnlyKey(key) || isUserNotesKey(key)) continue;
       const value = toSyncedValue(localItems[key]);
       if (JSON.stringify(value) !== JSON.stringify(syncItems[key])) {
         toSync[key] = value;
@@ -166,17 +182,49 @@ export class StorageSyncService {
   private applyChanges(target: SyncedArea, changes: StorageChanges): void {
     const items: { [key: string]: any } = {};
     const removed: string[] = [];
+    const noteKeys: string[] = [];
     for (const key of Object.keys(changes)) {
-      if (changes[key].newValue === undefined) {
+      if (isUserNotesKey(key)) {
+        noteKeys.push(key);
+      } else if (changes[key].newValue === undefined) {
         removed.push(key);
       } else {
         items[key] = toSyncedValue(changes[key].newValue);
       }
     }
 
+    if (noteKeys.length > 0) {
+      this.mergeNoteShards(noteKeys).catch((error) => {
+        Logger.error("Failed to sync User Notes:", error);
+      });
+    }
+    if (Object.keys(items).length === 0 && removed.length === 0) {
+      return;
+    }
     this.commit(target, items, removed).catch((error) => {
       Logger.error(`Failed to sync changes to ${target}:`, error);
     });
+  }
+
+  /**
+   * User Notes shards are merged per uid instead of copied, so notes edited
+   * on two devices before either synced are both kept. The merged shard is
+   * written to whichever area differs from it, in either direction. A removed
+   * shard is treated as empty: notes are only deleted through tombstones.
+   * Merges run one at a time so two can't interleave their reads and writes.
+   */
+  private mergeNoteShards(keys: string[]): Promise<void> {
+    const run = this.noteMerges.then(async () => {
+      const [localItems, syncItems] = await Promise.all([
+        this.storage.getLocalStorage().getMany(keys),
+        this.storage.getSyncStorage().getMany(keys),
+      ]);
+      const { toLocal, toSync } = mergeNoteItems(keys, localItems, syncItems);
+      await this.commit(STORAGE_AREAS.LOCAL, toLocal, []);
+      await this.commit(STORAGE_AREAS.SYNC, toSync, []);
+    });
+    this.noteMerges = run.catch((): void => undefined);
+    return run;
   }
 
   /**

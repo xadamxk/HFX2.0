@@ -1,5 +1,6 @@
 import { StorageService } from "./StorageService";
 import { SYNC_QUOTA_BYTES_PER_ITEM, getSyncItemSize } from "./constants";
+import type { SyncMergeStrategy } from "./StorageSyncService";
 
 /**
  * User Notes data: a private note per HF member, keyed by uid.
@@ -60,12 +61,20 @@ export interface UserNote {
   updatedAt: number;
 }
 
-export type SaveNoteResult = { ok: true } | { ok: false; error: string };
+/** The saved note, or no note when saving deleted it. */
+export type SaveNoteResult =
+  { ok: true; note?: UserNote } | { ok: false; error: string };
 
 export interface NotesUsage {
   bytes: number;
   budget: number;
   count: number;
+}
+
+/** Every note, by uid, and how much sync storage notes use, from one read. */
+export interface NotesSnapshot {
+  notes: Map<number, UserNote>;
+  usage: NotesUsage;
 }
 
 export function getShardKey(uid: number): string {
@@ -143,6 +152,17 @@ export function pruneTombstones(
   return result;
 }
 
+/**
+ * Lets StorageSyncService merge note shards per uid instead of copying them,
+ * so notes edited on two browsers are both kept. Registered in
+ * service-worker.ts.
+ */
+export const userNotesMergeStrategy: SyncMergeStrategy<NoteShard> = {
+  matches: isUserNotesKey,
+  merge: (a, b) => mergeNoteShards(a, b),
+  equals: (a, b) => sameNoteShard(a, b),
+};
+
 /** Whether two shard values hold the same records. */
 export function sameNoteShard(
   a: NoteShard | undefined,
@@ -171,25 +191,36 @@ export function getNotesBytes(shards: {
 
 /**
  * Check that writing `shard` under `key` keeps it within the sync item limit
- * and keeps all notes within the notes budget. Returns an error message for
- * the user, or undefined if it fits.
+ * and keeps all notes within the notes budget. A write that doesn't grow the
+ * shard or the total always fits, so notes can still be shortened or deleted
+ * when storage is already over a limit (e.g. after merging another browser's
+ * notes). Returns an error message for the user, or undefined if it fits.
  */
 export function checkNotesFit(
   shards: { [key: string]: NoteShard | undefined },
   key: string,
   shard: NoteShard
 ): string | undefined {
-  if (getSyncItemSize(key, shard) > SYNC_QUOTA_BYTES_PER_ITEM) {
+  const shardBytes = getSyncItemSize(key, shard);
+  if (
+    shardBytes > SYNC_QUOTA_BYTES_PER_ITEM &&
+    shardBytes > getNotesBytes({ [key]: shards[key] })
+  ) {
     return "Not saved: too many notes are stored for members like this one. Shorten or delete some notes and try again.";
   }
-  if (getNotesBytes({ ...shards, [key]: shard }) > USER_NOTES_BUDGET_BYTES) {
+  const totalBytes = getNotesBytes({ ...shards, [key]: shard });
+  if (
+    totalBytes > USER_NOTES_BUDGET_BYTES &&
+    totalBytes > getNotesBytes(shards)
+  ) {
     return "Not saved: User Notes has used all of its sync storage. Shorten or delete some notes and try again.";
   }
   return undefined;
 }
 
-function toUserNote(uid: string, record: NoteRecord): UserNote | undefined {
-  if (isTombstone(record)) return undefined;
+function toUserNote(uid: string, record: unknown): UserNote | undefined {
+  // Skip tombstones and anything malformed (older builds, partial sync values)
+  if (!isValidRecord(record) || isTombstone(record)) return undefined;
   return {
     uid: Number(uid),
     note: record.n,
@@ -210,6 +241,11 @@ export class UserNotesStore {
 
   /** Every note, by uid. */
   async getAll(): Promise<Map<number, UserNote>> {
+    return (await this.getSnapshot()).notes;
+  }
+
+  /** Every note and the notes' sync usage, from one storage read. */
+  async getSnapshot(): Promise<NotesSnapshot> {
     const shards = await this.storage.getMany(USER_NOTES_KEYS);
     const notes = new Map<number, UserNote>();
     for (const key of USER_NOTES_KEYS) {
@@ -219,22 +255,13 @@ export class UserNotesStore {
         if (note) notes.set(note.uid, note);
       }
     }
-    return notes;
-  }
-
-  async getUsage(): Promise<NotesUsage> {
-    const shards = await this.storage.getMany(USER_NOTES_KEYS);
-    let count = 0;
-    for (const key of USER_NOTES_KEYS) {
-      const shard: NoteShard = shards[key] ?? {};
-      count += Object.values(shard).filter(
-        (record) => !isTombstone(record)
-      ).length;
-    }
     return {
-      bytes: getNotesBytes(shards),
-      budget: USER_NOTES_BUDGET_BYTES,
-      count,
+      notes,
+      usage: {
+        bytes: getNotesBytes(shards),
+        budget: USER_NOTES_BUDGET_BYTES,
+        count: notes.size,
+      },
     };
   }
 
@@ -261,13 +288,19 @@ export class UserNotesStore {
 
     const entry: NoteEntry = { n: note, t: this.now() };
     if (username) entry.u = username;
-    return await this.writeRecord(uid, entry);
+    const error = await this.writeRecord(uid, entry);
+    return error
+      ? { ok: false, error }
+      : { ok: true, note: toUserNote(String(uid), entry) };
   }
 
-  /** Delete a member's note, leaving a tombstone so other devices delete it too. */
+  /**
+   * Delete a member's note, leaving a tombstone so other devices delete it
+   * too. A tombstone is never larger than the note it replaces, so this
+   * always fits.
+   */
   async delete(uid: number): Promise<void> {
-    const result = await this.writeRecord(uid, { d: 1, t: this.now() }, true);
-    if (!result.ok) throw new Error(result.error);
+    await this.writeRecord(uid, { d: 1, t: this.now() });
   }
 
   /** Every note as JSON, for the options page's export. */
@@ -282,15 +315,11 @@ export class UserNotesStore {
     );
   }
 
-  /**
-   * Write one record. Tombstones skip the size checks: deleting must always
-   * work, and a tombstone is smaller than the note it replaces.
-   */
+  /** Write one record. Returns an error message if it doesn't fit, without writing. */
   private async writeRecord(
     uid: number,
-    record: NoteRecord,
-    skipSizeCheck = false
-  ): Promise<SaveNoteResult> {
+    record: NoteRecord
+  ): Promise<string | undefined> {
     const key = getShardKey(uid);
     let error: string | undefined;
     await this.storage.updateMany(USER_NOTES_KEYS, (current) => {
@@ -306,9 +335,9 @@ export class UserNotesStore {
         { ...(existing ?? {}), [uid]: record },
         this.now()
       );
-      error = skipSizeCheck ? undefined : checkNotesFit(current, key, shard);
+      error = checkNotesFit(current, key, shard);
       return error ? {} : { [key]: shard };
     });
-    return error ? { ok: false, error } : { ok: true };
+    return error;
   }
 }

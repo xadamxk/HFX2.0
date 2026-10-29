@@ -132,6 +132,28 @@ describe("UserNotesPanel", () => {
     expect(local.items["UserNotes:notes:1"]["17"]).toMatchObject({ d: 1 });
   });
 
+  it("shows an error in the row when saving or deleting fails", async () => {
+    await render();
+    jest.spyOn(local, "setAll").mockRejectedValue(new Error("disk full"));
+
+    act(() => button(rows()[1], "Edit").click());
+    act(() => button(rows()[1], "Save").click());
+    await settle();
+    expect(rows()[1].querySelector(".user-notes-error")!.textContent).toMatch(
+      /Not saved/
+    );
+
+    act(() => button(rows()[1], "Cancel").click());
+    act(() => button(rows()[1], "Delete").click());
+    act(() => button(rows()[1], "Confirm").click());
+    await settle();
+    expect(rows()[1].querySelector(".user-notes-error")!.textContent).toMatch(
+      /Not deleted/
+    );
+    expect(console.error).toHaveBeenCalled();
+    (console.error as jest.Mock).mockClear();
+  });
+
   it("reloads when notes change elsewhere", async () => {
     await render();
     local.items["UserNotes:notes:3"] = { "3": { n: "new", t: 9 } };

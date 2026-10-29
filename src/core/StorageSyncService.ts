@@ -7,12 +7,17 @@ import {
   isLocalOnlyKey,
   withoutStorageItems,
 } from "./constants";
-import {
-  NoteShard,
-  isUserNotesKey,
-  mergeNoteShards,
-  sameNoteShard,
-} from "./UserNotesStore";
+
+/**
+ * How to merge a synced key's local and sync copies instead of letting one
+ * overwrite the other, for data several devices edit (e.g. User Notes).
+ * `merge` must be commutative and idempotent so every device converges.
+ */
+export interface SyncMergeStrategy<T = any> {
+  matches(key: string): boolean;
+  merge(a: T | undefined, b: T | undefined): T;
+  equals(a: T | undefined, b: T | undefined): boolean;
+}
 
 type StorageChanges = { [key: string]: chrome.storage.StorageChange };
 
@@ -49,31 +54,11 @@ function toSyncedValue(value: any): any {
 }
 
 /**
- * Merge each User Notes shard's local and sync copies, returning the merged
- * shards that need writing to each area.
- */
-function mergeNoteItems(
-  keys: string[],
-  localItems: { [key: string]: any },
-  syncItems: { [key: string]: any }
-): { toLocal: { [key: string]: NoteShard }; toSync: { [key: string]: NoteShard } } {
-  const toLocal: { [key: string]: NoteShard } = {};
-  const toSync: { [key: string]: NoteShard } = {};
-  for (const key of keys) {
-    const merged = mergeNoteShards(localItems[key], syncItems[key]);
-    if (!sameNoteShard(merged, localItems[key])) toLocal[key] = merged;
-    if (!sameNoteShard(merged, syncItems[key])) toSync[key] = merged;
-  }
-  return { toLocal, toSync };
-}
-
-/**
  * StorageSyncService
  *
  * Mirrors user settings between chrome.storage.local and chrome.storage.sync.
  * Cached data (`<class>:storage`, `ges_*`) and storage item fields stay local.
- * User Notes shards are merged per uid rather than copied (see
- * mergeNoteShards).
+ * Keys matched by a merge strategy are merged rather than copied.
  *
  * In an MV3 service worker, `listen()` must be called synchronously at the top
  * level of the worker script so the listener exists every time the worker
@@ -86,9 +71,12 @@ export class StorageSyncService {
   private maxRetries: number = DEFAULT_CONFIG.MAX_RETRIES;
   private retryDelay: number = DEFAULT_CONFIG.RETRY_DELAY;
   private readonly origin = `${Date.now()}-${Math.random()}`;
-  private noteMerges: Promise<void> = Promise.resolve();
+  private merges: Promise<void> = Promise.resolve();
 
-  constructor(private storage: StorageService) {}
+  constructor(
+    private storage: StorageService,
+    private mergeStrategies: SyncMergeStrategy[] = []
+  ) {}
 
   /** Register the chrome.storage.onChanged listener. */
   listen(): void {
@@ -98,8 +86,8 @@ export class StorageSyncService {
   /**
    * One-time reconciliation, run on install/update. Local values win for keys
    * present in both areas (sync may be stale); keys only in sync are pulled
-   * into local. User Notes shards are merged instead. Cached data found in
-   * sync by older versions is removed.
+   * into local. Keys with a merge strategy are merged instead. Cached data
+   * found in sync by older versions is removed.
    */
   async reconcile(): Promise<void> {
     const [localItems, syncItems] = await Promise.all([
@@ -107,14 +95,14 @@ export class StorageSyncService {
       this.storage.getSyncStorage().getAll(),
     ]);
 
-    const noteKeys = [
+    const mergedKeys = [
       ...new Set([...Object.keys(localItems), ...Object.keys(syncItems)]),
-    ].filter(isUserNotesKey);
-    const { toLocal, toSync } = mergeNoteItems(noteKeys, localItems, syncItems);
+    ].filter((key) => this.strategyFor(key));
+    const { toLocal, toSync } = this.mergeItems(mergedKeys, localItems, syncItems);
     const removeFromSync: string[] = [];
 
     for (const key of Object.keys(syncItems)) {
-      if (isUserNotesKey(key)) continue;
+      if (this.strategyFor(key)) continue;
       if (isLocalOnlyKey(key)) {
         if (key !== SYNC_IGNORE_KEY) removeFromSync.push(key);
       } else if (!(key in localItems)) {
@@ -123,7 +111,7 @@ export class StorageSyncService {
     }
 
     for (const key of Object.keys(localItems)) {
-      if (isLocalOnlyKey(key) || isUserNotesKey(key)) continue;
+      if (isLocalOnlyKey(key) || this.strategyFor(key)) continue;
       const value = toSyncedValue(localItems[key]);
       if (JSON.stringify(value) !== JSON.stringify(syncItems[key])) {
         toSync[key] = value;
@@ -182,10 +170,10 @@ export class StorageSyncService {
   private applyChanges(target: SyncedArea, changes: StorageChanges): void {
     const items: { [key: string]: any } = {};
     const removed: string[] = [];
-    const noteKeys: string[] = [];
+    const merged: { [key: string]: any } = {};
     for (const key of Object.keys(changes)) {
-      if (isUserNotesKey(key)) {
-        noteKeys.push(key);
+      if (this.strategyFor(key)) {
+        merged[key] = changes[key].newValue;
       } else if (changes[key].newValue === undefined) {
         removed.push(key);
       } else {
@@ -193,9 +181,9 @@ export class StorageSyncService {
       }
     }
 
-    if (noteKeys.length > 0) {
-      this.mergeNoteShards(noteKeys).catch((error) => {
-        Logger.error("Failed to sync User Notes:", error);
+    if (Object.keys(merged).length > 0) {
+      this.syncMergedKeys(merged).catch((error) => {
+        Logger.error("Failed to merge synced changes:", error);
       });
     }
     if (Object.keys(items).length === 0 && removed.length === 0) {
@@ -207,24 +195,61 @@ export class StorageSyncService {
   }
 
   /**
-   * User Notes shards are merged per uid instead of copied, so notes edited
-   * on two devices before either synced are both kept. The merged shard is
-   * written to whichever area differs from it, in either direction. A removed
-   * shard is treated as empty: notes are only deleted through tombstones.
-   * Merges run one at a time so two can't interleave their reads and writes.
+   * Merge keys that have a merge strategy, in either direction: the current
+   * local and sync copies, plus `changed` (each key's value from the change
+   * event), are merged and written to whichever area differs from the result.
+   * Including the changed value keeps a local write that landed between this
+   * merge's read and write: the write would otherwise be overwritten here,
+   * and its queued change would later re-read local without it. A removed key
+   * counts as empty, so it never wipes the other area. Merges run one at a
+   * time so two can't interleave their reads and writes.
    */
-  private mergeNoteShards(keys: string[]): Promise<void> {
-    const run = this.noteMerges.then(async () => {
+  private syncMergedKeys(changed: { [key: string]: any }): Promise<void> {
+    const keys = Object.keys(changed);
+    const run = this.merges.then(async () => {
       const [localItems, syncItems] = await Promise.all([
         this.storage.getLocalStorage().getMany(keys),
         this.storage.getSyncStorage().getMany(keys),
       ]);
-      const { toLocal, toSync } = mergeNoteItems(keys, localItems, syncItems);
+      const { toLocal, toSync } = this.mergeItems(
+        keys,
+        localItems,
+        syncItems,
+        changed
+      );
       await this.commit(STORAGE_AREAS.LOCAL, toLocal, []);
       await this.commit(STORAGE_AREAS.SYNC, toSync, []);
     });
-    this.noteMerges = run.catch((): void => undefined);
+    this.merges = run.catch((): void => undefined);
     return run;
+  }
+
+  private strategyFor(key: string): SyncMergeStrategy | undefined {
+    return this.mergeStrategies.find((strategy) => strategy.matches(key));
+  }
+
+  /**
+   * Merge each key's local and sync copies (and, if given, an extra copy),
+   * returning the merged values that need writing to each area.
+   */
+  private mergeItems(
+    keys: string[],
+    localItems: { [key: string]: any },
+    syncItems: { [key: string]: any },
+    extraItems: { [key: string]: any } = {}
+  ): { toLocal: { [key: string]: any }; toSync: { [key: string]: any } } {
+    const toLocal: { [key: string]: any } = {};
+    const toSync: { [key: string]: any } = {};
+    for (const key of keys) {
+      const strategy = this.strategyFor(key)!;
+      const merged = strategy.merge(
+        strategy.merge(localItems[key], syncItems[key]),
+        extraItems[key]
+      );
+      if (!strategy.equals(merged, localItems[key])) toLocal[key] = merged;
+      if (!strategy.equals(merged, syncItems[key])) toSync[key] = merged;
+    }
+    return { toLocal, toSync };
   }
 
   /**

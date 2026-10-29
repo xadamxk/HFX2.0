@@ -1,5 +1,6 @@
 import { StorageService } from "../../core/StorageService";
 import { getSyncItemSize } from "../../core/constants";
+import { UserNotesStore } from "../../core/UserNotesStore";
 import { Util } from "../../core/Util";
 import { MemoryStorage } from "../../test-utils/MemoryStorage";
 import Threads from "../../sections/Threads";
@@ -215,6 +216,46 @@ describe("UserNotes", () => {
       expect(error.textContent).toMatch(/Not saved/);
       expect(document.querySelector(".hfx-user-note-editor")).not.toBeNull();
       expect(JSON.stringify(local.items)).toBe(before);
+    });
+
+    it("runs one save at a time, even with repeated Ctrl+Enter", async () => {
+      const saveSpy = jest.spyOn(UserNotesStore.prototype, "save");
+      await UserNotes.run({}, Threads);
+      toggles()[0].click();
+      const textarea = document.querySelector<HTMLTextAreaElement>(
+        ".hfx-user-note-editor textarea"
+      )!;
+      textarea.value = "once";
+      const ctrlEnter = () =>
+        textarea.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true })
+        );
+
+      ctrlEnter();
+      ctrlEnter();
+      await settle();
+
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+      expect(noteTexts()).toEqual(["once", "once"]);
+    });
+
+    it("keeps a draft in another editor for the same member when one saves", async () => {
+      await UserNotes.run({}, Threads);
+      toggles()[2].click();
+      const draft = document
+        .querySelectorAll(".post")[2]
+        .querySelector("textarea")!;
+      draft.value = "unsaved draft";
+
+      await openEditorAndSave(0, "saved");
+
+      expect(
+        document.querySelectorAll(".post")[2].querySelector("textarea")?.value
+      ).toBe("unsaved draft");
+      expect(local.items["UserNotes:notes:1"]["17"]).toMatchObject({
+        n: "saved",
+      });
+      expect(noteTexts()).toEqual(["saved"]);
     });
 
     it("closes the editor on Escape without saving", async () => {

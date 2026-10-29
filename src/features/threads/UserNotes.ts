@@ -6,6 +6,7 @@ import { Util } from "../../core/Util";
 import { el } from "../../core/Dom";
 import { getPosts } from "../../core/Posts";
 import {
+  SaveNoteResult,
   USER_NOTE_MAX_LENGTH,
   UserNote,
   UserNotesStore,
@@ -222,40 +223,43 @@ class UserNotes extends Feature {
       error,
     ]);
 
-    const run = async (action: () => Promise<string | undefined>) => {
+    // One save or delete at a time, whether from a button or Ctrl+Enter
+    let isPending = false;
+    const run = async (action: () => Promise<SaveNoteResult>) => {
+      if (isPending) return;
+      isPending = true;
       save.disabled = true;
+      if (remove) remove.disabled = true;
       error.hidden = true;
       try {
-        const message = await action();
-        if (message) {
-          error.textContent = message;
+        const result = await action();
+        if (!result.ok) {
+          error.textContent = result.error;
           error.hidden = false;
           return;
         }
-        this.notes = await this.store.getAll();
+        if (result.note) {
+          this.notes.set(target.uid, result.note);
+        } else {
+          this.notes.delete(target.uid);
+        }
+        this.closeEditor(target);
+        // Other editors open for this member keep their drafts
         this.targets
-          .filter((other) => other.uid === target.uid)
-          .forEach((other) => {
-            this.closeEditor(other);
-            this.render(other);
-          });
+          .filter((other) => other.uid === target.uid && !other.editor)
+          .forEach((other) => this.render(other));
       } catch (caught) {
         this.logger.error("Failed to save note:", caught);
         error.textContent = "Not saved: something went wrong. Try again.";
         error.hidden = false;
       } finally {
+        isPending = false;
         save.disabled = false;
+        if (remove) remove.disabled = false;
       }
     };
     const saveNote = () =>
-      run(async () => {
-        const result = await this.store.save(
-          target.uid,
-          textarea.value,
-          target.username
-        );
-        return result.ok ? undefined : result.error;
-      });
+      run(() => this.store.save(target.uid, textarea.value, target.username));
 
     textarea.addEventListener("input", updateCount);
     textarea.addEventListener("keydown", (event) => {
@@ -271,7 +275,7 @@ class UserNotes extends Feature {
     remove?.addEventListener("click", () =>
       run(async () => {
         await this.store.delete(target.uid);
-        return undefined;
+        return { ok: true };
       })
     );
     cancel.addEventListener("click", () => this.closeEditor(target));

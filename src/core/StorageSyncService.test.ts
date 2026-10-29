@@ -1,6 +1,7 @@
 import { StorageSyncService } from "./StorageSyncService";
 import { StorageService } from "./StorageService";
 import { MemoryStorage } from "../test-utils/MemoryStorage";
+import { userNotesMergeStrategy } from "./UserNotesStore";
 
 type Listener = (
   changes: { [key: string]: chrome.storage.StorageChange },
@@ -18,7 +19,9 @@ describe("StorageSyncService", () => {
     (chrome.storage as any).onChanged = { addListener: jest.fn() };
     local = new MemoryStorage();
     sync = new MemoryStorage();
-    service = new StorageSyncService(new StorageService(local, sync));
+    service = new StorageSyncService(new StorageService(local, sync), [
+      userNotesMergeStrategy,
+    ]);
     service.listen();
     const calls = (chrome.storage.onChanged.addListener as jest.Mock).mock
       .calls;
@@ -290,6 +293,37 @@ describe("StorageSyncService", () => {
 
       expect(local.items["UserNotes:notes:1"]).toEqual({ "1": { n: "note", t: 5 } });
       expect(sync.items["UserNotes:notes:1"]).toEqual({ "1": { n: "note", t: 5 } });
+    });
+
+    it("keeps a local save that a concurrent merge overwrote, from its queued change", async () => {
+      // The save wrote note 17, then a merge from another device replaced the
+      // shard without it before this change was flushed
+      local.items = { "UserNotes:notes:1": { "1": { n: "theirs", t: 6 } } };
+      sync.items = { "UserNotes:notes:1": { "1": { n: "theirs", t: 6 } } };
+
+      listener(
+        { "UserNotes:notes:1": { newValue: { "17": { n: "just saved", t: 7 } } } },
+        "local"
+      );
+      await flush();
+
+      const merged = { "1": { n: "theirs", t: 6 }, "17": { n: "just saved", t: 7 } };
+      expect(local.items["UserNotes:notes:1"]).toEqual(merged);
+      expect(sync.items["UserNotes:notes:1"]).toEqual(merged);
+    });
+
+    it("copies keys without a merge strategy as before", async () => {
+      service = new StorageSyncService(new StorageService(local, sync));
+      service.listen();
+      const calls = (chrome.storage.onChanged.addListener as jest.Mock).mock.calls;
+      const plainListener = calls[calls.length - 1][0];
+      local.items = {};
+      sync.items = { "UserNotes:notes:1": { "17": { n: "theirs", t: 4 } } };
+
+      plainListener({ "UserNotes:notes:1": { newValue: { "1": { n: "mine", t: 5 } } } }, "local");
+      await flush();
+
+      expect(sync.items["UserNotes:notes:1"]).toEqual({ "1": { n: "mine", t: 5 } });
     });
 
     it("leaves settings in the same batch on the usual path", async () => {

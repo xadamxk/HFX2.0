@@ -182,7 +182,9 @@ describe("UserNotesStore", () => {
   });
 
   it("saves a note in the member's shard with the username and time", async () => {
-    await expect(store.save(17, "  paid fast  ", "Stanley")).resolves.toEqual({
+    await expect(
+      store.save(17, "  paid fast  ", "Stanley")
+    ).resolves.toMatchObject({
       ok: true,
     });
 
@@ -200,7 +202,7 @@ describe("UserNotesStore", () => {
   it(`accepts ${USER_NOTE_MAX_LENGTH} characters and refuses more without writing`, async () => {
     await expect(
       store.save(1, "a".repeat(USER_NOTE_MAX_LENGTH))
-    ).resolves.toEqual({ ok: true });
+    ).resolves.toMatchObject({ ok: true });
 
     const result = await store.save(2, "b".repeat(USER_NOTE_MAX_LENGTH + 1));
     expect(result).toEqual({
@@ -235,7 +237,7 @@ describe("UserNotesStore", () => {
   it("refuses a save that would exceed the budget and leaves storage intact", async () => {
     const full = fillToBudget();
     local.items = JSON.parse(JSON.stringify(full));
-    const usage = await store.getUsage();
+    const { usage } = await store.getSnapshot();
     expect(usage.bytes).toBeLessThanOrEqual(USER_NOTES_BUDGET_BYTES);
 
     const result = await store.save(1000 * 16, "r".repeat(256));
@@ -243,10 +245,68 @@ describe("UserNotesStore", () => {
     expect(local.items).toEqual(full);
   });
 
-  it("still deletes when storage is full", async () => {
-    local.items = { "UserNotes:notes:0": { "16": { n: "x", t: 1 } } };
-    await store.delete(16);
-    expect(local.items["UserNotes:notes:0"]["16"]).toEqual({ d: 1, t: NOW });
+  /** Notes already over the budget, as a merge from another browser can leave them. */
+  function overBudget(): { [key: string]: NoteShard } {
+    const shards = fillToBudget();
+    shards[getShardKey(5)] = {
+      ...shards[getShardKey(5)],
+      "99989": { n: "o".repeat(256), t: 1 },
+    };
+    expect(getNotesBytes(shards)).toBeGreaterThan(USER_NOTES_BUDGET_BYTES);
+    return shards;
+  }
+
+  it("still deletes when storage is over the budget", async () => {
+    local.items = overBudget();
+    await store.delete(99_989);
+    expect(local.items[getShardKey(5)]["99989"]).toEqual({ d: 1, t: NOW });
+  });
+
+  it("allows shortening a note when storage is over the budget, but not growing one", async () => {
+    local.items = overBudget();
+
+    await expect(store.save(99_989, "short")).resolves.toMatchObject({
+      ok: true,
+    });
+    expect(local.items[getShardKey(5)]["99989"]).toMatchObject({ n: "short" });
+
+    local.items = overBudget();
+    const grown = await store.save(5 + 16 * 70_000, "new note");
+    expect(grown.ok).toBe(false);
+  });
+
+  it("allows shortening a note in a shard over the 8 KB limit", async () => {
+    const shard: NoteShard = {};
+    for (let i = 1; i <= 31; i++)
+      shard[`${i * 16}`] = { n: "x".repeat(256), t: 1 };
+    expect(getSyncItemSize("UserNotes:notes:0", shard)).toBeGreaterThan(8192);
+    local.items = { "UserNotes:notes:0": shard };
+
+    await expect(store.save(16, "short")).resolves.toMatchObject({ ok: true });
+    await expect(store.save(16 * 99, "new")).resolves.toMatchObject({
+      ok: false,
+    });
+  });
+
+  it("returns the saved note, and none when saving deleted it", async () => {
+    await expect(store.save(3, " hi ", "Bob")).resolves.toEqual({
+      ok: true,
+      note: { uid: 3, note: "hi", username: "Bob", updatedAt: NOW },
+    });
+    await expect(store.save(3, "  ")).resolves.toEqual({ ok: true });
+  });
+
+  it("skips malformed records when reading", async () => {
+    local.items = {
+      "UserNotes:notes:1": {
+        "1": { n: "ok", t: 1 },
+        "17": { t: 2 },
+        "33": "junk",
+      },
+    };
+    const { notes, usage } = await store.getSnapshot();
+    expect([...notes.keys()]).toEqual([1]);
+    expect(usage.count).toBe(1);
   });
 
   it("reports usage, counting notes but not tombstones", async () => {
@@ -254,7 +314,7 @@ describe("UserNotesStore", () => {
     await store.save(2, "two");
     await store.delete(2);
 
-    const usage = await store.getUsage();
+    const { usage } = await store.getSnapshot();
     expect(usage.count).toBe(1);
     expect(usage.budget).toBe(USER_NOTES_BUDGET_BYTES);
     expect(usage.bytes).toBe(

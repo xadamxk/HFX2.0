@@ -33,18 +33,29 @@ const NoteRow: React.FC<NoteRowProps> = ({ note, store }) => {
 
   const save = async () => {
     if (draft === null) return;
-    const result = await store.save(note.uid, draft, note.username);
-    if (result.ok) {
-      setDraft(null);
-      setError(null);
-    } else {
-      setError(result.error);
+    try {
+      const result = await store.save(note.uid, draft, note.username);
+      if (result.ok) {
+        setDraft(null);
+        setError(null);
+      } else {
+        setError(result.error);
+      }
+    } catch (caught) {
+      Logger.error("Failed to save note:", caught);
+      setError("Not saved: something went wrong. Try again.");
     }
   };
 
   const remove = async () => {
     setIsConfirmingDelete(false);
-    await store.delete(note.uid);
+    try {
+      await store.delete(note.uid);
+      setError(null);
+    } catch (caught) {
+      Logger.error("Failed to delete note:", caught);
+      setError("Not deleted: something went wrong. Try again.");
+    }
   };
 
   return (
@@ -159,9 +170,8 @@ export const UserNotesPanel: React.FC = () => {
   };
 
   const load = useCallback(async () => {
-    const store = getStore();
-    const [all, usage] = await Promise.all([store.getAll(), store.getUsage()]);
-    setNotes([...all.values()].sort((a, b) => b.updatedAt - a.updatedAt));
+    const { notes, usage } = await getStore().getSnapshot();
+    setNotes([...notes.values()].sort((a, b) => b.updatedAt - a.updatedAt));
     setUsage(usage);
   }, []);
 

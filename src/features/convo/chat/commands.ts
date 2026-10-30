@@ -125,6 +125,10 @@ export function commandsFor(
     (command) =>
       (command.name !== "/leave" || chat !== "dm") &&
       (command.name !== "/rain" || chat === "global")
+  ).map((command) =>
+    command.name === "/leave" && chat === "global"
+      ? { ...command, about: "Leave the global chat and close its window." }
+      : command
   );
   return chat === "global" && moderator ? [...list, BAN] : list;
 }

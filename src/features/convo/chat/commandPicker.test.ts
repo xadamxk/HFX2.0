@@ -64,6 +64,14 @@ describe("commandsFor", () => {
     expect(names(commandsFor("global"))).not.toContain("/ban");
     expect(names(commandsFor("global", true))).toContain("/ban");
   });
+
+  it("describes /leave for the chat it's in", () => {
+    const about = (chat: "group" | "global") =>
+      commandsFor(chat).find((c) => c.name === "/leave")!.about;
+    expect(about("group")).toBe("Leave a group convo.");
+    expect(about("global")).toBe("Leave the global chat and close its window.");
+    expect(command("/leave").about).toBe("Leave a group convo.");
+  });
 });
 
 describe("CommandPicker", () => {

@@ -3,6 +3,7 @@ import { isQuotaError } from "./StorageAdapter";
 import { Logger } from "./Logger";
 import {
   SYNC_QUOTA_BYTES_PER_ITEM,
+  getRetiredFeatureKeys,
   getSyncItemSize,
   isLocalOnlyKey,
   withoutStorageItems,
@@ -87,9 +88,16 @@ export class StorageSyncService {
    * One-time reconciliation, run on install/update. Local values win for keys
    * present in both areas (sync may be stale); keys only in sync are pulled
    * into local. Keys with a merge strategy are merged instead. Cached data
-   * found in sync by older versions is removed.
+   * found in sync by older versions is removed, as is anything left by
+   * features that were removed from HFX.
    */
   async reconcile(): Promise<void> {
+    const retired = getRetiredFeatureKeys();
+    await Promise.all([
+      this.storage.getLocalStorage().remove(retired),
+      this.storage.getSyncStorage().remove(retired),
+    ]);
+
     const [localItems, syncItems] = await Promise.all([
       this.storage.getLocalStorage().getAll(),
       this.storage.getSyncStorage().getAll(),

@@ -1,6 +1,5 @@
 import AwardGoalAdditions from "./features/awards/AwardGoalAdditions";
 import BanReason from "./features/profile/BanReason";
-import ChatBubbles from "./features/convo/ChatBubbles";
 import ExpandIgnoredPosts from "./features/threads/ExpandIgnoredPosts";
 import ExpandProfileSections from "./features/profile/ExpandProfileSections";
 import ExpandProfileShortcuts from "./features/profile/ExpandProfileShortcuts";
@@ -37,7 +36,6 @@ import WhosOnlineSorting from "./features/global/WhosOnlineSorting";
 export default {
   AwardGoalAdditions: AwardGoalAdditions,
   BanReason: BanReason,
-  ChatBubbles: ChatBubbles,
   ExpandIgnoredPosts: ExpandIgnoredPosts,
   ExpandProfileSections: ExpandProfileSections,
   ExpandProfileShortcuts: ExpandProfileShortcuts,

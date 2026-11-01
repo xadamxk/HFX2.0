@@ -226,6 +226,23 @@ describe("StorageSyncService", () => {
       expect(local.items["A:storage"]).toEqual({ storage_cache: "local" });
     });
 
+    it("deletes what removed features left in both areas", async () => {
+      local.items = {
+        A: { enabled: true },
+        ChatBubbles: { enabled: true, layout: "list" },
+        "ChatBubbles:storage": { storage_dockState: { open: [] } },
+      };
+      sync.items = { ChatBubbles: { enabled: true, layout: "list" } };
+
+      await service.reconcile();
+
+      expect(Object.keys(local.items)).not.toContain("ChatBubbles");
+      expect(Object.keys(local.items)).not.toContain("ChatBubbles:storage");
+      expect(Object.keys(sync.items)).not.toContain("ChatBubbles");
+      expect(local.items.A).toEqual({ enabled: true });
+      expect(sync.items.A).toEqual({ enabled: true });
+    });
+
     it("merges User Notes shards per uid instead of letting local win", async () => {
       local.items = { "UserNotes:notes:1": { "1": { n: "local", t: 5 }, "17": { n: "old", t: 1 } } };
       sync.items = {

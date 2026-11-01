@@ -28,6 +28,20 @@ export function getFeatureStorageKey(featureClass: string): string {
   return `${featureClass}${FEATURE_STORAGE_SUFFIX}`;
 }
 
+/**
+ * Classes of features removed from HFX. Their settings and cached data are
+ * deleted from both storage areas when the extension is installed or updated.
+ */
+export const RETIRED_FEATURES = ["ChatBubbles"];
+
+/** Every storage key a retired feature may have left behind. */
+export function getRetiredFeatureKeys(): string[] {
+  return RETIRED_FEATURES.flatMap((featureClass) => [
+    featureClass,
+    getFeatureStorageKey(featureClass),
+  ]);
+}
+
 export function isStorageItemField(field: string): boolean {
   return field.startsWith(STORAGE_ITEM_PREFIX);
 }

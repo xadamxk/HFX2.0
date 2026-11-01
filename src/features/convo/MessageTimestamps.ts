@@ -1,10 +1,5 @@
 import { Feature } from "../../core/Feature";
 import Convo from "../../sections/Convo";
-import {
-  createTimestamp,
-  showsTimestamp,
-  TIMESTAMP_CLASS,
-} from "./common/timestamps";
 
 class MessageTimestamps extends Feature {
   constructor() {
@@ -75,7 +70,7 @@ class MessageTimestamps extends Feature {
       if (
         sibling &&
         sibling instanceof HTMLElement &&
-        sibling.classList.contains(TIMESTAMP_CLASS)
+        sibling.classList.contains("message-bubble-timestamp")
       ) {
         sibling.remove();
       }
@@ -83,7 +78,14 @@ class MessageTimestamps extends Feature {
 
     const addTimestampAfter = (b: HTMLElement, text: string) => {
       removeTimestampAfter(b);
-      const timestampEl = createTimestamp(text);
+      const timestampEl = document.createElement("div");
+      timestampEl.className = "message-bubble-timestamp";
+      timestampEl.textContent = text;
+      timestampEl.style.display = "block";
+      timestampEl.style.fontSize = "12px";
+      timestampEl.style.color = "#9e9e9e";
+      timestampEl.style.margin = "2px 0 2px 6px";
+      timestampEl.style.clear = "both";
       const parent = b.parentElement;
       if (parent) {
         if (b.nextSibling) parent.insertBefore(timestampEl, b.nextSibling);
@@ -130,8 +132,9 @@ class MessageTimestamps extends Feature {
       const nextKey = getMinuteKey(
         nextSameSenderBubble?.getAttribute("data-convotooltip") || null
       );
+      const sameMinuteAsNext = Boolean(nextKey && nextKey === currentKey);
 
-      if (!showsTimestamp(currentKey, nextKey)) {
+      if (sameMinuteAsNext) {
         // If we somehow already have a timestamp under this bubble (from a prior run), remove it
         removeTimestampAfter(bubble);
         return;

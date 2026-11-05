@@ -2,6 +2,7 @@ dist/
 coverage/
 node_modules/
 extension/
+releases/
 package-lock.json
 *.json
 !.prettierrc.json

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "webpack --config=config/webpack.dev.ts",
     "build": "webpack --config=config/webpack.prod.ts",
+    "package": "npm run build && node scripts/package.js",
     "template": "ts-node ./templates/index.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.jest.json",
     "lint": "eslint .",

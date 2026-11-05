@@ -2,6 +2,9 @@
 
 Contribution steps coming soon
 
+## Releasing
+Bump `version` in both `package.json` and `src/manifest.json`, then run ```npm run package```. It builds and writes the Chrome Web Store zip, the Firefox Add-ons zip and the Firefox source zip to `releases/`. See [BUILDING.md](BUILDING.md).
+
 # Features, Modules, and More
 ## Adding Features
 - Create feature using template: ```yarn template```

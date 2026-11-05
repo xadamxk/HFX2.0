@@ -8,7 +8,7 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   {
-    ignores: ["dist/", "coverage/", "node_modules/", "extension/"],
+    ignores: ["dist/", "coverage/", "node_modules/", "extension/", "releases/"],
   },
   js.configs.recommended,
   tseslint.configs.recommended,
@@ -27,6 +27,7 @@ export default defineConfig(
     files: [
       "config/**/*.ts",
       "templates/**/*.ts",
+      "scripts/**/*.js",
       "*.{js,mjs,ts}",
       "**/*.test.{ts,tsx}",
     ],
@@ -35,8 +36,13 @@ export default defineConfig(
     },
   },
   {
-    // Node scripts (webpack config, templates, jest config) use CommonJS requires
-    files: ["config/**/*.ts", "templates/**/*.ts", "jest.config.js"],
+    // Node scripts (webpack config, templates, release scripts, jest config) use CommonJS requires
+    files: [
+      "config/**/*.ts",
+      "templates/**/*.ts",
+      "scripts/**/*.js",
+      "jest.config.js",
+    ],
     rules: {
       "@typescript-eslint/no-require-imports": "off",
     },

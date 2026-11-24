@@ -56,14 +56,15 @@ class HideHeaderBanners extends Feature {
         document,
         true
       );
-      const firstWrapperDiv =
-        contentWrapper?.querySelector<HTMLElement>("div");
+      const banner = contentWrapper
+        ? this.findBanner(contentWrapper)
+        : null;
 
-      if (!firstWrapperDiv || firstWrapperDiv.classList.contains("breadcrumb")) {
+      if (!banner) {
         return;
       }
 
-      const bannerHash = this.getBannerHash(firstWrapperDiv);
+      const bannerHash = this.getBannerHash(banner);
       const storedBannerHash = await this.settingsService.getStorageItem(
         this,
         STORAGE_KEYS.BANNER_HASH
@@ -71,12 +72,30 @@ class HideHeaderBanners extends Feature {
 
       if (storedBannerHash === bannerHash) {
         // Banner was previously dismissed
-        firstWrapperDiv.remove();
+        banner.remove();
         return;
       }
 
-      this.appendDismissButton(firstWrapperDiv, bannerHash);
+      this.appendDismissButton(banner, bannerHash);
     }
+  }
+
+  /**
+   * The banner is whatever content element precedes the breadcrumb. It isn't
+   * always a div (e.g. the holiday announcement is an <a>), and may be preceded
+   * by its own <style> block.
+   */
+  private findBanner(contentWrapper: Element): HTMLElement | null {
+    const NON_CONTENT_TAGS = ["STYLE", "SCRIPT", "LINK", "BR"];
+    for (const child of Array.from(contentWrapper.children)) {
+      if (child.classList.contains("breadcrumb")) {
+        return null;
+      }
+      if (!NON_CONTENT_TAGS.includes(child.tagName)) {
+        return child as HTMLElement;
+      }
+    }
+    return null;
   }
 
   /**

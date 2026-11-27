@@ -3,8 +3,8 @@
       "outDir": "./dist/",
       "strict": true,
       "module": "es6",
-      "target": "es2020",
-      "lib": ["es2020", "dom", "dom.iterable"],
+      "target": "es2022",
+      "lib": ["es2022", "dom", "dom.iterable"],
       "jsx": "react",
       "allowJs": true,
       "allowSyntheticDefaultImports": true,
@@ -12,9 +12,13 @@
       "esModuleInterop": true,
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
-      "resolveJsonModule": true
+      "resolveJsonModule": true,
+      "isolatedModules": true
     },
-    "ts-node": { "compilerOptions": { "module": "CommonJS" } },
+    "ts-node": {
+      "transpileOnly": true,
+      "compilerOptions": { "module": "CommonJS" }
+    },
     "include": [
       "src/**/*"
     ],

@@ -20,8 +20,13 @@ const baseConfig: Configuration = {
   },
   module: {
     rules: [
-      // all files with a `.ts`, `.cts`, `.mts` or `.tsx` extension will be handled by `ts-loader`
-      { test: /\.([cm]?ts|tsx)$/, loader: "ts-loader" },
+      // all files with a `.ts`, `.cts`, `.mts` or `.tsx` extension will be handled by `ts-loader`.
+      // Compile only: type errors are caught by `npm run typecheck` (and CI), not the build
+      {
+        test: /\.([cm]?ts|tsx)$/,
+        loader: "ts-loader",
+        options: { transpileOnly: true },
+      },
     ],
   },
   plugins: [
